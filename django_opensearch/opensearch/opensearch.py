@@ -73,12 +73,12 @@ class OpensearchDescription:
 
 
 class Collection(FacetSet):
-    facets = [
-        ('collectionId',),
-        ('startDate',),
-        ('endDate',),
-        ('title',)
-    ]
+    facets = {
+        'collectionId': 'default',
+        'startDate': 'default',
+        'endDate': 'default',
+        'title': 'default'
+    }
 
     def __init__(self, collection):
         self.data = collection
@@ -153,7 +153,7 @@ class OpensearchResponse:
         self.startPage = int(search_params.get('startPage', settings.DEFAULT_START_PAGE))
 
         if all(value in search_params for value in ['startRecord', 'startPage']) or search_params.get('startPage'):
-            search_index = (self.startPage -1) * self.itemsPerPage
+            search_index = (self.startPage - 1) * self.itemsPerPage
         else:
             search_index = self.startRecord
 
