@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns:dc="http://purl.org/dc/terms/" xmlns:os="http://a9.com/-/spec/opensearch/1.1/">
+<title>Opensearch response</title>
+<id>{{ request.build_absolute_uri }}</id>
+<subtitle type="html">Found {{ osr.totalResults }} results. {{ osr.pagination_string }}</subtitle>
+<os:totalResults>{{ osr.totalResults }}</os:totalResults>
+<os:startIndex>1</os:startIndex>
+<os:itemsPerPage>10</os:itemsPerPage>
+<os:Query>{{ osr.query }}</os:Query>
+
+    {% for entry in osr.responses %}
+        <entry>
+            <id>{{ root_url }}?{{ entry.entry_id }}</id>
+            <title>{{ entry.title }}</title>
+            <updated>{{ entry.updated }}</updated>
+            <dc:date>{{ entry.startDate }}/{{ entry.endDate }}</dc:date>
+            {% for link in entry.links %}
+                <link href="{{ link.href }}" {{ link.args|safe }} />
+            {% endfor %}
+        </entry>
+    {% endfor %}
+</feed>
