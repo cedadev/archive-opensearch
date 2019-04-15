@@ -110,7 +110,7 @@ class CMIP5Facets(FacetSet):
         for param in params:
 
             if param == 'q':
-                query['query']['bool']['should'].append({
+                query['query']['bool']['must'].append({
                     'match': {
                         'info.phenomena.names': params[param]
                     }
