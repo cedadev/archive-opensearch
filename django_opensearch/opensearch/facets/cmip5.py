@@ -31,26 +31,46 @@ class CMIP5Facets(FacetSet):
         'cmipTable': 'default',
         'ensemble': 'default',
         'version': 'default',
-        'uuid': '_id'
+        'uuid': '_id',
+        'bbox': 'info.spatial.coordinates',
+        'startDate': 'info.temporal.start_time',
+        'endDate': 'info.temporal.end_time',
     }
 
+    # List of facets to exclude from value aggregation
+    exclude_list = ['uuid', 'bbox', 'startDate', 'endDate']
+
     def get_facet_set(self):
+        """
+        Used to build the description document. Get available facets
+        for this collection and add values where possible.
+        :return list: List of parameter object for each facet
+        """
+
+        # Returns list of parameter objects
         facet_set = super().get_facet_set()
         facet_set_with_vals = []
+
+        # Get the aggregated values for each facet
         values = self.get_facet_values()
 
         for param in facet_set:
             values_list = values.get(param.name)
 
-            # Add the values list if it exists
+            # Add the values list to the parameter if it exists
             if values_list is not None:
-                param.value_list = values[param.name]
+                param.value_list = values_list
 
             facet_set_with_vals.append(param)
 
         return facet_set_with_vals
 
     def get_facet_values(self):
+        """
+        Perform aggregations to get the range of possible values
+        for each facet to put in the description document.
+        :return dict: List of values for each facet
+        """
 
         values = {}
 
@@ -60,7 +80,7 @@ class CMIP5Facets(FacetSet):
         }
 
         for facet in self.facets:
-            if facet not in ['uuid']:
+            if facet not in self.exclude_list:
                 query['aggs'][facet] = {
                     'terms': {
                         'field': f'projects.{facet}.keyword',
@@ -77,9 +97,17 @@ class CMIP5Facets(FacetSet):
         return values
 
     def search(self, params, **kwargs):
+        """
+        Search interface to the CMIP5 collection
+        :param params: Opensearch parameters
+        :param kwargs:
+        :return:
+        """
+
         results = []
 
         query = self._build_query(params, **kwargs)
+        print(query)
 
         es_search = ElasticsearchConnection().search(query)
 
@@ -97,6 +125,7 @@ class CMIP5Facets(FacetSet):
 
     def _build_query(self, params, **kwargs):
 
+        # Deep copy to avoid aliasing
         query = copy.deepcopy(self.base_query)
 
         query['query']['bool']['must'].append({
@@ -105,7 +134,7 @@ class CMIP5Facets(FacetSet):
             }
         })
 
-        query['from'] = kwargs['start_index'] -1 if kwargs['start_index'] > 0 else 0
+        query['from'] = (kwargs['start_index'] - 1) if kwargs['start_index'] > 0 else 0
 
         for param in params:
 
@@ -115,7 +144,30 @@ class CMIP5Facets(FacetSet):
                         'info.phenomena.names': params[param]
                     }
                 })
+            elif param == 'startDate':
 
+                query['query']['bool']['filter'].append({
+                    'range': {
+                        self.facets.get(param): {
+                            'gte': params[param]
+                        }
+                    }
+                })
+
+            elif param == 'endDate':
+
+                query['query']['bool']['filter'].append({
+                    'range': {
+                        self.facets.get(param): {
+                            'lte': params[param]
+                        }
+                    }
+                })
+
+            elif param == 'bbox':
+
+                # Coordinates supplied top-left, bottom-right lon,lat
+                pass
             else:
                 facet = self.facets.get(param)
 

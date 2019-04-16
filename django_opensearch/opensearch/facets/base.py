@@ -38,7 +38,8 @@ class NamespaceMap:
         'collectionId': dict(name='uid', namespace=settings.GEO_NAMESPACE_TAG),
         'startDate': dict(name='start', namespace=settings.TIME_NAMESPACE_TAG),
         'endDate': dict(name='end', namespace=settings.TIME_NAMESPACE_TAG),
-        'uuid': dict(name='uid', namespace=settings.CEDA_NAMESPACE_TAG)
+        'uuid': dict(name='uid', namespace=settings.CEDA_NAMESPACE_TAG),
+        'bbox': dict(name='box', namespace=settings.GEO_NAMESPACE_TAG)
     }
 
     @classmethod
@@ -68,6 +69,8 @@ class FacetSet:
         'maximumRecords': 'default',
         'startPage': 'default',
         'startRecord': 'default',
+        'startDate': 'default',
+        'endDate': 'default',
     }
 
     base_query = {
@@ -80,7 +83,8 @@ class FacetSet:
                         }
                     }
                 ],
-                'should': []
+                'should': [],
+                'filter': []
             }
         }
     }
@@ -95,6 +99,11 @@ class FacetSet:
         return {}
 
     def get_facet_set(self):
+        """
+        Turns facets into parameter objects
+        :return:
+        """
+
         # Merge the facet dictionaries into one
         facets = {**self.default_facets, **self.facets}
 

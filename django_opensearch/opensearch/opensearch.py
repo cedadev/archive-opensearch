@@ -75,8 +75,6 @@ class OpensearchDescription:
 class Collection(FacetSet):
     facets = {
         'collectionId': 'default',
-        'startDate': 'default',
-        'endDate': 'default',
         'title': 'default'
     }
 
