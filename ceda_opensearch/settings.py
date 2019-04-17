@@ -127,6 +127,11 @@ try:
 except ImportError:
     pass
 
+# Import local settings
+try:
+    from .settings_local import *
+except ImportError:
+    pass
 
 TOP_LEVEL_COLLECTION = [
     {

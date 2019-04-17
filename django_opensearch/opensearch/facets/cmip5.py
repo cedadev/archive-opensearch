@@ -32,7 +32,7 @@ class CMIP5Facets(FacetSet):
         'ensemble': 'default',
         'version': 'default',
         'uuid': '_id',
-        'bbox': 'info.spatial.coordinates',
+        'bbox': 'info.spatial.coordinates.coordinates',
         'startDate': 'info.temporal.start_time',
         'endDate': 'info.temporal.end_time',
     }
@@ -107,7 +107,6 @@ class CMIP5Facets(FacetSet):
         results = []
 
         query = self._build_query(params, **kwargs)
-        print(query)
 
         es_search = ElasticsearchConnection().search(query)
 
@@ -135,6 +134,9 @@ class CMIP5Facets(FacetSet):
         })
 
         query['from'] = (kwargs['start_index'] - 1) if kwargs['start_index'] > 0 else 0
+
+        # Set number of results
+        query['size'] = kwargs['max_results']
 
         for param in params:
 
@@ -166,8 +168,24 @@ class CMIP5Facets(FacetSet):
 
             elif param == 'bbox':
 
-                # Coordinates supplied top-left, bottom-right lon,lat
-                pass
+                coordinates = params[param].split(',')
+
+                # Coordinates supplied top-left (lon,lat), bottom-right (lon,lat)
+                query['query']['bool']['filter'].append({
+                    'geo_bounding_box': {
+                        self.facets.get(param): {
+                            'top_left': {
+                                'lat': coordinates[1],
+                                'lon': coordinates[0]
+                            },
+                            'bottom_right': {
+                                'lat': coordinates[3],
+                                'lon': coordinates[2]
+                            }
+                        }
+                    }
+                })
+
             else:
                 facet = self.facets.get(param)
 

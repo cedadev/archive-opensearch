@@ -157,7 +157,7 @@ class OpensearchResponse:
 
         search_index = search_index if search_index > 1 else 1
 
-        self._generate_responses(search_params, start_index=search_index)
+        self._generate_responses(search_params, start_index=search_index, max_results=self.itemsPerPage)
 
         self.pagination_string = f'Showing {search_index} - {search_index + self.itemsPerPage -1}' \
                                  f' of {self.totalResults}'
