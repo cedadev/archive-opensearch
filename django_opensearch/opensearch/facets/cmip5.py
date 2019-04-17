@@ -142,8 +142,9 @@ class CMIP5Facets(FacetSet):
 
             if param == 'q':
                 query['query']['bool']['must'].append({
-                    'match': {
-                        'info.phenomena.names': params[param]
+                    'multi_match': {
+                        'query': params[param],
+                        'fields': ['info.phenomena.names', 'info.phenomena.var_id']
                     }
                 })
             elif param == 'startDate':
