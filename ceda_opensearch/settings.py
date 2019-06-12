@@ -139,6 +139,14 @@ TOP_LEVEL_COLLECTION = [
         'title': 'CMIP5',
         'description': 'cmip5 is very cool',
         'path': '/badc/cmip5/data',
+        'startDate': '01-01-1583',
+        'endDate': '01-01-5091'
+    },
+    {
+        'collectionId': '2',
+        'title': 'CCI',
+        'description': 'cci is very cool',
+        'path': '/neodc/esacci',
         'startDate': '20-01-2019',
         'endDate': '21-03-2019'
     }

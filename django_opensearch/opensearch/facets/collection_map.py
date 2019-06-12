@@ -9,5 +9,6 @@ __license__ = 'BSD - see LICENSE file in top-level package directory'
 __contact__ = 'richard.d.smith@stfc.ac.uk'
 
 COLLECTION_MAP = {
-    '/badc/cmip5/data': dict(exts=['.nc'], handler='django_opensearch.opensearch.facets.cmip5.CMIP5Facets')
+    '/badc/cmip5/data': dict(exts=['.nc'], handler='django_opensearch.opensearch.facets.cmip5.CMIP5Facets'),
+    '/neodc/esacci': dict(exts=['.nc'], handler='django_opensearch.opensearch.facets.cci.CCIFacets')
 }

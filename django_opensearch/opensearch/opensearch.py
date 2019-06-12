@@ -126,7 +126,7 @@ class Granule:
     def get_facet_set(self, path):
         handler = HandlerFactory().get_handler(path)
 
-        return handler().get_facet_set()
+        return handler.get_facet_set()
 
     def search(self, params, **kwargs):
         collection = Collection(settings.TOP_LEVEL_COLLECTION)
@@ -135,7 +135,7 @@ class Granule:
 
         handler = HandlerFactory().get_handler(path)
 
-        return handler().search(params, **kwargs)
+        return handler.search(params, **kwargs)
 
 
 class OpensearchResponse:

@@ -13,6 +13,8 @@ from pydoc import locate
 from abc import abstractmethod
 from django_opensearch import settings
 import os
+from django_opensearch.opensearch.elasticsearch_connection import ElasticsearchConnection
+from django_opensearch.constants import DEFAULT
 
 
 class Param:
@@ -65,12 +67,12 @@ class FacetSet:
     """
 
     default_facets = {
-        'q': 'default',
-        'maximumRecords': 'default',
-        'startPage': 'default',
-        'startRecord': 'default',
-        'startDate': 'default',
-        'endDate': 'default',
+        'q': DEFAULT,
+        'maximumRecords': DEFAULT,
+        'startPage': DEFAULT,
+        'startRecord': DEFAULT,
+        'startDate': DEFAULT,
+        'endDate': DEFAULT,
     }
 
     base_query = {
@@ -93,6 +95,12 @@ class FacetSet:
 
     }
 
+    # List of facets to exclude from value aggregation
+    exclude_list = ['uuid', 'bbox', 'startDate', 'endDate']
+
+    def __init__(self, path):
+        self.path = path
+
     @property
     @abstractmethod
     def facets(self):
@@ -108,6 +116,41 @@ class FacetSet:
         facets = {**self.default_facets, **self.facets}
 
         return [Param(*NamespaceMap.get_namespace(facet)) for facet in facets]
+
+    def get_facet_values(self):
+        """
+        Perform aggregations to get the range of possible values
+        for each facet to put in the description document.
+        :return dict: List of values for each facet
+        """
+
+        values = {}
+
+        query = {
+            'aggs': {},
+            'size': 0
+        }
+
+        for facet in self.facets:
+            if facet not in self.exclude_list:
+
+                # Get the path to the facet data
+                value = self.facets[facet]
+
+                query['aggs'][facet] = {
+                    'terms': {
+                        'field': f'projects.{facet}.keyword' if value is DEFAULT else value,
+                        'size': 1000
+                    }
+                }
+
+        aggs = ElasticsearchConnection().search(query)
+
+        for result in aggs['aggregations']:
+            values[result] = [{'label': f"{bucket['key']} ({bucket['doc_count']})", 'value': bucket['key']} for bucket
+                              in aggs['aggregations'][result]['buckets']]
+
+        return values
 
     @abstractmethod
     def search(self, params):
@@ -139,9 +182,10 @@ class HandlerFactory:
         :return: granule extension, handler class
         """
 
-        collection = self.get_collection_map(path)
+        collection, root_path = self.get_collection_map(path)
         if collection is not None:
-            return locate(collection['handler'])
+            handler = locate(collection['handler'])
+            return handler(root_path)
 
     def get_collection_map(self, path):
         """
@@ -157,4 +201,4 @@ class HandlerFactory:
         if path == '/':
             return None
 
-        return self.map[path]
+        return self.map[path], path
