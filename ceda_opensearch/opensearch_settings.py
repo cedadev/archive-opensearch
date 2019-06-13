@@ -22,4 +22,4 @@ OUTPUT_ENCODING = 'UTF-8'
 
 ELASTICSEARCH_HOST = 'https://jasmin-es1.ceda.ac.uk'
 ELASTICSEARCH_INDEX = 'opensearch-test'
-PROJECT_ID = 'opensearch'
+APPLICATION_ID = 'opensearch'

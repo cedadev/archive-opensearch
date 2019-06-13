@@ -81,7 +81,7 @@ class FacetSet:
                 'must': [
                     {
                         'term': {
-                            'projects.project_id.keyword': settings.PROJECT_ID
+                            'projects.application_id.keyword': settings.APPLICATION_ID
                         }
                     }
                 ],
