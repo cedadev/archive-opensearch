@@ -23,6 +23,7 @@ class OpensearchDescription:
         self.input_encoding = settings.INPUT_ENCODING
         self.output_encoding = settings.OUTPUT_ENCODING
         self.url_sections = []
+        self.example_queries = []
 
         response_types = settings.RESPONSE_TYPES
 
@@ -39,8 +40,13 @@ class OpensearchDescription:
         else:
             collection_path = collection.get_path(collectionId)
 
+            granule = Granule(collection_path)
+
             # Get granule level params
-            params = Granule().get_facet_set(collection_path)
+            params = granule.get_facet_set()
+
+            # Get example queries
+            self.example_queries = granule.get_example_queries()
 
             for response in response_types:
                 self.generate_url_section(response, params)
@@ -79,6 +85,8 @@ class Collection(FacetSet):
     }
 
     def __init__(self, collection):
+        super().__init__(path=None)
+
         self.data = collection
 
     def search(self, params):
@@ -97,20 +105,34 @@ class Collection(FacetSet):
             # Check all the parameters in the query string with the
             # dictionary keys
             for param in params:
-                val = d.get(param)
 
-                # If key exists in dictionary and values match
-                # return result
-                if val is not None and params[param] in val:
-                    # Add description document
-                    d['links'] = [{
-                        'href': f'localhost:8000/opensearch/description.xml?collectionId={d["collectionId"]}',
-                        'args': 'rel="search" type="application/xml"'
-                    }]
+                if param == 'q':
+                    if any([x in d['description'] for x in params['q'].split(',')]):
+                        # Add description document
+                        d['links'] = [{
+                            'href': f'localhost:8000/opensearch/description.xml?collectionId={d["collectionId"]}',
+                            'args': 'rel="search" type="application/xml"'
+                        }]
 
-                    d['entry_id'] = f'collectionId={ d["collectionId"] }'
+                        d['entry_id'] = f'collectionId={ d["collectionId"] }'
 
-                    results.append(d)
+                        results.append(d)
+
+                else:
+                    val = d.get(param)
+
+                    # If key exists in dictionary and values match
+                    # return result
+                    if val is not None and params[param] in val:
+                        # Add description document
+                        d['links'] = [{
+                            'href': f'localhost:8000/opensearch/description.xml?collectionId={d["collectionId"]}',
+                            'args': 'rel="search" type="application/xml"'
+                        }]
+
+                        d['entry_id'] = f'collectionId={ d["collectionId"] }'
+
+                        results.append(d)
 
         return len(results), results
 
@@ -123,10 +145,16 @@ class Collection(FacetSet):
 
 class Granule:
 
-    def get_facet_set(self, path):
-        handler = HandlerFactory().get_handler(path)
+    def __init__(self, path=None):
 
-        return handler.get_facet_set()
+        if path:
+            self.handler = HandlerFactory().get_handler(path)
+
+    def get_facet_set(self):
+        return self.handler.get_facet_set()
+
+    def get_example_queries(self):
+        return self.handler.get_example_queries()
 
     def search(self, params, **kwargs):
         collection = Collection(settings.TOP_LEVEL_COLLECTION)

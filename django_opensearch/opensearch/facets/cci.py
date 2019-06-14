@@ -43,10 +43,10 @@ class CCIFacets(FacetSet):
         facet_set_with_vals = []
 
         # Get the aggregated values for each facet
-        values = self.get_facet_values()
+        self.get_facet_values()
 
         for param in facet_set:
-            values_list = values.get(param.name)
+            values_list = self.facet_values.get(param.name)
 
             # Add the values list to the parameter if it exists
             if values_list is not None:

@@ -33,4 +33,7 @@
             {% endfor %}
         </Url>
     {% endfor %}
+    {% for example_query in osd.example_queries %}
+        <Query {% for k,v in example_query.items %}{{ k }}="{{ v }}"{% endfor %} role="example"/>
+    {% endfor %}
 </OpenSearchDescription>

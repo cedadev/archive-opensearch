@@ -95,6 +95,8 @@ class FacetSet:
 
     }
 
+    facet_values = {}
+
     # List of facets to exclude from value aggregation
     exclude_list = ['uuid', 'bbox', 'startDate', 'endDate']
 
@@ -116,6 +118,15 @@ class FacetSet:
         facets = {**self.default_facets, **self.facets}
 
         return [Param(*NamespaceMap.get_namespace(facet)) for facet in facets]
+
+    def get_example_queries(self):
+        examples = []
+        for facet in self.facets:
+            values_list = self.facet_values.get(facet)
+            if values_list is not None:
+                examples.append({facet:values_list[0]['value']})
+
+        return examples
 
     def get_facet_values(self):
         """
@@ -150,7 +161,7 @@ class FacetSet:
             values[result] = [{'label': f"{bucket['key']} ({bucket['doc_count']})", 'value': bucket['key']} for bucket
                               in aggs['aggregations'][result]['buckets']]
 
-        return values
+        self.facet_values = values
 
     @abstractmethod
     def search(self, params):
