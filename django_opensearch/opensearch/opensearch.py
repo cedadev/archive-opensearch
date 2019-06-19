@@ -53,7 +53,7 @@ class OpensearchDescription:
 
     def generate_url_template(self, response_type, params):
 
-        base_url = f'localhost:8000/opensearch/{response_type}?'
+        base_url = f'http://{settings.OPENSEARCH_HOST}/opensearch/{response_type}?'
 
         for i, param in enumerate(params, 1):
             required = '' if param.required else '?'
