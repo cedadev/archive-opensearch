@@ -9,9 +9,9 @@ __license__ = 'BSD - see LICENSE file in top-level package directory'
 __contact__ = 'richard.d.smith@stfc.ac.uk'
 
 from .base import FacetSet
-from django_opensearch.opensearch.elasticsearch_connection import ElasticsearchConnection
 import copy
 from django_opensearch.constants import DEFAULT
+
 
 class CCIFacets(FacetSet):
     """
@@ -30,57 +30,6 @@ class CCIFacets(FacetSet):
         'platform': DEFAULT
 
     }
-
-    def get_facet_set(self):
-        """
-        Used to build the description document. Get available facets
-        for this collection and add values where possible.
-        :return list: List of parameter object for each facet
-        """
-
-        # Returns list of parameter objects
-        facet_set = super().get_facet_set()
-        facet_set_with_vals = []
-
-        # Get the aggregated values for each facet
-        self.get_facet_values()
-
-        for param in facet_set:
-            values_list = self.facet_values.get(param.name)
-
-            # Add the values list to the parameter if it exists
-            if values_list is not None:
-                param.value_list = values_list
-
-            facet_set_with_vals.append(param)
-
-        return facet_set_with_vals
-
-    def search(self, params, **kwargs):
-        """
-        Search interface to the CMIP5 collection
-        :param params: Opensearch parameters
-        :param kwargs:
-        :return:
-        """
-
-        results = []
-
-        query = self._build_query(params, **kwargs)
-
-        es_search = ElasticsearchConnection().search(query)
-
-        hits = es_search['hits']['hits']
-
-        for hit in hits:
-            entry = {}
-
-            entry['entry_id'] = f'collectionId={params["collectionId"]}&uuid={ hit["_id"] }'
-            entry['title'] = hit['_source']['info']['name']
-            entry['updated'] = hit['_source']['info']['last_modified']
-            results.append(entry)
-
-        return es_search['hits']['total'], results
 
     def _build_query(self, params, **kwargs):
 

@@ -146,7 +146,6 @@ class Collection(FacetSet):
 class Granule:
 
     def __init__(self, path=None):
-
         if path:
             self.handler = HandlerFactory().get_handler(path)
 
@@ -170,6 +169,8 @@ class OpensearchResponse:
     """
     Base class for all the common attributes of an opensearch response
     """
+    type = "FeatureCollection"
+    title = "Opensearch Response"
 
     def __init__(self, search_params):
 
@@ -177,6 +178,8 @@ class OpensearchResponse:
         self.itemsPerPage = int(search_params.get('maximumRecords', settings.MAX_RESULTS_PER_PAGE))
         self.startRecord = int(search_params.get('startRecord', settings.DEFAULT_START_RECORD))
         self.startPage = int(search_params.get('startPage', settings.DEFAULT_START_PAGE))
+        self.queries = {}
+        self.features = []
 
         if all(value in search_params for value in ['startRecord', 'startPage']) or search_params.get('startPage'):
             search_index = (self.startPage - 1) * self.itemsPerPage
@@ -187,7 +190,7 @@ class OpensearchResponse:
 
         self._generate_responses(search_params, start_index=search_index, max_results=self.itemsPerPage)
 
-        self.pagination_string = f'Showing {search_index} - {search_index + self.itemsPerPage -1}' \
+        self.subtitle = f'Showing {search_index} - {search_index + self.itemsPerPage -1}' \
                                  f' of {self.totalResults}'
 
     def _generate_responses(self, search_params, **kwargs):
@@ -196,14 +199,14 @@ class OpensearchResponse:
 
         if 'collectionId' not in search_params:
             # Search for collections
-            self.totalResults, self.responses = Collection(settings.TOP_LEVEL_COLLECTION).search(search_params)
+            self.totalResults, self.features = Collection(settings.TOP_LEVEL_COLLECTION).search(search_params)
 
         elif 'collectionId' in search_params and len(search_params) == 1:
             # Search for collections
-            self.totalResults, self.responses = Collection(settings.TOP_LEVEL_COLLECTION).search(search_params)
+            self.totalResults, self.features = Collection(settings.TOP_LEVEL_COLLECTION).search(search_params)
 
         else:
-            self.totalResults, self.responses = Granule().search(search_params, **kwargs)
+            self.totalResults, self.features = Granule().search(search_params, **kwargs)
 
     def _generate_query_string(self, search_params):
 
@@ -215,3 +218,73 @@ class OpensearchResponse:
             query_string += f'{value}="{search_params[param]}" '
 
         self.query = query_string
+
+
+osr = {
+    "type": "FeatureCollection",
+    "id": "search_url",
+    "title": "Opensearch Response",
+    "subtitle": "Found 1 results. Showing 1 - 10 of 1",
+    "totalResults": 132,
+    "startIndex": 1,
+    "itemsPerPage": 1,
+    "queries": {
+        "request": [
+            {
+                "count": 10,
+                "startIndex": 1,
+                "searchTerms": "cool"
+            }
+        ]
+
+    },
+    "features": [
+        {
+            "type": "Feature",
+            "id": "url",
+            "bbox": "",
+            "properties": {
+                "title": "",
+                "identifier": "",
+                "date": "",
+                "updated": "",
+                "links": [
+                    {
+                        "search": [
+                            {
+                                "title": "OpenSearch Description Document",
+                                "href": "http://localhost:8000/opensearch/description.xml?collectionId=2"
+                            }
+
+                        ]
+                    }
+                ]
+            }
+        }
+    ],
+    "links": [
+        {
+            "first": [
+                {
+                    "href": "http:http://localhost:8000/opensearch/atom?q=cool&startPage=1",
+                    "type": "application/geo+json",
+                    "title": "first results"
+                }
+            ],
+            "next": [
+                {
+                    "href": "http:http://localhost:8000/opensearch/atom?q=cool&startPage=1",
+                    "type": "application/geo+json",
+                    "title": "next results"
+                }
+            ],
+            "last": [
+                {
+                    "href": "http:http://localhost:8000/opensearch/atom?q=cool&startPage=1",
+                    "type": "application/geo+json",
+                    "title": "last results"
+                }
+            ]
+        }
+    ]
+}

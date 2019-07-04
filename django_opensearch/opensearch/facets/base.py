@@ -108,7 +108,23 @@ class FacetSet:
     def facets(self):
         return {}
 
-    def get_facet_set(self):
+    @staticmethod
+    def _extract_bbox(coordinates):
+        coordinates = coordinates['coordinates']['coordinates']
+
+        sw = [coordinates[0][0], coordinates[1][1]]
+        ne = [coordinates[1][0], coordinates[0][1]]
+        return [sw,ne]
+
+    @staticmethod
+    def _extract_time_range(temporal):
+        return f"{temporal['start_time']}/{temporal['end_time']}"
+
+    @abstractmethod
+    def _build_query(self, params, **kwargs):
+        pass
+
+    def _get_facet_set(self):
         """
         Turns facets into parameter objects
         :return:
@@ -118,6 +134,31 @@ class FacetSet:
         facets = {**self.default_facets, **self.facets}
 
         return [Param(*NamespaceMap.get_namespace(facet)) for facet in facets]
+
+    def get_facet_set(self):
+        """
+        Used to build the description document. Get available facets
+        for this collection and add values where possible.
+        :return list: List of parameter object for each facet
+        """
+
+        # Returns list of parameter objects
+        facet_set = self._get_facet_set()
+        facet_set_with_vals = []
+
+        # Get the aggregated values for each facet
+        self.get_facet_values()
+
+        for param in facet_set:
+            values_list = self.facet_values.get(param.name)
+
+            # Add the values list to the parameter if it exists
+            if values_list is not None:
+                param.value_list = values_list
+
+            facet_set_with_vals.append(param)
+
+        return facet_set_with_vals
 
     def get_example_queries(self):
         examples = []
@@ -163,9 +204,42 @@ class FacetSet:
 
         self.facet_values = values
 
-    @abstractmethod
-    def search(self, params):
-        pass
+    def search(self, params, **kwargs):
+        """
+        Search interface to the CMIP5 collection
+        :param params: Opensearch parameters
+        :param kwargs:
+        :return:
+        """
+
+        results = []
+
+        query = self._build_query(params, **kwargs)
+
+        es_search = ElasticsearchConnection().search(query)
+
+        hits = es_search['hits']['hits']
+
+        for hit in hits:
+            source = hit['_source']
+            entry = {
+                'type': 'Feature',
+                'properties': {
+                    'title': source['info']['name'],
+                    'identifier': f'collectionId={params["collectionId"]}&uuid={ hit["_id"] }',
+                    'updated': source['info']['last_modified']
+                }
+            }
+
+            if source['info'].get('temporal'):
+                entry['properties']['date'] = self._extract_time_range(source['info']['temporal'])
+
+            if source['info'].get('spatial'):
+                # SW - NE (lon,lat)
+                entry['bbox'] = self._extract_bbox(source['info']['spatial'])
+            results.append(entry)
+
+        return es_search['hits']['total'], results
 
     @staticmethod
     def get_facet(facet_list, key):

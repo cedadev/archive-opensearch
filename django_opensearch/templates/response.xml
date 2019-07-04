@@ -8,12 +8,12 @@
 <os:itemsPerPage>10</os:itemsPerPage>
 <os:Query>{{ osr.query }}</os:Query>
 
-    {% for entry in osr.responses %}
+    {% for entry in osr.features %}
         <entry>
-            <id>{{ root_url }}?{{ entry.entry_id }}</id>
-            <title>{{ entry.title }}</title>
-            <updated>{{ entry.updated }}</updated>
-            <dc:date>{{ entry.startDate }}/{{ entry.endDate }}</dc:date>
+            <id>{{ root_url }}?{{ entry.properties.identifier}}</id>
+            <title>{{ entry.properties.title }}</title>
+            <updated>{{ entry.properties.updated }}</updated>
+            <dc:date>{{ entry.properties.date }}</dc:date>
             {% for link in entry.links %}
                 <link href="{{ link.href }}" {{ link.args|safe }} />
             {% endfor %}
