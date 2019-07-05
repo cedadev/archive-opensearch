@@ -41,7 +41,8 @@ class NamespaceMap:
         'startDate': dict(name='start', namespace=settings.TIME_NAMESPACE_TAG),
         'endDate': dict(name='end', namespace=settings.TIME_NAMESPACE_TAG),
         'uuid': dict(name='uid', namespace=settings.CEDA_NAMESPACE_TAG),
-        'bbox': dict(name='box', namespace=settings.GEO_NAMESPACE_TAG)
+        'bbox': dict(name='box', namespace=settings.GEO_NAMESPACE_TAG),
+        'identifier': dict(name='identifier', namespace=settings.DUBLIN_CORE_NAMESPACE_TAG)
     }
 
     @classmethod
@@ -220,13 +221,16 @@ class FacetSet:
 
         hits = es_search['hits']['hits']
 
+        base_url = kwargs['uri']
+
         for hit in hits:
             source = hit['_source']
             entry = {
                 'type': 'Feature',
+                'id': f'{base_url}?collectionId={params["collectionId"]}&uuid={ hit["_id"] }',
                 'properties': {
                     'title': source['info']['name'],
-                    'identifier': f'collectionId={params["collectionId"]}&uuid={ hit["_id"] }',
+                    'identifier': hit["_id"],
                     'updated': source['info']['last_modified']
                 }
             }

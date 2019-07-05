@@ -4,7 +4,6 @@ from django.views.generic import TemplateView
 from django.views.generic.base import ContextMixin
 from django.http import HttpResponse
 from .opensearch.opensearch import OpensearchDescription, OpensearchResponse
-import json
 import jsonpickle
 
 jsonpickle.set_encoder_options('json', indent=4)
@@ -41,11 +40,11 @@ class Response(ContextMixin, View):
             return render(request, 'response.xml', context, content_type='application/xml')
 
         if response_type == 'json+geo':
-            return HttpResponse(jsonpickle.encode(context['osr']), content_type='application/geo+json')
+            return HttpResponse(jsonpickle.encode(context['osr'], unpicklable=False), content_type='application/geo+json')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["osr"] = OpensearchResponse(self.request.GET)
+        context["osr"] = OpensearchResponse(self.request)
         context["root_url"] = self.gen_item_root()
 
         return context

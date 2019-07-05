@@ -1,21 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns:dc="http://purl.org/dc/terms/" xmlns:os="http://a9.com/-/spec/opensearch/1.1/">
-<title>Opensearch response</title>
-<id>{{ request.build_absolute_uri }}</id>
-<subtitle type="html">Found {{ osr.totalResults }} results. {{ osr.pagination_string }}</subtitle>
-<os:totalResults>{{ osr.totalResults }}</os:totalResults>
-<os:startIndex>1</os:startIndex>
-<os:itemsPerPage>10</os:itemsPerPage>
-<os:Query>{{ osr.query }}</os:Query>
+    <title>Opensearch response</title>
+    <id>{{ request.build_absolute_uri }}</id>
+    <subtitle type="html">Found {{ osr.totalResults }} results. {{ osr.pagination_string }}</subtitle>
+    <os:totalResults>{{ osr.totalResults }}</os:totalResults>
+    <os:startIndex>1</os:startIndex>
+    <os:itemsPerPage>10</os:itemsPerPage>
+    {% for link in osr.links %}
+        {% for role, links in link.items %}
+            {% for link in links %}
+                <link>href="{{ link.href }}" rel="{{ role }}" {% if link.title %}title="{{ link.title }}"{% endif %} {% if link.type %}
+                    type="{{ link.type }}"{% endif %}</link>
+            {% endfor %}
+        {% endfor %}
+    {% endfor %}
+    {% for role, queries in osr.queries.items %}
+        {% for query in queries %}
+            <os:Query>
+                role="{{ role }}"
+                {% for key,value in query.items %}
+                    {{ key }}="{{ value }}"
+                {% endfor %}
+            </os:Query>
+        {% endfor %}
+    {% endfor %}
 
     {% for entry in osr.features %}
         <entry>
-            <id>{{ root_url }}?{{ entry.properties.identifier}}</id>
+            <id>{{ entry.id }}</id>
             <title>{{ entry.properties.title }}</title>
             <updated>{{ entry.properties.updated }}</updated>
+            <dc:identifier>{{ entry.properties.identifier }}</dc:identifier>
             <dc:date>{{ entry.properties.date }}</dc:date>
-            {% for link in entry.links %}
-                <link href="{{ link.href }}" {{ link.args|safe }} />
+            {% for link in entry.properties.links %}
+                {% for role, links in link.items %}
+                    {% for link in links %}
+                        <link>href="{{ link.href }}" rel="{{ role }}" {% if link.title %}title="{{ link.title }}"{% endif %}
+                            {% if link.type %}type="{{ link.type }}"{% endif %}</link>
+                    {% endfor %}
+                {% endfor %}
             {% endfor %}
         </entry>
     {% endfor %}
