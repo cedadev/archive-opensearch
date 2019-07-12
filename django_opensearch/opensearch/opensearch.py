@@ -102,6 +102,8 @@ class Collection(FacetSet):
         :return:
         """
 
+        base_url = kwargs['uri']
+
         results = []
 
         # Loop through the collection list of dicts
@@ -122,7 +124,7 @@ class Collection(FacetSet):
                             'search': [
                                 {
                                     'title': 'Opensearch Description Document',
-                                    'href': f'localhost:8000/opensearch/description.xml?collectionId={d["collectionId"]}',
+                                    'href': f'{base_url}/opensearch/description.xml?collectionId={d["collectionId"]}',
                                     'type': 'application/xml'}
                             ]
                         }]
@@ -146,7 +148,7 @@ class Collection(FacetSet):
                             'search': [
                                 {
                                     'title': 'Opensearch Description Document',
-                                    'href': f'localhost:8000/opensearch/description.xml?collectionId={d["collectionId"]}',
+                                    'href': f'{base_url}/opensearch/description.xml?collectionId={d["collectionId"]}',
                                     'type': 'application/xml'}
                             ]
                         }]
@@ -300,12 +302,12 @@ class OpensearchResponse:
 
         if 'collectionId' not in search_params:
             # Search for collections
-            self.totalResults, self.features = Collection(settings.TOP_LEVEL_COLLECTION).search(search_params)
+            self.totalResults, self.features = Collection(settings.TOP_LEVEL_COLLECTION).search(search_params, **kwargs)
 
         elif 'collectionId' in search_params and len(search_params) == 1:
             # Search for collections
             coll = Collection(settings.TOP_LEVEL_COLLECTION)
-            self.totalResults, self.features = coll.search(search_params)
+            self.totalResults, self.features = coll.search(search_params, **kwargs)
 
         else:
             self.totalResults, self.features = Granule().search(search_params, **kwargs)
