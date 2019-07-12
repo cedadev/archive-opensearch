@@ -102,7 +102,7 @@ class Collection(FacetSet):
         :return:
         """
 
-        base_url = kwargs['uri']
+        base_url = kwargs['uri'].split('/opensearch')[0]
 
         results = []
 
