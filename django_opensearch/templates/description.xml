@@ -4,7 +4,9 @@
                        xmlns:geo="http://a9.com/-/opensearch/extensions/geo/1.0/"
                        xmlns:safe="http://www.esa.int/safe/sentinel/1.1"
                        xmlns:time="http://a9.com/-/opensearch/extensions/time/1.0/"
-                       xmlns:param="http://a9.com/-/spec/opensearch/extensions/parameters/1.0/">
+                       xmlns:param="http://a9.com/-/spec/opensearch/extensions/parameters/1.0/"
+                       xmlns:sru="http://a9.com/-/opensearch/extensions/sru/2.0/"
+>
     <ShortName>{{ osd.short_name }}</ShortName>
     <Description>{{ osd.description }}</Description>
     <Tags>{% for tag in osd.tags %}{{ tag }}{% if forloop.counter == osd.tags|length %}{% else %}
@@ -20,7 +22,7 @@
     <Url rel="self" template="http://opensearch.ceda.ac.uk/opensearch/description.xml"
          type="application/opensearchdescription+xml"/>
     {% for section in osd.url_sections %}
-        <Url rel="results" template="{{ section.url_template }}" type="application/{{ section.type }}+xml">
+        <Url rel="results" template="{{ section.url_template }}" type="{{ section.type }}">
             {% for param in section.params %}
                 <param:Parameter name="{{ param.name }}" value="{{ param.val }}"{% if param.value_list %}>{% else %}
                     />{% endif %}

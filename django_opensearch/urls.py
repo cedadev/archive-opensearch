@@ -19,5 +19,5 @@ from . import views
 
 urlpatterns = [
     path('description.xml', views.Description.as_view()),
-    path('<str:response_type>', views.Response.as_view()),
+    path('request', views.Response.as_view()),
 ]

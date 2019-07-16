@@ -55,7 +55,7 @@ class OpensearchDescription:
 
     def generate_url_template(self, response_type, params):
 
-        base_url = f'http://{settings.OPENSEARCH_HOST}/opensearch/{response_type}?'
+        base_url = f'http://{settings.OPENSEARCH_HOST}/opensearch/request?httpAccept={response_type}&'
 
         for i, param in enumerate(params, 1):
             required = '' if param.required else '?'
@@ -117,8 +117,8 @@ class Collection(FacetSet):
                     'properties': {}
                 }
 
-                if param == 'q':
-                    if any([x in d['description'] for x in params['q'].split(',')]):
+                if param == 'query':
+                    if any([x in d['description'] for x in params['query'].split(',')]):
                         # Add description document
                         entry['properties']['links'] = [{
                             'search': [
@@ -321,74 +321,3 @@ class OpensearchResponse:
             request[value] = search_params[param]
 
         self.queries['request'] = [request]
-
-
-osr = {
-    "type": "FeatureCollection",
-    "id": "search_url",
-    "title": "Opensearch Response",
-    "subtitle": "Found 1 results. Showing 1 - 10 of 1",
-    "totalResults": 132,
-    "startIndex": 1,
-    "itemsPerPage": 1,
-    "queries": {
-        "request": [
-            {
-                "count": 10,
-                "startIndex": 1,
-                "searchTerms": "cool"
-            }
-        ]
-
-    },
-    "features": [
-        {
-            "type": "Feature",
-            "id": "url",
-            "bbox": "",
-            "properties": {
-                "title": "",
-                "identifier": "",
-                "date": "",
-                "updated": "",
-                "links": [
-                    {
-                        "search": [
-                            {
-                                "title": "OpenSearch Description Document",
-                                "href": "http://localhost:8000/opensearch/description.xml?collectionId=2",
-                                "type": "application/xml"
-                            }
-
-                        ]
-                    }
-                ]
-            }
-        }
-    ],
-    "links": [
-        {
-            "first": [
-                {
-                    "href": "http:http://localhost:8000/opensearch/atom?q=cool&startPage=1",
-                    "type": "application/geo+json",
-                    "title": "first results"
-                }
-            ],
-            "next": [
-                {
-                    "href": "http:http://localhost:8000/opensearch/atom?q=cool&startPage=1",
-                    "type": "application/geo+json",
-                    "title": "next results"
-                }
-            ],
-            "last": [
-                {
-                    "href": "http:http://localhost:8000/opensearch/atom?q=cool&startPage=1",
-                    "type": "application/geo+json",
-                    "title": "last results"
-                }
-            ]
-        }
-    ]
-}

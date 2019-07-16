@@ -49,7 +49,7 @@ class CCIFacets(FacetSet):
 
         for param in params:
 
-            if param == 'q':
+            if param == 'query':
                 query['query']['bool']['must'].append({
                     'multi_match': {
                         'query': params[param],

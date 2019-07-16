@@ -8,6 +8,7 @@ import jsonpickle
 
 jsonpickle.set_encoder_options('json', indent=4)
 from django.conf import settings
+from django_opensearch import settings as opensearch_settings
 
 
 # Create your views here.
@@ -19,8 +20,7 @@ class Index():
 
 class Description(TemplateView):
     template_name = 'description.xml'
-    # content_type = 'application/opensearchdescription+xml'
-    content_type = 'application/xml'
+    content_type = 'application/opensearchdescription+xml'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -33,14 +33,29 @@ class Description(TemplateView):
 
 
 class Response(ContextMixin, View):
-    def get(self, request, response_type):
+    def get(self, request):
         context = self.get_context_data()
 
-        if response_type == 'atom':
-            return render(request, 'response.xml', context, content_type='application/xml')
+        # Get accept params
+        accept_param = request.GET.get('httpAccept')
+        accept_header = request.headers.get('Accept')
 
-        if response_type == 'json+geo':
-            return HttpResponse(jsonpickle.encode(context['osr'], unpicklable=False), content_type='application/geo+json')
+        if accept_param:
+            response_type = accept_param
+        else:
+            response_type = accept_header
+
+        # Pick the template
+        if response_type in opensearch_settings.RESPONSE_TYPES:
+
+            if response_type == 'application/atom+xml':
+                return render(request, 'response.xml', context, content_type='application/atom+xml')
+
+            if response_type == 'application/geo+json':
+                return HttpResponse(jsonpickle.encode(context['osr'], unpicklable=False), content_type='application/geo+json')
+
+        # Response type not found
+        return HttpResponse(f'Accept parameter: {response_type} cannot be provided by this service. Possible response types: {opensearch_settings.RESPONSE_TYPES}',status=406)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

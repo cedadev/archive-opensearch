@@ -35,7 +35,7 @@ class Param:
 
 class NamespaceMap:
     map = {
-        'q': {'name': 'searchTerms'},
+        'query': {'name': 'searchTerms'},
         'maximumRecords': dict(name='count'),
         'collectionId': dict(name='uid', namespace=settings.GEO_NAMESPACE_TAG),
         'startDate': dict(name='start', namespace=settings.TIME_NAMESPACE_TAG),
@@ -68,7 +68,7 @@ class FacetSet:
     """
 
     default_facets = {
-        'q': DEFAULT,
+        'query': DEFAULT,
         'maximumRecords': DEFAULT,
         'startPage': DEFAULT,
         'startRecord': DEFAULT,
