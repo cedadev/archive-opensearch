@@ -38,7 +38,10 @@ class Response(ContextMixin, View):
 
         # Get accept params
         accept_param = request.GET.get('httpAccept')
-        accept_header = request.headers.get('Accept')
+        try:
+            accept_header = request.headers.get('Accept')
+        except AttributeError:
+            accept_header = None
 
         if accept_param:
             response_type = accept_param
