@@ -20,7 +20,7 @@ class Index():
 
 class Description(TemplateView):
     template_name = 'description.xml'
-    content_type = 'application/opensearchdescription+xml'
+    content_type = 'application/xml'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -52,10 +52,10 @@ class Response(ContextMixin, View):
         if response_type in opensearch_settings.RESPONSE_TYPES:
 
             if response_type == 'application/atom+xml':
-                return render(request, 'response.xml', context, content_type='application/atom+xml')
+                return render(request, 'response.xml', context, content_type='application/xml')
 
             if response_type == 'application/geo+json':
-                return HttpResponse(jsonpickle.encode(context['osr'], unpicklable=False), content_type='application/geo+json')
+                return HttpResponse(jsonpickle.encode(context['osr'], unpicklable=False), content_type='application/json')
 
         # Response type not found
         return HttpResponse(f'Accept parameter: {response_type} cannot be provided by this service. Possible response types: {opensearch_settings.RESPONSE_TYPES}',status=406)

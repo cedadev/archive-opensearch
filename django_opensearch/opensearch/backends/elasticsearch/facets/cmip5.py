@@ -3,32 +3,36 @@
 
 """
 __author__ = 'Richard Smith'
-__date__ = '29 Apr 2019'
+__date__ = '21 Mar 2019'
 __copyright__ = 'Copyright 2018 United Kingdom Research and Innovation'
 __license__ = 'BSD - see LICENSE file in top-level package directory'
 __contact__ = 'richard.d.smith@stfc.ac.uk'
 
-from .base import FacetSet
+from .base import ElasticsearchFacetSet
 import copy
 from django_opensearch.constants import DEFAULT
 
 
-class CCIFacets(FacetSet):
+class CMIP5Facets(ElasticsearchFacetSet):
     """
 
     """
 
     facets = {
-        'ecv': DEFAULT,
-        'frequency': 'projects.time_coverage_resolution.keyword',
-        'institute': 'projects.institution.keyword',
-        'processingLevel': 'projects.processing_level.keyword',
-        'productString': 'projects.product_string.keyword',
-        'productVersion': 'projects.product_version.keyword',
-        'dataType': 'projects.data_type.keyword',
-        'sensor': DEFAULT,
-        'platform': DEFAULT
-
+        'project': DEFAULT,
+        'product': DEFAULT,
+        'institute': DEFAULT,
+        'model': DEFAULT,
+        'experiment': DEFAULT,
+        'timeFrequency': DEFAULT,
+        'realm': DEFAULT,
+        'cmipTable': DEFAULT,
+        'ensemble': DEFAULT,
+        'version': DEFAULT,
+        'uuid': '_id',
+        'bbox': 'info.spatial.coordinates.coordinates',
+        'startDate': 'info.temporal.start_time',
+        'endDate': 'info.temporal.end_time',
     }
 
     def _build_query(self, params, **kwargs):

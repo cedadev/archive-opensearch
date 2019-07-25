@@ -13,56 +13,12 @@ from pydoc import locate
 from abc import abstractmethod
 from django_opensearch import settings
 import os
-from django_opensearch.opensearch.elasticsearch_connection import ElasticsearchConnection
 from django_opensearch.constants import DEFAULT
+from django_opensearch.opensearch.backends import NamespaceMap, Param, FacetSet
+from .elasticsearch_connection import ElasticsearchConnection
 
 
-class Param:
-
-    def __init__(self, name, value, required=False, value_list=[], **kwargs):
-        self.name = name
-        self.value = value
-        self.required = required
-        self.value_list = value_list
-
-        for k, v in kwargs.items():
-            setattr(self, k, v)
-
-    @property
-    def val(self):
-        return f'{{{self.value}}}'
-
-
-class NamespaceMap:
-    map = {
-        'query': {'name': 'searchTerms'},
-        'maximumRecords': dict(name='count'),
-        'collectionId': dict(name='uid', namespace=settings.GEO_NAMESPACE_TAG),
-        'startDate': dict(name='start', namespace=settings.TIME_NAMESPACE_TAG),
-        'endDate': dict(name='end', namespace=settings.TIME_NAMESPACE_TAG),
-        'uuid': dict(name='uid', namespace=settings.CEDA_NAMESPACE_TAG),
-        'bbox': dict(name='box', namespace=settings.GEO_NAMESPACE_TAG),
-        'identifier': dict(name='identifier', namespace=settings.DUBLIN_CORE_NAMESPACE_TAG)
-    }
-
-    @classmethod
-    def get_namespace(cls, key):
-
-        mapping = cls.map.get(key)
-
-        if mapping is not None:
-            namespace = mapping.get('namespace')
-            if namespace is not None:
-                value = f'{namespace}:{mapping["name"]}'
-            else:
-                value = mapping['name']
-
-            return key, value
-
-        return key, key
-
-
-class FacetSet:
+class ElasticsearchFacetSet(FacetSet):
     """
     Class to provide opensearch URL template with facets and parameter options
     """
