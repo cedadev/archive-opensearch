@@ -1,6 +1,6 @@
 from django_opensearch import settings
 import math
-from django_opensearch.opensearch.backends.elasticsearch import Collection, Granule
+from django_opensearch.opensearch.backends.solr import Collection, Granule
 from django_opensearch.opensearch.backends import NamespaceMap
 
 
@@ -190,11 +190,11 @@ class OpensearchResponse:
 
         if 'collectionId' not in search_params:
             # Search for collections
-            self.totalResults, self.features = Collection(settings.TOP_LEVEL_COLLECTION).search(search_params, **kwargs)
+            self.totalResults, self.features = Collection().search(search_params, **kwargs)
 
         elif 'collectionId' in search_params and len(search_params) == 1:
             # Search for collections
-            coll = Collection(settings.TOP_LEVEL_COLLECTION)
+            coll = Collection()
             self.totalResults, self.features = coll.search(search_params, **kwargs)
 
         else:

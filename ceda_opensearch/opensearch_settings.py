@@ -24,3 +24,7 @@ ELASTICSEARCH_HOST = 'https://jasmin-es1.ceda.ac.uk'
 ELASTICSEARCH_INDEX = 'opensearch-test'
 APPLICATION_ID = 'opensearch'
 OPENSEARCH_HOST = 'localhost:8000'
+
+
+SOLR_HOST = 'https://esgf-index1.ceda.ac.uk/solr'
+SOLR_CORE = 'datasets'
