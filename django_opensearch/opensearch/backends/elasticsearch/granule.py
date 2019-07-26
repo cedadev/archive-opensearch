@@ -14,7 +14,10 @@ from django_opensearch import settings
 
 class Granule:
 
-    def __init__(self, path=None):
+    def __init__(self, **kwargs):
+
+        path = kwargs.get('path')
+
         if path:
             self.handler = HandlerFactory().get_handler(path)
 
@@ -25,7 +28,7 @@ class Granule:
         return self.handler.get_example_queries()
 
     def search(self, params, **kwargs):
-        collection = Collection(settings.TOP_LEVEL_COLLECTION)
+        collection = Collection()
 
         path = collection.get_path(params.get('collectionId'))
 

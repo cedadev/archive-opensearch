@@ -57,8 +57,6 @@ class ElasticsearchFacetSet(FacetSet):
     # List of facets to exclude from value aggregation
     exclude_list = ['uuid', 'bbox', 'startDate', 'endDate']
 
-    def __init__(self, path):
-        self.path = path
 
     @property
     @abstractmethod

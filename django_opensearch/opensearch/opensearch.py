@@ -28,7 +28,7 @@ class OpensearchDescription:
 
         response_types = settings.RESPONSE_TYPES
 
-        collection = Collection(settings.TOP_LEVEL_COLLECTION)
+        collection = Collection()
 
         if not collectionId:
 
