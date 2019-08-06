@@ -30,8 +30,9 @@
             <id>{{ entry.id }}</id>
             <title>{{ entry.properties.title }}</title>
             <updated>{{ entry.properties.updated }}</updated>
-            <dc:identifier>{{ entry.properties.identifier }}</dc:identifier>
-            <dc:date>{{ entry.properties.date }}</dc:date>
+            {% for k,v in entry.properties.items %}
+                 <{{ k }}>{{ v }}</{{ k }}>
+            {% endfor %}
             {% for link in entry.properties.links %}
                 {% for role, links in link.items %}
                     {% for link in links %}

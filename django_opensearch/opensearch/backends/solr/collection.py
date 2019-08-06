@@ -87,6 +87,8 @@ class Collection(FacetSet):
 
     def search(self, params, **kwargs):
 
+        base_url = kwargs['uri'].split('/opensearch')[0]
+
         results = []
 
         extra_params = {
@@ -101,6 +103,10 @@ class Collection(FacetSet):
             if param == 'query':
                 q = params[param]
 
+            elif param == 'collectionId':
+                extra_params['fq'] = [f'project:{params[param]}']
+
+
         # Execute search
         if q:
             resp = SolrConnection().search(q, **extra_params)
@@ -108,7 +114,30 @@ class Collection(FacetSet):
             resp = SolrConnection().search(**extra_params)
 
         for collection, count in pairwise(resp.facets['facet_fields']['project']):
-            pass
+
+            entry = {
+                'id': collection,
+                'properties': {
+                    'identifier': collection,
+                    'title': collection,
+                    'dataset_count': count,
+                    'links': [
+                        {
+                            'search': [
+                                {
+                                    'title': 'Description Document',
+                                    'href': f'{base_url}/opensearch/description.xml?collectionId={collection}',
+                                    'type': 'application/xml'
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+
+            results.append(entry)
+
+        return len(results), results
 
 
 

@@ -3,6 +3,17 @@ import math
 from django_opensearch.opensearch.backends.solr import Collection, Granule
 from django_opensearch.opensearch.backends import NamespaceMap
 
+def collection_search(search_params):
+    len_params = len(search_params)
+
+    if 'collectionId' in search_params:
+        if len_params == 1:
+            return True
+        if len_params == 2:
+            if 'httpAccept' in search_params:
+                return True
+
+    return False
 
 class OpensearchDescription:
     """
@@ -192,7 +203,7 @@ class OpensearchResponse:
             # Search for collections
             self.totalResults, self.features = Collection().search(search_params, **kwargs)
 
-        elif 'collectionId' in search_params and len(search_params) == 1:
+        elif collection_search(search_params):
             # Search for collections
             coll = Collection()
             self.totalResults, self.features = coll.search(search_params, **kwargs)
