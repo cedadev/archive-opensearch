@@ -14,10 +14,7 @@ from django_opensearch import settings
 
 class Granule:
 
-    def __init__(self, **kwargs):
-
-        path = kwargs.get('path')
-
+    def __init__(self, path=None):
         if path:
             self.handler = HandlerFactory().get_handler(path)
 

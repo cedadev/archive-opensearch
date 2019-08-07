@@ -161,7 +161,7 @@ class ElasticsearchFacetSet(FacetSet):
 
     def search(self, params, **kwargs):
         """
-        Search interface to the CMIP5 collection
+        Search interface to elasticsearch
         :param params: Opensearch parameters
         :param kwargs:
         :return:

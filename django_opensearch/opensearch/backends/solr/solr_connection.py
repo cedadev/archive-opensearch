@@ -30,6 +30,9 @@ Example:
 
 import requests
 
+
+url = https://esgf-ingex1.ceda.ac.uk/solr/datasets/query
+
 r = requests.post(url, json={"query":"*:*", "limit":0,"facet":{"projects":{"terms":{"field":"project","limit":2, "offset":1}}}})
 r.json()
 {

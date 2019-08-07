@@ -11,14 +11,7 @@ __contact__ = 'richard.d.smith@stfc.ac.uk'
 from django_opensearch.opensearch.backends import FacetSet
 from django_opensearch.constants import DEFAULT
 from .solr_connection import SolrConnection
-
-
-def pairwise(l):
-    i = 0
-    while i < len(l):
-        yield l[i], l[i + 1]
-        i += 2
-
+from .util import pairwise
 
 COLLECTION_METADATA = {
     'CMIP5': {
@@ -116,6 +109,7 @@ class Collection(FacetSet):
         for collection, count in pairwise(resp.facets['facet_fields']['project']):
 
             entry = {
+                'type': 'FeatureCollection',
                 'id': collection,
                 'properties': {
                     'identifier': collection,
@@ -139,5 +133,6 @@ class Collection(FacetSet):
 
         return len(results), results
 
-
+    def get_path(self, collection_id):
+        return collection_id
 

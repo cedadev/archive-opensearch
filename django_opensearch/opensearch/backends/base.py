@@ -76,6 +76,10 @@ class FacetSet:
     # List of facets to exclude from value aggregation
     exclude_list = ['uuid', 'bbox', 'startDate', 'endDate']
 
+    def __init__(self, path=None):
+        if path:
+            self.path = path
+
     @property
     def facets(self):
         raise NotImplementedError
@@ -123,7 +127,7 @@ class FacetSet:
         examples = []
         for facet in self.facets:
             values_list = self.facet_values.get(facet)
-            if values_list is not None:
+            if values_list:
                 examples.append({facet:values_list[0]['value']})
 
         return examples
