@@ -149,14 +149,3 @@ class FacetSet:
         """
 
         raise NotImplementedError
-
-    @staticmethod
-    def get_facet(facet_list, key):
-
-        for facet in facet_list:
-            if facet[0] == key:
-
-                if len(facet) == 1:
-                    return facet[0], None
-
-                return facet

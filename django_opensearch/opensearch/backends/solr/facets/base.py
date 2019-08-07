@@ -69,10 +69,6 @@ class SolrFacetSet(FacetSet):
         'fq': []
     }
 
-    @property
-    def facets(self):
-        raise NotImplementedError
-
     def _build_query(self, params, **kwargs):
         query = copy.deepcopy(self.base_query)
 

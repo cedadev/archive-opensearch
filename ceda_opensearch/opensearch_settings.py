@@ -28,3 +28,5 @@ OPENSEARCH_HOST = 'localhost:8000'
 
 SOLR_HOST = 'https://esgf-index1.ceda.ac.uk/solr'
 SOLR_CORE = 'datasets'
+
+OPENSEARCH_BACKEND = 'solr'

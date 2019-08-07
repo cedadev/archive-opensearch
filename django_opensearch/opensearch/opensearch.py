@@ -1,7 +1,14 @@
 from django_opensearch import settings
 import math
-from django_opensearch.opensearch.backends.solr import Collection, Granule
 from django_opensearch.opensearch.backends import NamespaceMap
+from importlib import import_module
+
+# Import required backend
+backend = import_module(f'django_opensearch.opensearch.backends.{settings.OPENSEARCH_BACKEND}')
+Collection = getattr(backend, 'Collection')
+Granule = getattr(backend, 'Granule')
+
+
 
 def collection_search(search_params):
     len_params = len(search_params)
