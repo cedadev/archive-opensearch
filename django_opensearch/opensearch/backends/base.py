@@ -27,6 +27,9 @@ class Param:
     def val(self):
         return f'{{{self.value}}}'
 
+    def __str__(self):
+        return self.name
+
 
 class NamespaceMap:
     map = {

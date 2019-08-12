@@ -10,28 +10,19 @@ __contact__ = 'richard.d.smith@stfc.ac.uk'
 
 from .collection_map import COLLECTION_MAP
 from pydoc import locate
-from abc import abstractmethod
 from django_opensearch import settings
 import os
 from django_opensearch.constants import DEFAULT
 from django_opensearch.opensearch.backends import NamespaceMap, Param, FacetSet
 from .elasticsearch_connection import ElasticsearchConnection
 import copy
+from dateutil.parser import parse as date_parser
 
 
 class ElasticsearchFacetSet(FacetSet):
     """
     Class to provide opensearch URL template with facets and parameter options
     """
-
-    default_facets = {
-        'query': DEFAULT,
-        'maximumRecords': DEFAULT,
-        'startPage': DEFAULT,
-        'startRecord': DEFAULT,
-        'startDate': DEFAULT,
-        'endDate': DEFAULT,
-    }
 
     base_query = {
         'query': {
@@ -71,6 +62,10 @@ class ElasticsearchFacetSet(FacetSet):
     def _extract_time_range(temporal):
         return f"{temporal['start_time']}/{temporal['end_time']}"
 
+    @staticmethod
+    def _isodate(date):
+        return date_parser(date).isoformat()
+
     def _build_query(self, params, **kwargs):
 
         # Deep copy to avoid aliasing
@@ -101,7 +96,7 @@ class ElasticsearchFacetSet(FacetSet):
                 query['query']['bool']['filter'].append({
                     'range': {
                         self.facets.get(param): {
-                            'gte': params[param]
+                            'gte': self._isodate(params[param])
                         }
                     }
                 })
@@ -111,7 +106,7 @@ class ElasticsearchFacetSet(FacetSet):
                 query['query']['bool']['filter'].append({
                     'range': {
                         self.facets.get(param): {
-                            'lte': params[param]
+                            'lte': self._isodate(params[param])
                         }
                     }
                 })
@@ -139,14 +134,20 @@ class ElasticsearchFacetSet(FacetSet):
             else:
                 facet = self.facets.get(param)
 
-                if facet is not None:
+                if facet:
                     es_path = f'projects.{param}' if facet is DEFAULT else facet
+                    search_terms = params.getlist(param)
 
-                    query['query']['bool']['must'].append({
-                        'match_phrase': {
-                            es_path: params[param]
-                        }
-                    })
+                    if search_terms:
+                        query['query']['bool']['minimum_should_match'] = 1
+
+                    for search_term in params.getlist(param):
+
+                        query['query']['bool']['should'].append({
+                            'match_phrase': {
+                                es_path: search_term
+                            }
+                        })
 
         return query
 

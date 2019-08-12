@@ -90,9 +90,9 @@ class SolrFacetSet(FacetSet):
             elif param == 'bbox':
                 pass
             else:
-                facet = self.facets.get(param)
+                facet = self.facets.getlist(param)
 
-                if facet is not None:
+                if facet:
                     field_path = param if facet is DEFAULT else facet
 
                     query['fq'].append(
