@@ -45,7 +45,7 @@ class ESGFFacets(SolrFacetSet):
 
             entry = {
                 'type': 'Feature',
-                'id': f'{base_url}?collectionId={params["collectionId"]}&uuid={hit["id"]}',
+                'id': f'{base_url}?parentIdentifier={params["parentIdentifier"]}&uuid={hit["id"]}',
                 'properties': {
                     'title': hit['title'],
                     'identifier': hit['id'],

@@ -208,7 +208,7 @@ class ElasticsearchFacetSet(FacetSet):
             source = hit['_source']
             entry = {
                 'type': 'Feature',
-                'id': f'{base_url}?collectionId={params["collectionId"]}&uuid={ hit["_id"] }',
+                'id': f'{base_url}?parentIdentifier={params["parentIdentifier"]}&uuid={ hit["_id"] }',
                 'properties': {
                     'title': source['info']['name'],
                     'identifier': hit["_id"],

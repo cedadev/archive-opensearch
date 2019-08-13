@@ -23,7 +23,7 @@ class TestCollection(TestCase):
 
     def test_search_by_id(self):
         params = {
-            'collectionId': '1'
+            'parentIdentifier': '1'
         }
 
         result_count, results = self.collection.search(params, **self.kwargs)

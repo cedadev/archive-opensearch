@@ -13,7 +13,7 @@ Granule = getattr(backend, 'Granule')
 def collection_search(search_params):
     len_params = len(search_params)
 
-    if 'collectionId' in search_params:
+    if 'parentIdentifier' in search_params:
         if len_params == 1:
             return True
         if len_params == 2:
@@ -30,7 +30,7 @@ class OpensearchDescription:
     OS_PREFIX = settings.OS_PREFIX
     OS_ROOT_TAG = settings.OS_ROOT_TAG
 
-    def __init__(self, collectionId=None):
+    def __init__(self, parentIdentifier=None):
         self.short_name = settings.SHORT_NAME
         self.long_name = settings.LONG_NAME
         self.description = settings.DESCRIPTION
@@ -48,7 +48,7 @@ class OpensearchDescription:
 
         collection = Collection()
 
-        if not collectionId:
+        if not parentIdentifier:
 
             # Get top level collection description
             params = collection.get_facet_set()
@@ -57,7 +57,7 @@ class OpensearchDescription:
                 self.generate_url_section(response, params)
 
         else:
-            collection_path = collection.get_path(collectionId)
+            collection_path = collection.get_path(parentIdentifier)
 
             granule = Granule(collection_path)
 
@@ -114,7 +114,7 @@ class OpensearchResponse:
         self.startPage = int(search_params.get('startPage', settings.DEFAULT_START_PAGE))
         self.queries = {}
         self.features = []
-        self.links = []
+        self.links = {}
 
         if all(value in search_params for value in ['startRecord', 'startPage']) or search_params.get('startPage'):
             search_index = (self.startPage - 1) * self.itemsPerPage
@@ -131,43 +131,33 @@ class OpensearchResponse:
         if self.totalResults > self.itemsPerPage:
             # Generate paging links
             if self.startPage > 1:
-                self.links.append({
-                    'first': [
+                self.links['first'] = [
                         {
                             'href': self._generate_navigation_url(full_uri, search_params, 'first'),
                             'title': 'first',
                         }
                     ]
-                })
-                self.links.append({
-                    'previous': [
+                self.links['previous'] = [
                         {
                             'href': self._generate_navigation_url(full_uri, search_params, 'prev'),
                             'title': 'prev',
                         }
                     ]
-                })
 
             if self.startPage + 1 < self.totalResults / self.itemsPerPage:
-                self.links.append({
-                    'next': [
+                self.links['next'] = [
                         {
                             'href': self._generate_navigation_url(full_uri, search_params, 'next'),
                             'title': 'next',
                         }
                     ]
-                })
 
-                self.links.append(
-                    {
-                        'last': [
+                self.links['last'] = [
                             {
                                 'href': self._generate_navigation_url(full_uri, search_params, 'last'),
                                 'title': 'last',
                             }
                         ]
-                    }
-                )
 
     @staticmethod
     def _stitch_query_params(query_params):
@@ -206,7 +196,7 @@ class OpensearchResponse:
 
         self._generate_request_query(search_params)
 
-        if 'collectionId' not in search_params:
+        if 'parentIdentifier' not in search_params:
             # Search for collections
             self.totalResults, self.features = Collection().search(search_params, **kwargs)
 

@@ -26,7 +26,7 @@ class Granule:
     def search(self, params, **kwargs):
         collection = Collection()
 
-        path = collection.get_path(params.get('collectionId'))
+        path = collection.get_path(params.get('parentIdentifier'))
 
         handler = HandlerFactory().get_handler(path)
 

@@ -48,7 +48,7 @@ COLLECTION_METADATA = {
 class Collection(FacetSet):
 
     facets = {
-        'collectionId': DEFAULT
+        'parentIdentifier': DEFAULT
     }
 
     def get_facet_values(self):
@@ -96,7 +96,7 @@ class Collection(FacetSet):
             if param == 'query':
                 q = params[param]
 
-            elif param == 'collectionId':
+            elif param == 'parentIdentifier':
                 extra_params['fq'] = [f'project:{params[param]}']
 
 
@@ -120,7 +120,7 @@ class Collection(FacetSet):
                             'search': [
                                 {
                                     'title': 'Description Document',
-                                    'href': f'{base_url}/opensearch/description.xml?collectionId={collection}',
+                                    'href': f'{base_url}/opensearch/description.xml?parentIdentifier={collection}',
                                     'type': 'application/xml'
                                 }
                             ]

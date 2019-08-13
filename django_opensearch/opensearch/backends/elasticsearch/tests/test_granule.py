@@ -26,7 +26,7 @@ class TestGranule(TestCase):
 
     def test_search_query(self):
 
-        params = QueryDict(f'collectionId={self.collection_id}&query=water')
+        params = QueryDict(f'parentIdentifier={self.collection_id}&query=water')
         count, results = Granule().search(params, **self.kwargs)
 
         self.assertEqual(955672, count)
@@ -34,7 +34,7 @@ class TestGranule(TestCase):
 
     def test_search_uuid(self):
 
-        params = QueryDict(f'collectionId={self.collection_id}&uuid=0b5abdcaf3b8690108beab1b08eb1beba2be7abc')
+        params = QueryDict(f'parentIdentifier={self.collection_id}&uuid=0b5abdcaf3b8690108beab1b08eb1beba2be7abc')
         count, results = Granule().search(params, **self.kwargs)
 
         self.assertEqual(1, count)

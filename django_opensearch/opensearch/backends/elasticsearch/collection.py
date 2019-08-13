@@ -12,7 +12,7 @@ from .facets.base import ElasticsearchFacetSet
 
 class Collection(ElasticsearchFacetSet):
     facets = {
-        'collectionId': 'default',
+        'parentIdentifier': 'default',
         'title': 'default'
     }
 
@@ -20,7 +20,7 @@ class Collection(ElasticsearchFacetSet):
 
         self.data = [
             {
-                'collectionId': '1',
+                'parentIdentifier': '1',
                 'title': 'CMIP5',
                 'description': 'cmip5 is very cool',
                 'path': '/badc/cmip5/data',
@@ -28,7 +28,7 @@ class Collection(ElasticsearchFacetSet):
                 'endDate': '01-01-5091'
             },
             {
-                'collectionId': '2',
+                'parentIdentifier': '2',
                 'title': 'CCI',
                 'description': 'cci is very cool',
                 'path': '/neodc/esacci',
@@ -63,17 +63,17 @@ class Collection(ElasticsearchFacetSet):
                 if param == 'query':
                     if any([x in d['description'] for x in params['query'].split(',')]):
                         # Add description document
-                        entry['properties']['links'] = [{
+                        entry['properties']['links'] = {
                             'search': [
                                 {
                                     'title': 'Opensearch Description Document',
-                                    'href': f'{base_url}/opensearch/description.xml?collectionId={d["collectionId"]}',
+                                    'href': f'{base_url}/opensearch/description.xml?parentIdentifier={d["parentIdentifier"]}',
                                     'type': 'application/xml'}
                             ]
-                        }]
+                        }
 
-                        entry['id'] = f'collectionId={ d["collectionId"] }'
-                        entry['properties']['identifier'] = d["collectionId"]
+                        entry['id'] = f'parentIdentifier={ d["parentIdentifier"] }'
+                        entry['properties']['identifier'] = d["parentIdentifier"]
                         entry['properties']['title'] = d['title']
                         entry['properties']['date'] = f'{d["startDate"]}/{d["endDate"]}'
 
@@ -91,13 +91,13 @@ class Collection(ElasticsearchFacetSet):
                             'search': [
                                 {
                                     'title': 'Opensearch Description Document',
-                                    'href': f'{base_url}/opensearch/description.xml?collectionId={d["collectionId"]}',
+                                    'href': f'{base_url}/opensearch/description.xml?parentIdentifier={d["parentIdentifier"]}',
                                     'type': 'application/xml'}
                             ]
                         }]
 
-                        entry['id'] = f'collectionId={ d["collectionId"] }'
-                        entry['properties']['identifier'] = d["collectionId"]
+                        entry['id'] = f'parentIdentifier={ d["parentIdentifier"] }'
+                        entry['properties']['identifier'] = d["parentIdentifier"]
                         entry['properties']['title'] = d['title']
                         entry['properties']['date'] = f'{d["startDate"]}/{d["endDate"]}'
 
@@ -107,7 +107,7 @@ class Collection(ElasticsearchFacetSet):
 
     def get_path(self, collection_id):
         for d in self.data:
-            val = d.get('collectionId')
+            val = d.get('parentIdentifier')
             if val == collection_id:
                 return d.get('path')
 
