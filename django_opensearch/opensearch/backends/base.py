@@ -35,10 +35,10 @@ class NamespaceMap:
     map = {
         'query': {'name': 'searchTerms'},
         'maximumRecords': dict(name='count'),
-        'collectionId': dict(name='uid', namespace=settings.GEO_NAMESPACE_TAG),
+        'parentIdentifer': dict(name='parentIdentifier', namespace=settings.GEO_NAMESPACE_TAG),
         'startDate': dict(name='start', namespace=settings.TIME_NAMESPACE_TAG),
         'endDate': dict(name='end', namespace=settings.TIME_NAMESPACE_TAG),
-        'uuid': dict(name='uid', namespace=settings.CEDA_NAMESPACE_TAG),
+        'uuid': dict(name='uid', namespace=settings.GEO_NAMESPACE_TAG),
         'bbox': dict(name='box', namespace=settings.GEO_NAMESPACE_TAG),
         'identifier': dict(name='identifier', namespace=settings.DUBLIN_CORE_NAMESPACE_TAG)
     }
@@ -72,6 +72,7 @@ class FacetSet:
         'startRecord': DEFAULT,
         'startDate': DEFAULT,
         'endDate': DEFAULT,
+        'parentIdentifier': DEFAULT,
     }
 
     facet_values = {}
