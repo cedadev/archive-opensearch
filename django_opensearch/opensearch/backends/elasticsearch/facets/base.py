@@ -10,27 +10,19 @@ __contact__ = 'richard.d.smith@stfc.ac.uk'
 
 from .collection_map import COLLECTION_MAP
 from pydoc import locate
-from abc import abstractmethod
 from django_opensearch import settings
 import os
 from django_opensearch.constants import DEFAULT
 from django_opensearch.opensearch.backends import NamespaceMap, Param, FacetSet
 from .elasticsearch_connection import ElasticsearchConnection
+import copy
+from dateutil.parser import parse as date_parser
 
 
 class ElasticsearchFacetSet(FacetSet):
     """
     Class to provide opensearch URL template with facets and parameter options
     """
-
-    default_facets = {
-        'query': DEFAULT,
-        'maximumRecords': DEFAULT,
-        'startPage': DEFAULT,
-        'startRecord': DEFAULT,
-        'startDate': DEFAULT,
-        'endDate': DEFAULT,
-    }
 
     base_query = {
         'query': {
@@ -57,13 +49,6 @@ class ElasticsearchFacetSet(FacetSet):
     # List of facets to exclude from value aggregation
     exclude_list = ['uuid', 'bbox', 'startDate', 'endDate']
 
-    def __init__(self, path):
-        self.path = path
-
-    @property
-    @abstractmethod
-    def facets(self):
-        return {}
 
     @staticmethod
     def _extract_bbox(coordinates):
@@ -77,54 +62,94 @@ class ElasticsearchFacetSet(FacetSet):
     def _extract_time_range(temporal):
         return f"{temporal['start_time']}/{temporal['end_time']}"
 
-    @abstractmethod
+    @staticmethod
+    def _isodate(date):
+        return date_parser(date).isoformat()
+
     def _build_query(self, params, **kwargs):
-        pass
 
-    def _get_facet_set(self):
-        """
-        Turns facets into parameter objects
-        :return:
-        """
+        # Deep copy to avoid aliasing
+        query = copy.deepcopy(self.base_query)
 
-        # Merge the facet dictionaries into one
-        facets = {**self.default_facets, **self.facets}
+        query['query']['bool']['must'].append({
+            'match_phrase_prefix': {
+                'info.directory.analyzed': self.path
+            }
+        })
 
-        return [Param(*NamespaceMap.get_namespace(facet)) for facet in facets]
+        query['from'] = (kwargs['start_index'] - 1) if kwargs['start_index'] > 0 else 0
 
-    def get_facet_set(self):
-        """
-        Used to build the description document. Get available facets
-        for this collection and add values where possible.
-        :return list: List of parameter object for each facet
-        """
+        # Set number of results
+        query['size'] = kwargs['max_results']
 
-        # Returns list of parameter objects
-        facet_set = self._get_facet_set()
-        facet_set_with_vals = []
+        for param in params:
 
-        # Get the aggregated values for each facet
-        self.get_facet_values()
+            if param == 'query':
+                query['query']['bool']['must'].append({
+                    'multi_match': {
+                        'query': params[param],
+                        'fields': ['info.phenomena.names', 'info.phenomena.var_id']
+                    }
+                })
+            elif param == 'startDate':
 
-        for param in facet_set:
-            values_list = self.facet_values.get(param.name)
+                query['query']['bool']['filter'].append({
+                    'range': {
+                        self.facets.get(param): {
+                            'gte': self._isodate(params[param])
+                        }
+                    }
+                })
 
-            # Add the values list to the parameter if it exists
-            if values_list is not None:
-                param.value_list = values_list
+            elif param == 'endDate':
 
-            facet_set_with_vals.append(param)
+                query['query']['bool']['filter'].append({
+                    'range': {
+                        self.facets.get(param): {
+                            'lte': self._isodate(params[param])
+                        }
+                    }
+                })
 
-        return facet_set_with_vals
+            elif param == 'bbox':
 
-    def get_example_queries(self):
-        examples = []
-        for facet in self.facets:
-            values_list = self.facet_values.get(facet)
-            if values_list is not None:
-                examples.append({facet:values_list[0]['value']})
+                coordinates = params[param].split(',')
 
-        return examples
+                # Coordinates supplied top-left (lon,lat), bottom-right (lon,lat)
+                query['query']['bool']['filter'].append({
+                    'geo_bounding_box': {
+                        self.facets.get(param): {
+                            'top_left': {
+                                'lat': coordinates[1],
+                                'lon': coordinates[0]
+                            },
+                            'bottom_right': {
+                                'lat': coordinates[3],
+                                'lon': coordinates[2]
+                            }
+                        }
+                    }
+                })
+
+            else:
+                facet = self.facets.get(param)
+
+                if facet:
+                    es_path = f'projects.{param}' if facet is DEFAULT else facet
+                    search_terms = params.getlist(param)
+
+                    if search_terms:
+                        query['query']['bool']['minimum_should_match'] = 1
+
+                    for search_term in params.getlist(param):
+
+                        query['query']['bool']['should'].append({
+                            'match_phrase': {
+                                es_path: search_term
+                            }
+                        })
+
+        return query
 
     def get_facet_values(self):
         """
@@ -163,7 +188,7 @@ class ElasticsearchFacetSet(FacetSet):
 
     def search(self, params, **kwargs):
         """
-        Search interface to the CMIP5 collection
+        Search interface to elasticsearch
         :param params: Opensearch parameters
         :param kwargs:
         :return:
@@ -183,7 +208,7 @@ class ElasticsearchFacetSet(FacetSet):
             source = hit['_source']
             entry = {
                 'type': 'Feature',
-                'id': f'{base_url}?collectionId={params["collectionId"]}&uuid={ hit["_id"] }',
+                'id': f'{base_url}?parentIdentifier={params["parentIdentifier"]}&uuid={ hit["_id"] }',
                 'properties': {
                     'title': source['info']['name'],
                     'identifier': hit["_id"],
@@ -200,17 +225,6 @@ class ElasticsearchFacetSet(FacetSet):
             results.append(entry)
 
         return es_search['hits']['total'], results
-
-    @staticmethod
-    def get_facet(facet_list, key):
-
-        for facet in facet_list:
-            if facet[0] == key:
-
-                if len(facet) == 1:
-                    return facet[0], None
-
-                return facet
 
 
 class HandlerFactory:

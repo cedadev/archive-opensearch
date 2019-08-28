@@ -27,15 +27,18 @@ class Param:
     def val(self):
         return f'{{{self.value}}}'
 
+    def __str__(self):
+        return self.name
+
 
 class NamespaceMap:
     map = {
         'query': {'name': 'searchTerms'},
         'maximumRecords': dict(name='count'),
-        'collectionId': dict(name='uid', namespace=settings.GEO_NAMESPACE_TAG),
+        'parentIdentifer': dict(name='parentIdentifier', namespace=settings.GEO_NAMESPACE_TAG),
         'startDate': dict(name='start', namespace=settings.TIME_NAMESPACE_TAG),
         'endDate': dict(name='end', namespace=settings.TIME_NAMESPACE_TAG),
-        'uuid': dict(name='uid', namespace=settings.CEDA_NAMESPACE_TAG),
+        'uuid': dict(name='uid', namespace=settings.GEO_NAMESPACE_TAG),
         'bbox': dict(name='box', namespace=settings.GEO_NAMESPACE_TAG),
         'identifier': dict(name='identifier', namespace=settings.DUBLIN_CORE_NAMESPACE_TAG)
     }
@@ -69,6 +72,7 @@ class FacetSet:
         'startRecord': DEFAULT,
         'startDate': DEFAULT,
         'endDate': DEFAULT,
+        'parentIdentifier': DEFAULT,
     }
 
     facet_values = {}
@@ -76,8 +80,9 @@ class FacetSet:
     # List of facets to exclude from value aggregation
     exclude_list = ['uuid', 'bbox', 'startDate', 'endDate']
 
-    def __init__(self, path):
-        self.path = path
+    def __init__(self, path=None):
+        if path:
+            self.path = path
 
     @property
     def facets(self):
@@ -126,7 +131,7 @@ class FacetSet:
         examples = []
         for facet in self.facets:
             values_list = self.facet_values.get(facet)
-            if values_list is not None:
+            if values_list:
                 examples.append({facet:values_list[0]['value']})
 
         return examples
@@ -148,14 +153,3 @@ class FacetSet:
         """
 
         raise NotImplementedError
-
-    @staticmethod
-    def get_facet(facet_list, key):
-
-        for facet in facet_list:
-            if facet[0] == key:
-
-                if len(facet) == 1:
-                    return facet[0], None
-
-                return facet

@@ -10,7 +10,6 @@ __contact__ = 'richard.d.smith@stfc.ac.uk'
 
 from .facets.base import HandlerFactory
 from .collection import Collection
-from django_opensearch import settings
 
 class Granule:
 
