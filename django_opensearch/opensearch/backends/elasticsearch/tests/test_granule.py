@@ -43,7 +43,7 @@ class TestGranule(TestCase):
     def test_get_facet_set(self):
         facet_set = Granule(self.path).get_facet_set()
 
-        self.assertEqual(18, len(facet_set))
+        self.assertEqual(19, len(facet_set))
 
     def test_get_example_queries(self):
 
