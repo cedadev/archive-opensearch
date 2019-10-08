@@ -10,10 +10,10 @@ __contact__ = 'richard.d.smith@stfc.ac.uk'
 
 from .collection_map import COLLECTION_MAP
 from pydoc import locate
-from django_opensearch import settings
 import os
 from django_opensearch.constants import DEFAULT
 from django_opensearch.opensearch.backends import NamespaceMap, Param, FacetSet
+from django_opensearch import settings
 from .elasticsearch_connection import ElasticsearchConnection
 import copy
 from dateutil.parser import parse as date_parser
@@ -29,8 +29,9 @@ class ElasticsearchFacetSet(FacetSet):
             'bool': {
                 'must': [
                     {
-                        'term': {
-                            'projects.application_id.keyword': settings.APPLICATION_ID
+                        'exists': {
+                            'field':f'projects.{settings.APPLICATION_ID}'
+
                         }
                     }
                 ],
@@ -135,7 +136,7 @@ class ElasticsearchFacetSet(FacetSet):
                 facet = self.facets.get(param)
 
                 if facet:
-                    es_path = f'projects.{param}' if facet is DEFAULT else facet
+                    es_path = f'projects.{settings.APPLICATION_ID}.{param}' if facet is DEFAULT else facet
                     search_terms = params.getlist(param)
 
                     if search_terms:
@@ -173,7 +174,7 @@ class ElasticsearchFacetSet(FacetSet):
 
                 query['aggs'][facet] = {
                     'terms': {
-                        'field': f'projects.{facet}.keyword' if value is DEFAULT else value,
+                        'field': f'projects.{settings.APPLICATION_ID}.{facet}.keyword' if value is DEFAULT else value,
                         'size': 1000
                     }
                 }
