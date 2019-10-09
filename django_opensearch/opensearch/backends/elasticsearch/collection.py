@@ -9,11 +9,43 @@ __license__ = 'BSD - see LICENSE file in top-level package directory'
 __contact__ = 'richard.d.smith@stfc.ac.uk'
 
 from .facets.base import ElasticsearchFacetSet
+from .facets.elasticsearch_connection import ElasticsearchConnection
+
+
+def collection_search(search_params):
+
+    if 'parentIdentifier' not in search_params:
+        return True
+
+    if 'parentIdentifier' in search_params:
+        query = {
+            "query": {
+                "term": {
+                    "parent_identifier": search_params['parentIdentifier']
+                }
+            }
+        }
+
+        return bool(ElasticsearchConnection().es.count(index='opensearch-collections', body=query)['count'])
+
+    return False
+
 
 class Collection(ElasticsearchFacetSet):
     facets = {
-        'parentIdentifier': 'default',
-        'title': 'default'
+        'parentIdentifier': 'parent_identifier.keyword',
+        'title': 'title.keyword'
+    }
+
+    base_query = {
+        'query': {
+            'bool': {
+                'must': [],
+                'should': [],
+                'filter': [],
+                'must_not':[]
+            }
+        }
     }
 
     def __init__(self):
@@ -37,78 +69,70 @@ class Collection(ElasticsearchFacetSet):
             }
         ]
 
+    def _query_elasticsearch(self, query):
+        return ElasticsearchConnection().search_collections(query)
+
+    def _build_query(self, params, **kwargs):
+        query = super()._build_query(params, **kwargs)
+
+        if params.get('parentIdentifier') is None:
+            query['query']['bool']['must_not'].append({
+                'exists': {
+                    'field': 'parent_identifier'
+                }
+            })
+
+        return query
+
     def search(self, params, **kwargs):
-        """
-        Search through the dictionary for key, value matches.
-        Only matches strings.
-        :param params:
-        :return:
-        """
-
-        base_url = kwargs['uri'].split('/opensearch')[0]
-
         results = []
 
-        # Loop through the collection list of dicts
-        for d in self.data:
+        query = self._build_query(params, **kwargs)
 
-            # Check all the parameters in the query string with the
-            # dictionary keys
-            for param in params:
-                entry = {
-                    'type': 'FeatureCollection',
-                    'properties': {}
+        es_search = ElasticsearchConnection().search_collections(query)
+
+        hits = es_search['hits']['hits']
+
+        base_url = kwargs['uri']
+
+        for hit in hits:
+            source = hit['_source']
+            entry = {
+                'type': 'FeatureCollection',
+                'id': f'{base_url}/request?uuid={ hit["_id"] }',
+                'properties': {
+                    'title': source['title'],
+                    'identifier': source["collection_id"],
+                    'links': {
+                        'search': [
+                            {
+                                'title': 'Opensearch Description Document',
+                                'href': f'{base_url}/description.xml?parentIdentifier={source["collection_id"]}',
+                                'type': 'application/xml'}
+                        ]
+                    }
                 }
+            }
 
-                if param == 'query':
-                    if any([x in d['description'] for x in params['query'].split(',')]):
-                        # Add description document
-                        entry['properties']['links'] = {
-                            'search': [
-                                {
-                                    'title': 'Opensearch Description Document',
-                                    'href': f'{base_url}/opensearch/description.xml?parentIdentifier={d["parentIdentifier"]}',
-                                    'type': 'application/xml'}
-                            ]
-                        }
+            if source.get('start_date'):
+                entry['properties']['date'] = f"{source['start_date']}/{source['end_date']}"
 
-                        entry['id'] = f'parentIdentifier={ d["parentIdentifier"] }'
-                        entry['properties']['identifier'] = d["parentIdentifier"]
-                        entry['properties']['title'] = d['title']
-                        entry['properties']['date'] = f'{d["startDate"]}/{d["endDate"]}'
+            results.append(entry)
 
-                        results.append(entry)
-
-
-                else:
-                    val = d.get(param)
-
-                    # If key exists in dictionary and values match
-                    # return result
-                    if val is not None and params[param] in val:
-                        # Add description document
-                        entry['properties']['links'] = [{
-                            'search': [
-                                {
-                                    'title': 'Opensearch Description Document',
-                                    'href': f'{base_url}/opensearch/description.xml?parentIdentifier={d["parentIdentifier"]}',
-                                    'type': 'application/xml'}
-                            ]
-                        }]
-
-                        entry['id'] = f'parentIdentifier={ d["parentIdentifier"] }'
-                        entry['properties']['identifier'] = d["parentIdentifier"]
-                        entry['properties']['title'] = d['title']
-                        entry['properties']['date'] = f'{d["startDate"]}/{d["endDate"]}'
-
-                        results.append(entry)
-
-        return len(results), results
+        return es_search['hits']['total'], results
 
     def get_path(self, collection_id):
-        for d in self.data:
-            val = d.get('parentIdentifier')
-            if val == collection_id:
-                return d.get('path')
 
+        query = {
+            'query': {
+                'term': {
+                    'collection_id': collection_id
+                }
+            },
+            'size': 1
+        }
+
+        result = ElasticsearchConnection().search_collections(query)
+        if result['hits']['hits']:
+            return result['hits']['hits'][0]['_source']['path']
 

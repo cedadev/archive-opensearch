@@ -9,19 +9,6 @@ Collection = getattr(backend, 'Collection')
 Granule = getattr(backend, 'Granule')
 
 
-
-def collection_search(search_params):
-    len_params = len(search_params)
-
-    if 'parentIdentifier' in search_params:
-        if len_params == 1:
-            return True
-        if len_params == 2:
-            if 'httpAccept' in search_params:
-                return True
-
-    return False
-
 class OpensearchDescription:
     """
     Class to generate an opensearch Description document and handle boiler plate
@@ -106,7 +93,7 @@ class OpensearchResponse:
 
     def __init__(self, request):
         search_params = request.GET
-        full_uri = request.build_absolute_uri('?')
+        full_uri = request.build_absolute_uri('/opensearch')
 
         self.totalResults = 0
         self.itemsPerPage = int(search_params.get('maximumRecords', settings.MAX_RESULTS_PER_PAGE))
@@ -196,14 +183,9 @@ class OpensearchResponse:
 
         self._generate_request_query(search_params)
 
-        if 'parentIdentifier' not in search_params:
+        if backend.collection.collection_search(search_params):
             # Search for collections
             self.totalResults, self.features = Collection().search(search_params, **kwargs)
-
-        elif collection_search(search_params):
-            # Search for collections
-            coll = Collection()
-            self.totalResults, self.features = coll.search(search_params, **kwargs)
 
         else:
             self.totalResults, self.features = Granule().search(search_params, **kwargs)

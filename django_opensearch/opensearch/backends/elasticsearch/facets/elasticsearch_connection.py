@@ -16,11 +16,14 @@ class ElasticsearchConnection:
 
     def __init__(self, index=settings.ELASTICSEARCH_INDEX, host=settings.ELASTICSEARCH_HOST):
         self.index = index
+        self.collection_index = settings.ELASTICSEARCH_COLLECTION_INDEX
         self.es = Elasticsearch([host])
 
     def search(self, query):
         return self.es.search(index=self.index, body=query)
 
+    def search_collections(self, query):
+        return self.es.search(index=self.collection_index, body=query)
 
 
 

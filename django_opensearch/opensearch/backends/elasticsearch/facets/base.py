@@ -48,7 +48,7 @@ class ElasticsearchFacetSet(FacetSet):
     facet_values = {}
 
     # List of facets to exclude from value aggregation
-    exclude_list = ['uuid', 'bbox', 'startDate', 'endDate']
+    exclude_list = ['uuid', 'bbox', 'startDate', 'endDate','title','parentIdentifier']
 
 
     @staticmethod
@@ -72,12 +72,6 @@ class ElasticsearchFacetSet(FacetSet):
         # Deep copy to avoid aliasing
         query = copy.deepcopy(self.base_query)
 
-        query['query']['bool']['must'].append({
-            'match_phrase_prefix': {
-                'info.directory.analyzed': self.path
-            }
-        })
-
         query['from'] = (kwargs['start_index'] - 1) if kwargs['start_index'] > 0 else 0
 
         # Set number of results
@@ -85,11 +79,10 @@ class ElasticsearchFacetSet(FacetSet):
 
         for param in params:
 
-            if param == 'query':
+            if param == 'query' and params[param]:
                 query['query']['bool']['must'].append({
-                    'multi_match': {
-                        'query': params[param],
-                        'fields': ['info.phenomena.names', 'info.phenomena.var_id']
+                    'simple_query_string': {
+                        'query': params[param]
                     }
                 })
             elif param == 'startDate':
@@ -152,6 +145,9 @@ class ElasticsearchFacetSet(FacetSet):
 
         return query
 
+    def _query_elasticsearch(self, query):
+        return ElasticsearchConnection().search(query)
+
     def get_facet_values(self):
         """
         Perform aggregations to get the range of possible values
@@ -179,11 +175,12 @@ class ElasticsearchFacetSet(FacetSet):
                     }
                 }
 
-        aggs = ElasticsearchConnection().search(query)
+        aggs = self._query_elasticsearch(query)
 
-        for result in aggs['aggregations']:
-            values[result] = [{'label': f"{bucket['key']} ({bucket['doc_count']})", 'value': bucket['key']} for bucket
-                              in aggs['aggregations'][result]['buckets']]
+        if aggs.get('aggregations'):
+            for result in aggs['aggregations']:
+                values[result] = [{'label': f"{bucket['key']} ({bucket['doc_count']})", 'value': bucket['key']} for bucket
+                                  in aggs['aggregations'][result]['buckets']]
 
         self.facet_values = values
 
@@ -245,7 +242,7 @@ class HandlerFactory:
         collection, root_path = self.get_collection_map(path)
         if collection is not None:
             handler = locate(collection['handler'])
-            return handler(root_path)
+            return handler(path)
 
     def get_collection_map(self, path):
         """
