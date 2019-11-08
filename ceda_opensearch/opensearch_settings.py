@@ -21,7 +21,7 @@ OUTPUT_ENCODING = 'UTF-8'
 
 
 ELASTICSEARCH_HOST = 'https://jasmin-es1.ceda.ac.uk'
-ELASTICSEARCH_INDEX = 'opensearch-cci-test'
+ELASTICSEARCH_INDEX = 'opensearch-cci-test-1'
 ELASTICSEARCH_COLLECTION_INDEX = 'opensearch-collections'
 APPLICATION_ID = 'opensearch'
 OPENSEARCH_HOST = 'localhost:8000'

@@ -17,6 +17,7 @@ from django_opensearch import settings
 from .elasticsearch_connection import ElasticsearchConnection
 import copy
 from dateutil.parser import parse as date_parser
+from django_opensearch.opensearch.utils import NestedDict
 
 
 class ElasticsearchFacetSet(FacetSet):
@@ -66,6 +67,17 @@ class ElasticsearchFacetSet(FacetSet):
     @staticmethod
     def _isodate(date):
         return date_parser(date).isoformat()
+
+    @staticmethod
+    def _get_es_path(facet, param):
+        """
+        Return the path to the target in elasticsearch index. Extracted
+        to method to allow subclasses to modify the behaviour.
+        :param facet: facet path
+        :param param: parameter
+        :return str: path to item in elasticsearch index
+        """
+        return f'projects.{settings.APPLICATION_ID}.{param}' if facet is DEFAULT else facet
 
     def _build_query(self, params, **kwargs):
 
@@ -128,27 +140,41 @@ class ElasticsearchFacetSet(FacetSet):
             else:
                 facet = self.facets.get(param)
 
-                if facet:
-                    es_path = f'projects.{settings.APPLICATION_ID}.{param}' if facet is DEFAULT else facet
+                if facet and param not in self.exclude_list:
+
+                    es_path = self._get_es_path(facet=facet, param=param)
                     search_terms = params.getlist(param)
 
                     if search_terms:
-                        query['query']['bool']['minimum_should_match'] = 1
 
-                    for search_term in params.getlist(param):
+                        if len(search_terms) == 1:
+                            # Equal to AND query
+                            query['query']['bool']['must'].append({
+                                'match_phrase': {
+                                    es_path: search_terms[0]
+                                }
+                            })
 
-                        query['query']['bool']['should'].append({
-                            'match_phrase': {
-                                es_path: search_term
-                            }
-                        })
+                        else:
+                            # Equal to AND (a OR b) query where there should be at least one match
+                            andor = {'bool':{'should':[], 'minimum_should_match': 1}}
+
+                            for search_term in search_terms:
+                                andor['bool']['should'].append(
+                                    {
+                                        'match_phrase': {
+                                            es_path: search_term
+                                        }
+                                    })
+
+                            query['query']['bool']['must'].append(andor)
 
         return query
 
     def _query_elasticsearch(self, query):
         return ElasticsearchConnection().search(query)
 
-    def get_facet_values(self):
+    def get_facet_values(self, search_params):
         """
         Perform aggregations to get the range of possible values
         for each facet to put in the description document.
@@ -157,10 +183,17 @@ class ElasticsearchFacetSet(FacetSet):
 
         values = {}
 
-        query = {
+        query = NestedDict({
             'aggs': {},
             'size': 0
-        }
+        })
+
+        if 'parentIdentifier' in search_params:
+            query.nested_put(['query','bool','must'], {
+                'term': {
+                    f'projects.{settings.APPLICATION_ID}.datasetId': search_params.get('parentIdentifier')
+                }
+            })
 
         for facet in self.facets:
             if facet not in self.exclude_list:
@@ -168,14 +201,14 @@ class ElasticsearchFacetSet(FacetSet):
                 # Get the path to the facet data
                 value = self.facets[facet]
 
-                query['aggs'][facet] = {
+                query.nested_put(['aggs',facet], {
                     'terms': {
                         'field': f'projects.{settings.APPLICATION_ID}.{facet}.keyword' if value is DEFAULT else value,
                         'size': 1000
                     }
-                }
+                })
 
-        aggs = self._query_elasticsearch(query)
+        aggs = self._query_elasticsearch(query.data)
 
         if aggs.get('aggregations'):
             for result in aggs['aggregations']:

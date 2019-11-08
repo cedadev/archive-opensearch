@@ -10,10 +10,12 @@ __contact__ = 'richard.d.smith@stfc.ac.uk'
 
 from .facets.base import ElasticsearchFacetSet
 from .facets.elasticsearch_connection import ElasticsearchConnection
+from .facets.base import HandlerFactory
+from django_opensearch.constants import DEFAULT
+from django_opensearch.opensearch.utils import NestedDict
 
 
 def collection_search(search_params):
-
     if 'parentIdentifier' not in search_params:
         return True
 
@@ -33,8 +35,8 @@ def collection_search(search_params):
 
 class Collection(ElasticsearchFacetSet):
     facets = {
-        'parentIdentifier': 'parent_identifier.keyword',
-        'title': 'title.keyword'
+        'parentIdentifier': DEFAULT,
+        'title': DEFAULT
     }
 
     base_query = {
@@ -43,39 +45,33 @@ class Collection(ElasticsearchFacetSet):
                 'must': [],
                 'should': [],
                 'filter': [],
-                'must_not':[]
+                'must_not': []
             }
         }
     }
 
-    def __init__(self):
-
-        self.data = [
-            {
-                'parentIdentifier': '1',
-                'title': 'CMIP5',
-                'description': 'cmip5 is very cool',
-                'path': '/badc/cmip5/data',
-                'startDate': '01-01-1583',
-                'endDate': '01-01-5091'
-            },
-            {
-                'parentIdentifier': '2',
-                'title': 'CCI',
-                'description': 'cci is very cool',
-                'path': '/neodc/esacci',
-                'startDate': '20-01-2019',
-                'endDate': '21-03-2019'
-            }
-        ]
+    @staticmethod
+    def _get_es_path(facet, param):
+        return f'{param}' if facet is DEFAULT else facet
 
     def _query_elasticsearch(self, query):
         return ElasticsearchConnection().search_collections(query)
 
     def _build_query(self, params, **kwargs):
+
         query = super()._build_query(params, **kwargs)
 
-        if params.get('parentIdentifier') is None:
+        pid = params.get('parentIdentifier')
+
+        if pid:
+
+            query['query']['bool']['must'].append({
+                'term': {
+                    'parent_identifier': pid
+                }
+            })
+
+        else:
             query['query']['bool']['must_not'].append({
                 'exists': {
                     'field': 'parent_identifier'
@@ -84,8 +80,104 @@ class Collection(ElasticsearchFacetSet):
 
         return query
 
+    def get_facet_set(self, search_params):
+        """
+        Used to build the description document. Get available facets
+        for this collection and add values where possible.
+        :return list: List of parameter object for each facet
+        """
+
+        # Returns list of parameter objects
+        if self.path:
+            handler = HandlerFactory().get_handler(self.path)
+
+            self.facets.update(handler.facets)
+
+            facet_set = handler._get_facet_set()
+
+        else:
+           facet_set = self._get_facet_set()
+
+        # facet_set = self._get_facet_set()
+        facet_set_with_vals = []
+
+        # Get the aggregated values for each facet
+        self.get_facet_values(search_params)
+
+        for param in facet_set:
+            values_list = self.facet_values.get(param.name)
+
+            # Add the values list to the parameter if it exists
+            if values_list is not None:
+                param.value_list = values_list
+
+            facet_set_with_vals.append(param)
+
+        return facet_set_with_vals
+
+    def get_facet_values(self, search_params):
+        """
+        Perform aggregations to get the range of possible values
+        for each facet to put in the description document.
+        :return dict: List of values for each facet
+        """
+
+        values = {}
+
+        query = NestedDict({
+            'aggs': {},
+            'size': 0
+        })
+
+        if self.path:
+            query.nested_put(['query','bool','must'], {
+                'match_phrase_prefix': {
+                    'path': self.path
+                }
+            })
+
+        if 'parentIdentifier' in search_params:
+            query.nested_put(['query','bool','must'], {
+                'term': {
+                    'parent_identifier': search_params.get('parentIdentifier')
+                }
+            })
+        else:
+            query.nested_put(['query', 'bool', 'must_not'], {
+                'exists': {
+                    'field': 'parent_identifier'
+                }
+            })
+
+
+
+        for facet in self.facets:
+            if facet not in self.exclude_list:
+                # Get the path to the facet data
+                value = self.facets[facet]
+
+                query['aggs'][facet] = {
+                    'terms': {
+                        'field': f'{facet}.keyword',
+                        'size': 1000
+                    }
+                }
+        aggs = self._query_elasticsearch(query.data)
+
+        if aggs.get('aggregations'):
+            for result in aggs['aggregations']:
+                values[result] = [{'label': f"{bucket['key']} ({bucket['doc_count']})", 'value': bucket['key']} for
+                                  bucket
+                                  in aggs['aggregations'][result]['buckets']]
+
+        self.facet_values = values
+
     def search(self, params, **kwargs):
         results = []
+
+        if self.path:
+            handler = HandlerFactory().get_handler(self.path)
+            self.facets.update(handler.facets)
 
         query = self._build_query(params, **kwargs)
 
@@ -121,7 +213,8 @@ class Collection(ElasticsearchFacetSet):
 
         return es_search['hits']['total'], results
 
-    def get_path(self, collection_id):
+    @staticmethod
+    def get_path(collection_id):
 
         query = {
             'query': {
@@ -135,4 +228,3 @@ class Collection(ElasticsearchFacetSet):
         result = ElasticsearchConnection().search_collections(query)
         if result['hits']['hits']:
             return result['hits']['hits'][0]['_source']['path']
-

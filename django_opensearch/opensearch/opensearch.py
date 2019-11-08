@@ -17,7 +17,7 @@ class OpensearchDescription:
     OS_PREFIX = settings.OS_PREFIX
     OS_ROOT_TAG = settings.OS_ROOT_TAG
 
-    def __init__(self, parentIdentifier=None):
+    def __init__(self, request):
         self.short_name = settings.SHORT_NAME
         self.long_name = settings.LONG_NAME
         self.description = settings.DESCRIPTION
@@ -31,28 +31,36 @@ class OpensearchDescription:
         self.url_sections = []
         self.example_queries = []
 
+        search_params = request.GET
+
         response_types = settings.RESPONSE_TYPES
 
-        collection = Collection()
 
-        if not parentIdentifier:
+        if not search_params.get('parentIdentifier'):
 
             # Get top level collection description
-            params = collection.get_facet_set()
+            params = Collection().get_facet_set(search_params)
 
             for response in response_types:
                 self.generate_url_section(response, params)
 
         else:
-            collection_path = collection.get_path(parentIdentifier)
 
-            granule = Granule(collection_path)
+            parentID = search_params.get('parentIdentifier')
+            collection_path = Collection.get_path(parentID)
 
-            # Get granule level params
-            params = granule.get_facet_set()
+            if backend.collection.collection_search(search_params):
+                params = Collection(path=collection_path).get_facet_set(search_params)
 
-            # Get example queries
-            self.example_queries = granule.get_example_queries()
+            else:
+
+                granule = Granule(collection_path)
+
+                # Get granule level params
+                params = granule.get_facet_set(search_params)
+
+                # Get example queries
+                self.example_queries = granule.get_example_queries()
 
             for response in response_types:
                 self.generate_url_section(response, params)
@@ -183,12 +191,18 @@ class OpensearchResponse:
 
         self._generate_request_query(search_params)
 
+        collection_path = None
+
+        if search_params.get('parentIdentifier'):
+            parentID = search_params.get('parentIdentifier')
+            collection_path = Collection.get_path(parentID)
+
         if backend.collection.collection_search(search_params):
             # Search for collections
-            self.totalResults, self.features = Collection().search(search_params, **kwargs)
+            self.totalResults, self.features = Collection(path=collection_path).search(search_params, **kwargs)
 
         else:
-            self.totalResults, self.features = Granule().search(search_params, **kwargs)
+            self.totalResults, self.features = Granule(collection_path).search(search_params, **kwargs)
 
     def _generate_request_query(self, search_params):
 

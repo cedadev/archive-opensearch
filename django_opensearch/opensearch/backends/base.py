@@ -81,8 +81,7 @@ class FacetSet:
     exclude_list = ['uuid', 'bbox', 'startDate', 'endDate']
 
     def __init__(self, path=None):
-        if path:
-            self.path = path
+        self.path = path
 
     @property
     def facets(self):
@@ -102,7 +101,7 @@ class FacetSet:
 
         return [Param(*NamespaceMap.get_namespace(facet)) for facet in facets]
 
-    def get_facet_set(self):
+    def get_facet_set(self, search_params):
         """
         Used to build the description document. Get available facets
         for this collection and add values where possible.
@@ -114,7 +113,7 @@ class FacetSet:
         facet_set_with_vals = []
 
         # Get the aggregated values for each facet
-        self.get_facet_values()
+        self.get_facet_values(search_params)
 
         for param in facet_set:
             values_list = self.facet_values.get(param.name)
