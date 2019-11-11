@@ -12,8 +12,6 @@ from .facets.base import ElasticsearchFacetSet
 from .facets.elasticsearch_connection import ElasticsearchConnection
 from .facets.base import HandlerFactory
 from django_opensearch.constants import DEFAULT
-from django_opensearch.opensearch.utils import NestedDict
-
 
 def collection_search(search_params):
     if 'parentIdentifier' not in search_params:
@@ -124,32 +122,12 @@ class Collection(ElasticsearchFacetSet):
 
         values = {}
 
-        query = NestedDict({
+        query = self._build_query(search_params)
+
+        query.update({
             'aggs': {},
             'size': 0
         })
-
-        if self.path:
-            query.nested_put(['query','bool','must'], {
-                'match_phrase_prefix': {
-                    'path': self.path
-                }
-            })
-
-        if 'parentIdentifier' in search_params:
-            query.nested_put(['query','bool','must'], {
-                'term': {
-                    'parent_identifier': search_params.get('parentIdentifier')
-                }
-            })
-        else:
-            query.nested_put(['query', 'bool', 'must_not'], {
-                'exists': {
-                    'field': 'parent_identifier'
-                }
-            })
-
-
 
         for facet in self.facets:
             if facet not in self.exclude_list:
@@ -162,7 +140,7 @@ class Collection(ElasticsearchFacetSet):
                         'size': 1000
                     }
                 }
-        aggs = self._query_elasticsearch(query.data)
+        aggs = self._query_elasticsearch(query)
 
         if aggs.get('aggregations'):
             for result in aggs['aggregations']:

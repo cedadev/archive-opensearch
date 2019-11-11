@@ -17,7 +17,6 @@ from django_opensearch import settings
 from .elasticsearch_connection import ElasticsearchConnection
 import copy
 from dateutil.parser import parse as date_parser
-from django_opensearch.opensearch.utils import NestedDict
 
 
 class ElasticsearchFacetSet(FacetSet):
