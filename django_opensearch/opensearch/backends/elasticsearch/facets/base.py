@@ -84,10 +84,12 @@ class ElasticsearchFacetSet(FacetSet):
         # Deep copy to avoid aliasing
         query = copy.deepcopy(self.base_query)
 
-        query['from'] = (kwargs['start_index'] - 1) if kwargs['start_index'] > 0 else 0
+        if kwargs.get('start_index'):
+            query['from'] = (kwargs['start_index'] - 1) if kwargs['start_index'] > 0 else 0
 
-        # Set number of results
-        query['size'] = kwargs['max_results']
+        if kwargs.get('max_results'):
+            # Set number of results
+            query['size'] = kwargs['max_results']
 
         for param in params:
 
@@ -183,32 +185,25 @@ class ElasticsearchFacetSet(FacetSet):
 
         values = {}
 
-        query = NestedDict({
-            'aggs': {},
-            'size': 0
-        })
+        # Build query with filters based on
+        query = self._build_query(search_params)
+        query.update({'aggs':{}, 'size':0})
 
-        if 'parentIdentifier' in search_params:
-            query.nested_put(['query','bool','must'], {
-                'term': {
-                    f'projects.{settings.APPLICATION_ID}.datasetId': search_params.get('parentIdentifier')
-                }
-            })
-
+        # Get aggregations
         for facet in self.facets:
             if facet not in self.exclude_list:
 
                 # Get the path to the facet data
                 value = self.facets[facet]
 
-                query.nested_put(['aggs',facet], {
+                query['aggs'][facet] = {
                     'terms': {
                         'field': f'projects.{settings.APPLICATION_ID}.{facet}.keyword' if value is DEFAULT else value,
                         'size': 1000
                     }
-                })
+                }
 
-        aggs = self._query_elasticsearch(query.data)
+        aggs = self._query_elasticsearch(query)
 
         if aggs.get('aggregations'):
             for result in aggs['aggregations']:
