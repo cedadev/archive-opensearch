@@ -50,5 +50,47 @@ class CCIFacets(ElasticsearchFacetSet):
             })
         return query
 
+    def build_representation(self, hits, params, **kwargs):
+
+        base_url = kwargs['uri']
+
+        results = []
+
+        for hit in hits:
+
+            source = hit['_source']
+
+            entry = {
+                'type': 'Feature',
+                'id': f'{base_url}?parentIdentifier={params["parentIdentifier"]}&uuid={ hit["_id"] }',
+                'properties': {
+                    'title': source['info']['name'],
+                    'identifier': hit["_id"],
+                    'updated': source['info']['last_modified'],
+                    'links': {
+                            'related': [
+                                {
+                                    'title': 'Download',
+                                    'href': f'http://dap.ceda.ac.uk/thredds/fileServer{source["info"]["directory"]}/{source["info"]["name"]}',
+                                },
+                                {
+                                    'title': 'Opendap',
+                                    'href': f'http://dap.ceda.ac.uk/thredds/dodsC/dap/{source["info"]["directory"]}/{source["info"]["name"]}',
+                                }
+                            ]
+                    }
+                }
+            }
+
+            if source['info'].get('temporal'):
+                entry['properties']['date'] = self._extract_time_range(source['info']['temporal'])
+
+            if source['info'].get('spatial'):
+                # SW - NE (lon,lat)
+                entry['bbox'] = self._extract_bbox(source['info']['spatial'])
+
+            results.append(entry)
+
+        return results
 
 

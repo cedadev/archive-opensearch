@@ -152,3 +152,6 @@ class FacetSet:
         """
 
         raise NotImplementedError
+
+    def build_representation(self, data):
+        raise NotImplementedError

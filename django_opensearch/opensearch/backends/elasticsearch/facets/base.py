@@ -219,18 +219,25 @@ class ElasticsearchFacetSet(FacetSet):
         :return:
         """
 
-        results = []
-
         query = self._build_query(params, **kwargs)
 
         es_search = ElasticsearchConnection().search(query)
 
         hits = es_search['hits']['hits']
 
+        results = self.build_representation(hits, params, **kwargs)
+
+        return es_search['hits']['total'], results
+
+    def build_representation(self, hits, params, **kwargs):
+
+        results = []
         base_url = kwargs['uri']
 
         for hit in hits:
+
             source = hit['_source']
+
             entry = {
                 'type': 'Feature',
                 'id': f'{base_url}?parentIdentifier={params["parentIdentifier"]}&uuid={ hit["_id"] }',
@@ -247,10 +254,10 @@ class ElasticsearchFacetSet(FacetSet):
             if source['info'].get('spatial'):
                 # SW - NE (lon,lat)
                 entry['bbox'] = self._extract_bbox(source['info']['spatial'])
+
             results.append(entry)
 
-        return es_search['hits']['total'], results
-
+        return results
 
 class HandlerFactory:
 

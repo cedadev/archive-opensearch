@@ -187,9 +187,20 @@ class Collection(ElasticsearchFacetSet):
             if source.get('start_date'):
                 entry['properties']['date'] = f"{source['start_date']}/{source['end_date']}"
 
+            if source.get('collection_id') != 'cci':
+                entry['properties']['links']['describedby'] = [
+                            {
+                                'title': 'ISO19115',
+                                'href': f'https://catalogue.ceda.ac.uk/export/xml/{source["collection_id"]}.xml'
+                            }
+                        ]
+
             results.append(entry)
 
         return es_search['hits']['total'], results
+
+    def build_representation(self, hits, **kwargs):
+        base_url = kwargs['uri']
 
     @staticmethod
     def get_path(collection_id):
