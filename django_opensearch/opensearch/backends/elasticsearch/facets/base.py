@@ -210,15 +210,21 @@ class ElasticsearchFacetSet(FacetSet):
 
             for result in aggs['aggregations']:
 
-                if result in ['startDate', 'endDate']:
+                # Start and end date buckets have a different format so
+                # handle them differently
+                if result == 'startDate':
 
-                    if result == 'startDate':
+                    # Reject null values
+                    if aggs['aggregations'][result].get('value_as_string'):
                         values['startDate'] = {'extra_kwargs': {
                             'minInclusive': aggs['aggregations'][result].get('value_as_string'),
                             'pattern': '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$'
                         }}
 
-                    else:
+                elif result == 'endDate':
+
+                    # Reject null values
+                    if aggs['aggregations'][result].get('value_as_string'):
                         values['endDate'] = {'extra_kwargs': {
                             'maxInclusive': aggs['aggregations'][result].get('value_as_string'),
                             'pattern': '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$'

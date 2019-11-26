@@ -94,47 +94,6 @@ class Collection(ElasticsearchFacetSet):
 
         return query
 
-    # def get_facet_values(self, search_params):
-    #     """
-    #     Perform aggregations to get the range of possible values
-    #     for each facet to put in the description document.
-    #     :return dict: List of values for each facet
-    #     """
-    #
-    #     query = self._build_query(search_params)
-    #
-    #     query.update({
-    #         'aggs': {},
-    #         'size': 0
-    #     })
-    #
-    #     for facet in self.facets:
-    #         if facet not in self.exclude_list:
-    #             # Get the path to the facet data
-    #             value = self.facets[facet]
-    #
-    #             query['aggs'][facet] = {
-    #                 'terms': {
-    #                     'field': f'{facet}.keyword',
-    #                     'size': 1000
-    #                 }
-    #             }
-    #
-    #     # Get start and end time ranges
-    #     query['aggs']['startDate'] = {
-    #         "min": {"field": self.get_date_field('start')}
-    #     }
-    #
-    #     query['aggs']['endDate'] = {
-    #         "max": {"field": self.get_date_field('end')}
-    #     }
-    #
-    #     aggs = self._query_elasticsearch(query)
-    #
-    #     values = self._process_aggregations(aggs)
-    #
-    #     self.facet_values = values
-
     def search(self, params, **kwargs):
         results = []
 
@@ -164,6 +123,12 @@ class Collection(ElasticsearchFacetSet):
                                 'title': 'Opensearch Description Document',
                                 'href': f'{base_url}/description.xml?parentIdentifier={source["collection_id"]}',
                                 'type': 'application/xml'}
+                        ],
+                        'related': [
+                            {
+                                'title': 'ftp',
+                                'href': f'ftp://ftp.ceda.ac.uk{source["path"]}',
+                            }
                         ]
                     }
                 }
