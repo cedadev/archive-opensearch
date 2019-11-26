@@ -19,6 +19,7 @@ class Param:
         self.value = value
         self.required = required
         self.value_list = value_list
+        self.extra_kwargs = {}
 
         for k, v in kwargs.items():
             setattr(self, k, v)
@@ -87,6 +88,14 @@ class FacetSet:
     def facets(self):
         raise NotImplementedError
 
+    @property
+    def all_facets(self):
+        """
+        Merge the facet dictionaries into one
+        :return: dict
+        """
+        return {**self.default_facets, **self.facets}
+
     def _build_query(self, params, **kwargs):
         raise NotImplementedError
 
@@ -96,10 +105,10 @@ class FacetSet:
         :return:
         """
 
-        # Merge the facet dictionaries into one
-        facets = {**self.default_facets, **self.facets}
+        return [Param(*NamespaceMap.get_namespace(facet)) for facet in self.all_facets]
 
-        return [Param(*NamespaceMap.get_namespace(facet)) for facet in facets]
+    def get_handler(self):
+        raise NotImplementedError
 
     def get_facet_set(self, search_params):
         """
@@ -109,18 +118,33 @@ class FacetSet:
         """
 
         # Returns list of parameter objects
-        facet_set = self._get_facet_set()
+        if self.path:
+            handler = self.get_handler()
+
+            self.facets.update(handler.facets)
+
+            facet_set = handler._get_facet_set()
+
+        else:
+           facet_set = self._get_facet_set()
+
+        # facet_set = self._get_facet_set()
         facet_set_with_vals = []
 
         # Get the aggregated values for each facet
         self.get_facet_values(search_params)
 
         for param in facet_set:
-            values_list = self.facet_values.get(param.name)
+            facet_data = self.facet_values.get(param.name)
 
             # Add the values list to the parameter if it exists
-            if values_list is not None:
-                param.value_list = values_list
+            if facet_data is not None:
+
+                if facet_data.get('values'):
+                    param.value_list = facet_data.get('values')
+
+                if facet_data.get('extra_kwargs'):
+                    param.extra_kwargs = facet_data.get('extra_kwargs')
 
             facet_set_with_vals.append(param)
 
@@ -129,13 +153,13 @@ class FacetSet:
     def get_example_queries(self):
         examples = []
         for facet in self.facets:
-            values_list = self.facet_values.get(facet)
+            values_list = self.facet_values.get(facet).get('values')
             if values_list:
                 examples.append({facet:values_list[0]['value']})
 
         return examples
 
-    def get_facet_values(self):
+    def get_facet_values(self, search_params):
         """
         Perform aggregations to get the range of possible values
         for each facet to put in the description document.

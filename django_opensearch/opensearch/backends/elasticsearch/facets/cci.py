@@ -50,6 +50,7 @@ class CCIFacets(ElasticsearchFacetSet):
             })
         return query
 
+
     def build_representation(self, hits, params, **kwargs):
 
         base_url = kwargs['uri']
