@@ -26,7 +26,8 @@ class CCIFacets(ElasticsearchFacetSet):
         'productVersion': DEFAULT,
         'dataType': DEFAULT,
         'sensor': DEFAULT,
-        'platform': DEFAULT
+        'platform': DEFAULT,
+        'fileFormat': 'info.type'
     }
 
     def _build_query(self, params, **kwargs):
