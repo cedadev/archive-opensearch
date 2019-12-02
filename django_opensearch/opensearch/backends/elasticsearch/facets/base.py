@@ -69,7 +69,7 @@ class ElasticsearchFacetSet(FacetSet):
         return date_parser(date).isoformat()
 
     @staticmethod
-    def _get_es_path(facet, param):
+    def _get_es_path(facet_path, facet_name):
         """
         Return the path to the target in elasticsearch index. Extracted
         to method to allow subclasses to modify the behaviour.
@@ -77,7 +77,7 @@ class ElasticsearchFacetSet(FacetSet):
         :param param: parameter
         :return str: path to item in elasticsearch index
         """
-        return f'projects.{settings.APPLICATION_ID}.{param}' if facet is DEFAULT else facet
+        return f'projects.{settings.APPLICATION_ID}.{facet_name}' if facet_path is DEFAULT else facet_path
 
     @staticmethod
     def get_date_field(key):
@@ -139,11 +139,11 @@ class ElasticsearchFacetSet(FacetSet):
                 })
 
             else:
-                facet = self.facets.get(param)
+                facet_path = self.facets.get(param)
 
-                if facet and param not in self.exclude_list:
+                if facet_path and param not in self.exclude_list:
 
-                    es_path = self._get_es_path(facet=facet, param=param)
+                    es_path = self._get_es_path(facet_path, param)
                     search_terms = params.getlist(param)
 
                     if search_terms:
@@ -259,11 +259,11 @@ class ElasticsearchFacetSet(FacetSet):
         for facet in self.facets:
             if facet not in self.exclude_list:
                 # Get the path to the facet data
-                value = self.facets[facet]
+                facet_path = self.facets[facet]
 
                 query['aggs'][facet] = {
                     'terms': {
-                        'field': f'{facet}.keyword',
+                        'field': f'{self._get_es_path(facet_path, facet)}.keyword',
                         'size': 1000
                     }
                 }

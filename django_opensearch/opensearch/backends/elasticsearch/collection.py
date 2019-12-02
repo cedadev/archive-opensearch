@@ -49,8 +49,8 @@ class Collection(ElasticsearchFacetSet):
     }
 
     @staticmethod
-    def _get_es_path(facet, param):
-        return f'{param}' if facet is DEFAULT else facet
+    def _get_es_path(facet_path, facet_name):
+        return f'{facet_name}' if facet_path is DEFAULT else facet_path
 
     @staticmethod
     def get_date_field(key):
