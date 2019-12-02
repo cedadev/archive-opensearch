@@ -10,13 +10,14 @@ __contact__ = 'richard.d.smith@stfc.ac.uk'
 
 from .collection_map import COLLECTION_MAP
 from pydoc import locate
-from django_opensearch import settings
 import os
 from django_opensearch.constants import DEFAULT
 from django_opensearch.opensearch.backends import NamespaceMap, Param, FacetSet
+from django_opensearch import settings
 from .elasticsearch_connection import ElasticsearchConnection
 import copy
 from dateutil.parser import parse as date_parser
+from django_opensearch.opensearch.utils import NestedDict
 
 
 class ElasticsearchFacetSet(FacetSet):
@@ -29,8 +30,9 @@ class ElasticsearchFacetSet(FacetSet):
             'bool': {
                 'must': [
                     {
-                        'term': {
-                            'projects.application_id.keyword': settings.APPLICATION_ID
+                        'exists': {
+                            'field':f'projects.{settings.APPLICATION_ID}'
+
                         }
                     }
                 ],
@@ -47,7 +49,7 @@ class ElasticsearchFacetSet(FacetSet):
     facet_values = {}
 
     # List of facets to exclude from value aggregation
-    exclude_list = ['uuid', 'bbox', 'startDate', 'endDate']
+    exclude_list = ['uuid', 'bbox', 'startDate', 'endDate','title','parentIdentifier']
 
 
     @staticmethod
@@ -66,48 +68,53 @@ class ElasticsearchFacetSet(FacetSet):
     def _isodate(date):
         return date_parser(date).isoformat()
 
+    @staticmethod
+    def _get_es_path(facet_path, facet_name):
+        """
+        Return the path to the target in elasticsearch index. Extracted
+        to method to allow subclasses to modify the behaviour.
+        :param facet: facet path
+        :param param: parameter
+        :return str: path to item in elasticsearch index
+        """
+        return f'projects.{settings.APPLICATION_ID}.{facet_name}' if facet_path is DEFAULT else facet_path
+
+    @staticmethod
+    def get_date_field(key):
+        """
+        Date field for the target index
+        :param key: one of 'start'|'end'|'range'
+        :return: field name attached to key
+        """
+        date_fields = {
+            'start': 'info.temporal.start_time',
+            'end': 'info.temporal.end_time',
+            'range': 'info.temporal.time_frame'
+        }
+
+        return date_fields[key]
+
+    def get_handler(self):
+        return HandlerFactory().get_handler(self.path)
+
     def _build_query(self, params, **kwargs):
 
         # Deep copy to avoid aliasing
         query = copy.deepcopy(self.base_query)
 
-        query['query']['bool']['must'].append({
-            'match_phrase_prefix': {
-                'info.directory.analyzed': self.path
-            }
-        })
+        if kwargs.get('start_index'):
+            query['from'] = (kwargs['start_index'] - 1) if kwargs['start_index'] > 0 else 0
 
-        query['from'] = (kwargs['start_index'] - 1) if kwargs['start_index'] > 0 else 0
-
-        # Set number of results
-        query['size'] = kwargs['max_results']
+        if kwargs.get('max_results'):
+            # Set number of results
+            query['size'] = kwargs['max_results']
 
         for param in params:
 
-            if param == 'query':
+            if param == 'query' and params[param]:
                 query['query']['bool']['must'].append({
-                    'multi_match': {
-                        'query': params[param],
-                        'fields': ['info.phenomena.names', 'info.phenomena.var_id']
-                    }
-                })
-            elif param == 'startDate':
-
-                query['query']['bool']['filter'].append({
-                    'range': {
-                        self.facets.get(param): {
-                            'gte': self._isodate(params[param])
-                        }
-                    }
-                })
-
-            elif param == 'endDate':
-
-                query['query']['bool']['filter'].append({
-                    'range': {
-                        self.facets.get(param): {
-                            'lte': self._isodate(params[param])
-                        }
+                    'simple_query_string': {
+                        'query': params[param]
                     }
                 })
 
@@ -132,59 +139,150 @@ class ElasticsearchFacetSet(FacetSet):
                 })
 
             else:
-                facet = self.facets.get(param)
+                facet_path = self.facets.get(param)
 
-                if facet:
-                    es_path = f'projects.{param}' if facet is DEFAULT else facet
+                if facet_path and param not in self.exclude_list:
+
+                    es_path = self._get_es_path(facet_path, param)
                     search_terms = params.getlist(param)
 
                     if search_terms:
-                        query['query']['bool']['minimum_should_match'] = 1
 
-                    for search_term in params.getlist(param):
+                        if len(search_terms) == 1:
+                            # Equal to AND query
+                            query['query']['bool']['must'].append({
+                                'match_phrase': {
+                                    es_path: search_terms[0]
+                                }
+                            })
 
-                        query['query']['bool']['should'].append({
-                            'match_phrase': {
-                                es_path: search_term
-                            }
-                        })
+                        else:
+                            # Equal to AND (a OR b) query where there should be at least one match
+                            andor = {'bool':{'should':[], 'minimum_should_match': 1}}
+
+                            for search_term in search_terms:
+                                andor['bool']['should'].append(
+                                    {
+                                        'match_phrase': {
+                                            es_path: search_term
+                                        }
+                                    })
+
+                            query['query']['bool']['must'].append(andor)
+
+        # Add date filter
+        date_filter = NestedDict()
+
+        if 'startDate' in params:
+            date_filter.nested_put([
+                'range',self.get_date_field('range'),'gte'],
+                self._isodate(params['startDate'])
+            )
+
+        if 'endDate' in params:
+            date_filter.nested_put([
+                'range', self.get_date_field('range'), 'lte'],
+                self._isodate(params['endDate'])
+            )
+
+        if date_filter:
+            query['query']['bool']['filter'].append(
+                date_filter.data
+                )
+
 
         return query
 
-    def get_facet_values(self):
+    def _query_elasticsearch(self, query):
+        return ElasticsearchConnection().search(query)
+
+    @staticmethod
+    def _process_aggregations(aggs):
+        """
+        Process the aggregations and return the facet values
+
+        :param aggs: elasticsearch query response
+        :return: {} Dict of values with the facet as the key
+        """
+        values = {}
+
+        if aggs.get('aggregations'):
+
+            for result in aggs['aggregations']:
+
+                # Start and end date buckets have a different format so
+                # handle them differently
+                if result == 'startDate':
+
+                    # Reject null values
+                    if aggs['aggregations'][result].get('value_as_string'):
+                        values['startDate'] = {'extra_kwargs': {
+                            'minInclusive': aggs['aggregations'][result].get('value_as_string'),
+                            'pattern': '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$'
+                        }}
+
+                elif result == 'endDate':
+
+                    # Reject null values
+                    if aggs['aggregations'][result].get('value_as_string'):
+                        values['endDate'] = {'extra_kwargs': {
+                            'maxInclusive': aggs['aggregations'][result].get('value_as_string'),
+                            'pattern': '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$'
+                        }}
+
+                else:
+                    values[result] = {
+                        'values': [
+                            {
+                                'label': f"{bucket['key']} ({bucket['doc_count']})",
+                                'value': bucket['key']
+                            } for bucket in aggs['aggregations'][result]['buckets']
+                        ]
+                    }
+
+        return values
+
+    def get_facet_values(self, search_params):
         """
         Perform aggregations to get the range of possible values
         for each facet to put in the description document.
         :return dict: List of values for each facet
         """
 
-        values = {}
+        query = self._build_query(search_params)
 
-        query = {
+        query.update({
             'aggs': {},
             'size': 0
-        }
+        })
 
         for facet in self.facets:
             if facet not in self.exclude_list:
-
                 # Get the path to the facet data
-                value = self.facets[facet]
+                facet_path = self.facets[facet]
 
                 query['aggs'][facet] = {
                     'terms': {
-                        'field': f'projects.{facet}.keyword' if value is DEFAULT else value,
+                        'field': f'{self._get_es_path(facet_path, facet)}.keyword',
                         'size': 1000
                     }
                 }
 
-        aggs = ElasticsearchConnection().search(query)
+        # Get start and end time ranges
+        query['aggs']['startDate'] = {
+            "min": {"field": self.get_date_field('start')}
+        }
 
-        for result in aggs['aggregations']:
-            values[result] = [{'label': f"{bucket['key']} ({bucket['doc_count']})", 'value': bucket['key']} for bucket
-                              in aggs['aggregations'][result]['buckets']]
+        query['aggs']['endDate'] = {
+            "max": {"field": self.get_date_field('end')}
+        }
+
+        aggs = self._query_elasticsearch(query)
+
+        values = self._process_aggregations(aggs)
 
         self.facet_values = values
+
 
     def search(self, params, **kwargs):
         """
@@ -194,18 +292,25 @@ class ElasticsearchFacetSet(FacetSet):
         :return:
         """
 
-        results = []
-
         query = self._build_query(params, **kwargs)
 
         es_search = ElasticsearchConnection().search(query)
 
         hits = es_search['hits']['hits']
 
+        results = self.build_representation(hits, params, **kwargs)
+
+        return es_search['hits']['total'], results
+
+    def build_representation(self, hits, params, **kwargs):
+
+        results = []
         base_url = kwargs['uri']
 
         for hit in hits:
+
             source = hit['_source']
+
             entry = {
                 'type': 'Feature',
                 'id': f'{base_url}?parentIdentifier={params["parentIdentifier"]}&uuid={ hit["_id"] }',
@@ -222,10 +327,10 @@ class ElasticsearchFacetSet(FacetSet):
             if source['info'].get('spatial'):
                 # SW - NE (lon,lat)
                 entry['bbox'] = self._extract_bbox(source['info']['spatial'])
+
             results.append(entry)
 
-        return es_search['hits']['total'], results
-
+        return results
 
 class HandlerFactory:
 
@@ -244,7 +349,7 @@ class HandlerFactory:
         collection, root_path = self.get_collection_map(path)
         if collection is not None:
             handler = locate(collection['handler'])
-            return handler(root_path)
+            return handler(path)
 
     def get_collection_map(self, path):
         """

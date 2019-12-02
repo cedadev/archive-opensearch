@@ -11,6 +11,7 @@ __contact__ = 'richard.d.smith@stfc.ac.uk'
 from .facets.base import HandlerFactory
 from .collection import Collection
 from django_opensearch import settings
+from .facets.base import ElasticsearchFacetSet
 
 class Granule:
 
@@ -18,17 +19,11 @@ class Granule:
         if path:
             self.handler = HandlerFactory().get_handler(path)
 
-    def get_facet_set(self):
-        return self.handler.get_facet_set()
+    def get_facet_set(self, search_params):
+        return self.handler.get_facet_set(search_params)
 
     def get_example_queries(self):
         return self.handler.get_example_queries()
 
     def search(self, params, **kwargs):
-        collection = Collection()
-
-        path = collection.get_path(params.get('parentIdentifier'))
-
-        handler = HandlerFactory().get_handler(path)
-
-        return handler.search(params, **kwargs)
+        return self.handler.search(params, **kwargs)

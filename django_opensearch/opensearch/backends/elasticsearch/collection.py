@@ -9,106 +9,161 @@ __license__ = 'BSD - see LICENSE file in top-level package directory'
 __contact__ = 'richard.d.smith@stfc.ac.uk'
 
 from .facets.base import ElasticsearchFacetSet
+from .facets.elasticsearch_connection import ElasticsearchConnection
+from .facets.base import HandlerFactory
+from django_opensearch.constants import DEFAULT
+
+def collection_search(search_params):
+    if 'parentIdentifier' not in search_params:
+        return True
+
+    if 'parentIdentifier' in search_params:
+        query = {
+            "query": {
+                "term": {
+                    "parent_identifier": search_params['parentIdentifier']
+                }
+            }
+        }
+
+        return bool(ElasticsearchConnection().es.count(index='opensearch-collections', body=query)['count'])
+
+    return False
+
 
 class Collection(ElasticsearchFacetSet):
     facets = {
-        'parentIdentifier': 'default',
-        'title': 'default'
+        'parentIdentifier': DEFAULT,
+        'title': DEFAULT
     }
 
-    def __init__(self):
-
-        self.data = [
-            {
-                'parentIdentifier': '1',
-                'title': 'CMIP5',
-                'description': 'cmip5 is very cool',
-                'path': '/badc/cmip5/data',
-                'startDate': '01-01-1583',
-                'endDate': '01-01-5091'
-            },
-            {
-                'parentIdentifier': '2',
-                'title': 'CCI',
-                'description': 'cci is very cool',
-                'path': '/neodc/esacci',
-                'startDate': '20-01-2019',
-                'endDate': '21-03-2019'
+    base_query = {
+        'query': {
+            'bool': {
+                'must': [],
+                'should': [],
+                'filter': [],
+                'must_not': []
             }
-        ]
+        }
+    }
+
+    @staticmethod
+    def _get_es_path(facet_path, facet_name):
+        return f'{facet_name}' if facet_path is DEFAULT else facet_path
+
+    @staticmethod
+    def get_date_field(key):
+        """
+        Date field for the target index
+        :param key: one of 'start'|'end'|'range'
+        :return: field name attached to key
+        """
+
+        date_fields = {
+            'start': 'start_date',
+            'end': 'end_date',
+            'range': 'time_frame'
+        }
+
+        return date_fields[key]
+
+    def _query_elasticsearch(self, query):
+        return ElasticsearchConnection().search_collections(query)
+
+    def _build_query(self, params, **kwargs):
+
+        query = super()._build_query(params, **kwargs)
+
+        pid = params.get('parentIdentifier')
+
+        if pid:
+
+            query['query']['bool']['must'].append({
+                'term': {
+                    'parent_identifier': pid
+                }
+            })
+
+        else:
+            query['query']['bool']['must_not'].append({
+                'exists': {
+                    'field': 'parent_identifier'
+                }
+            })
+
+        return query
 
     def search(self, params, **kwargs):
-        """
-        Search through the dictionary for key, value matches.
-        Only matches strings.
-        :param params:
-        :return:
-        """
-
-        base_url = kwargs['uri'].split('/opensearch')[0]
-
         results = []
 
-        # Loop through the collection list of dicts
-        for d in self.data:
+        if self.path:
+            handler = HandlerFactory().get_handler(self.path)
+            self.facets.update(handler.facets)
 
-            # Check all the parameters in the query string with the
-            # dictionary keys
-            for param in params:
-                entry = {
-                    'type': 'FeatureCollection',
-                    'properties': {}
+        query = self._build_query(params, **kwargs)
+
+        es_search = ElasticsearchConnection().search_collections(query)
+
+        hits = es_search['hits']['hits']
+
+        base_url = kwargs['uri']
+
+        for hit in hits:
+            source = hit['_source']
+            entry = {
+                'type': 'FeatureCollection',
+                'id': f'{base_url}/request?uuid={ hit["_id"] }',
+                'properties': {
+                    'title': source['title'],
+                    'identifier': source["collection_id"],
+                    'links': {
+                        'search': [
+                            {
+                                'title': 'Opensearch Description Document',
+                                'href': f'{base_url}/description.xml?parentIdentifier={source["collection_id"]}',
+                                'type': 'application/xml'}
+                        ],
+                        'related': [
+                            {
+                                'title': 'ftp',
+                                'href': f'ftp://ftp.ceda.ac.uk{source["path"]}',
+                            }
+                        ]
+                    }
                 }
+            }
 
-                if param == 'query':
-                    if any([x in d['description'] for x in params['query'].split(',')]):
-                        # Add description document
-                        entry['properties']['links'] = {
-                            'search': [
-                                {
-                                    'title': 'Opensearch Description Document',
-                                    'href': f'{base_url}/opensearch/description.xml?parentIdentifier={d["parentIdentifier"]}',
-                                    'type': 'application/xml'}
-                            ]
-                        }
+            if source.get('start_date'):
+                entry['properties']['date'] = f"{source['start_date']}/{source['end_date']}"
 
-                        entry['id'] = f'parentIdentifier={ d["parentIdentifier"] }'
-                        entry['properties']['identifier'] = d["parentIdentifier"]
-                        entry['properties']['title'] = d['title']
-                        entry['properties']['date'] = f'{d["startDate"]}/{d["endDate"]}'
+            if source.get('collection_id') != 'cci':
+                entry['properties']['links']['describedby'] = [
+                            {
+                                'title': 'ISO19115',
+                                'href': f'https://catalogue.ceda.ac.uk/export/xml/{source["collection_id"]}.xml'
+                            }
+                        ]
 
-                        results.append(entry)
+            results.append(entry)
 
+        return es_search['hits']['total'], results
 
-                else:
-                    val = d.get(param)
+    def build_representation(self, hits, **kwargs):
+        base_url = kwargs['uri']
 
-                    # If key exists in dictionary and values match
-                    # return result
-                    if val is not None and params[param] in val:
-                        # Add description document
-                        entry['properties']['links'] = [{
-                            'search': [
-                                {
-                                    'title': 'Opensearch Description Document',
-                                    'href': f'{base_url}/opensearch/description.xml?parentIdentifier={d["parentIdentifier"]}',
-                                    'type': 'application/xml'}
-                            ]
-                        }]
+    @staticmethod
+    def get_path(collection_id):
 
-                        entry['id'] = f'parentIdentifier={ d["parentIdentifier"] }'
-                        entry['properties']['identifier'] = d["parentIdentifier"]
-                        entry['properties']['title'] = d['title']
-                        entry['properties']['date'] = f'{d["startDate"]}/{d["endDate"]}'
+        query = {
+            'query': {
+                'term': {
+                    'collection_id': collection_id
+                }
+            },
+            'size': 1
+        }
 
-                        results.append(entry)
-
-        return len(results), results
-
-    def get_path(self, collection_id):
-        for d in self.data:
-            val = d.get('parentIdentifier')
-            if val == collection_id:
-                return d.get('path')
-
-
+        result = ElasticsearchConnection().search_collections(query)
+        if result['hits']['hits']:
+            return result['hits']['hits'][0]['_source']['path']

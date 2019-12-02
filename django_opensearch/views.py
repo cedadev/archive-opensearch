@@ -25,9 +25,7 @@ class Description(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        parentIdentifier = self.request.GET.get("parentIdentifier")
-
-        context["osd"] = OpensearchDescription(parentIdentifier)
+        context["osd"] = OpensearchDescription(self.request)
 
         return context
 

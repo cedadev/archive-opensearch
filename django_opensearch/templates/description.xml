@@ -24,7 +24,7 @@
     {% for section in osd.url_sections %}
         <Url rel="results" template="{{ section.url_template }}" type="{{ section.type }}">
             {% for param in section.params %}
-                <param:Parameter name="{{ param.name }}" value="{{ param.val }}"{% if param.value_list %}>{% else %}
+                <param:Parameter name="{{ param.name }}" value="{{ param.val }}" {% for k,v in param.extra_kwargs.items %} {{k}}="{{ v }}" {% endfor %}{% if param.value_list %}>{% else %}
                     />{% endif %}
                 {% for value in param.value_list %}
                     <param:Option label="{{ value.label }}" value="{{ value.value }}"/>

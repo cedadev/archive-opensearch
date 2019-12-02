@@ -69,6 +69,9 @@ class SolrFacetSet(FacetSet):
         'fq': []
     }
 
+    def get_handler(self):
+        return HandlerFactory().get_handler(self.path)
+
     def _build_query(self, params, **kwargs):
         query = copy.deepcopy(self.base_query)
 

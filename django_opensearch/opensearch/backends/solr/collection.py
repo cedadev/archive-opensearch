@@ -45,6 +45,22 @@ COLLECTION_METADATA = {
 }
 
 
+def collection_search(search_params):
+    len_params = len(search_params)
+
+    if 'parentIdentifier' not in search_params:
+        return True
+
+    if 'parentIdentifier' in search_params:
+        if len_params == 1:
+            return True
+        if len_params == 2:
+            if 'httpAccept' in search_params:
+                return True
+
+    return False
+
+
 class Collection(FacetSet):
 
     facets = {
