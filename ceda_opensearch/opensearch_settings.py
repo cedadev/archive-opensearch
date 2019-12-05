@@ -13,12 +13,6 @@ LONG_NAME = 'CEDA Opensearch'
 DESCRIPTION = 'Opensearch interface to the CEDA archive'
 TAGS = ['CEDA','NERC']
 DEVELOPER = 'CEDA'
-SYNDICATION_RIGHT = 'Open'
-ADULT_CONTENT = 'False'
-LANGUAGE = 'en'
-INPUT_ENCODING = 'UTF-8'
-OUTPUT_ENCODING = 'UTF-8'
-
 
 ELASTICSEARCH_HOST = 'https://jasmin-es1.ceda.ac.uk'
 ELASTICSEARCH_INDEX = 'opensearch-cci-test-2'
