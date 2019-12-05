@@ -61,7 +61,6 @@ class Response(ContextMixin, View):
                 return HttpResponse(jsonpickle.encode(context['osr'], unpicklable=False), content_type='application/json')
 
         # Response type not found
-        print('x')
         return HttpResponse(f'Accept parameter: {response_type} cannot be provided by this service. Possible response types: {opensearch_settings.RESPONSE_TYPES}',status=406)
 
     def get_context_data(self, **kwargs):
