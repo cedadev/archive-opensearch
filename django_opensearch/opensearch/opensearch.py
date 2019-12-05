@@ -30,6 +30,7 @@ class OpensearchDescription:
         self.output_encoding = settings.OUTPUT_ENCODING
         self.url_sections = []
         self.example_queries = []
+        self.host = request._current_scheme_host
 
         search_params = request.GET
 
@@ -67,7 +68,7 @@ class OpensearchDescription:
 
     def generate_url_template(self, response_type, params):
 
-        base_url = f'http://{settings.OPENSEARCH_HOST}/opensearch/request?httpAccept={response_type}&'
+        base_url = f'{self.host}/opensearch/request?httpAccept={response_type}&'
 
         for i, param in enumerate(params, 1):
             required = '' if param.required else '?'

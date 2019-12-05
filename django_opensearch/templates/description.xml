@@ -19,7 +19,7 @@
     <Language>{{ osd.language }}</Language>
     <InputEncoding>{{ osd.input_encoding }}</InputEncoding>
     <OutputEncoding>{{ osd.output_encoding }}</OutputEncoding>
-    <Url rel="self" template="http://opensearch.ceda.ac.uk/opensearch/description.xml"
+    <Url rel="self" template="{{ osd.host }}/opensearch/description.xml"
          type="application/opensearchdescription+xml"/>
     {% for section in osd.url_sections %}
         <Url rel="results" template="{{ section.url_template }}" type="{{ section.type }}">
