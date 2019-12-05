@@ -36,6 +36,7 @@ class Response(ContextMixin, View):
 
         # Get accept params
         accept_param = request.GET.get('httpAccept')
+        print('sss',accept_param)
         try:
             accept_header = request.headers.get('Accept')
         except AttributeError:
@@ -44,18 +45,24 @@ class Response(ContextMixin, View):
         if accept_param:
             response_type = accept_param
         else:
+            if not accept_header:
+                accept_header = opensearch_settings.DEFAULT_RESPONSE_TYPE
+
             response_type = accept_header
 
         # Pick the template
         if response_type in opensearch_settings.RESPONSE_TYPES:
+            print('xxxx')
 
             if response_type == 'application/atom+xml':
+                print('xx')
                 return render(request, 'response.xml', context, content_type='application/xml')
 
             if response_type == 'application/geo+json':
                 return HttpResponse(jsonpickle.encode(context['osr'], unpicklable=False), content_type='application/json')
 
         # Response type not found
+        print('x')
         return HttpResponse(f'Accept parameter: {response_type} cannot be provided by this service. Possible response types: {opensearch_settings.RESPONSE_TYPES}',status=406)
 
     def get_context_data(self, **kwargs):
