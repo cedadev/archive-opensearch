@@ -125,9 +125,6 @@ class OpensearchResponse:
 
         if self.totalResults > self.itemsPerPage:
             # Generate paging links
-            print('yyyyy', self.totalResults / self.itemsPerPage)
-            print('yyyyyy', self.startPage + 0.5)
-            print('yyyyy', self.startPage)
             if self.startPage > 1:
 
                 self.links['first'] = [
@@ -144,9 +141,6 @@ class OpensearchResponse:
                     ]
 
             if self.startPage < self.totalResults / self.itemsPerPage:
-                print('sssssss', self.totalResults / self.itemsPerPage)
-                print('ssssssss', self.startPage + 0.5)
-                print('ssssssss', self.startPage)
                 self.links['next'] = [
                         {
                             'href': self._generate_navigation_url(full_uri, search_params, 'next'),
