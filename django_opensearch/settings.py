@@ -22,6 +22,7 @@ INPUT_ENCODING = 'UTF-8'
 OUTPUT_ENCODING = 'UTF-8'
 
 RESPONSE_TYPES = ['application/geo+json','application/atom+xml']
+DEFAULT_RESPONSE_TYPE = 'application/atom+xml'
 
 MAX_RESULTS_PER_PAGE = 10
 DEFAULT_START_PAGE = 1

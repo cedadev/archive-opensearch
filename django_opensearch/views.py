@@ -36,6 +36,7 @@ class Response(ContextMixin, View):
 
         # Get accept params
         accept_param = request.GET.get('httpAccept')
+
         try:
             accept_header = request.headers.get('Accept')
         except AttributeError:
@@ -43,7 +44,11 @@ class Response(ContextMixin, View):
 
         if accept_param:
             response_type = accept_param
+
         else:
+            if not accept_header:
+                accept_header = opensearch_settings.DEFAULT_RESPONSE_TYPE
+
             response_type = accept_header
 
         # Pick the template
