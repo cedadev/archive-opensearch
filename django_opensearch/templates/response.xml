@@ -2,10 +2,12 @@
 <feed xmlns:dc="http://purl.org/dc/terms/" xmlns:os="http://a9.com/-/spec/opensearch/1.1/">
     <title>Opensearch response</title>
     <id>{{ request.build_absolute_uri }}</id>
-    <subtitle type="html">Found {{ osr.totalResults }} results. {{ osr.pagination_string }}</subtitle>
+    <subtitle type="html">{{ osr.subtitle}}</subtitle>
     <os:totalResults>{{ osr.totalResults }}</os:totalResults>
-    <os:startIndex>1</os:startIndex>
-    <os:itemsPerPage>10</os:itemsPerPage>
+    <os:startIndex>{{ osr.startPage }}</os:startIndex>
+    <os:itemsPerPage>{{ osr.itemsPerPage }}</os:itemsPerPage>
+
+    {# Page level links #}
     {% for link in osr.links %}
         {% for role, links in link.items %}
             {% for link in links %}
@@ -14,32 +16,40 @@
             {% endfor %}
         {% endfor %}
     {% endfor %}
+
+    {# Expand Query tag #}
     {% for role, queries in osr.queries.items %}
         {% for query in queries %}
-            <os:Query>
+            <os:Query
                 role="{{ role }}"
                 {% for key,value in query.items %}
                     {{ key }}="{{ value }}"
                 {% endfor %}
-            </os:Query>
+            />
         {% endfor %}
     {% endfor %}
 
+    {# Generate the feed #}
     {% for entry in osr.features %}
         <entry>
             <id>{{ entry.id }}</id>
-            <title>{{ entry.properties.title }}</title>
-            <updated>{{ entry.properties.updated }}</updated>
+
+            {# Loop attributes #}
             {% for k,v in entry.properties.items %}
+
+                {# filter out links from attributes #}
+                {% if k != 'links' %}
                  <{{ k }}>{{ v }}</{{ k }}>
+
+                {% endif %}
             {% endfor %}
-            {% for link in entry.properties.links %}
-                {% for role, links in link.items %}
+
+            {# Generate entry links #}
+            {% for rel,links in entry.properties.links.items %}
                     {% for link in links %}
-                        <link>href="{{ link.href }}" rel="{{ role }}" {% if link.title %}title="{{ link.title }}"{% endif %}
-                            {% if link.type %}type="{{ link.type }}"{% endif %}</link>
+                        <link href="{{ link.href }}" rel="{{ rel }}" {% if link.title %}title="{{ link.title }}"{% endif %}
+                            {% if link.type %}type="{{ link.type }}"{% endif %} />
                     {% endfor %}
-                {% endfor %}
             {% endfor %}
         </entry>
     {% endfor %}
