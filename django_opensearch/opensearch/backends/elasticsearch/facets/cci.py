@@ -69,6 +69,7 @@ class CCIFacets(ElasticsearchFacetSet):
                     'title': source['info']['name'],
                     'identifier': hit["_id"],
                     'updated': source['info']['last_modified'],
+                    'filesize': source['info']['size'],
                     'links': {
                             'related': [
                                 {
