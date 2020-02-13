@@ -38,7 +38,15 @@
             {% for k,v in entry.properties.items %}
 
                 {# filter out links from attributes #}
-                {% if k != 'links' %}
+                {% if k == 'variables' %}
+                    {% for variable in v %}
+                        <variable
+                         {% for k,v in variable.items %}
+                             {{ k }}="{{ v }}"
+                         {% endfor %}
+                        ></variable>
+                    {% endfor %}
+                {% elif k != 'links' %}
                  <{{ k }}>{{ v }}</{{ k }}>
 
                 {% endif %}
