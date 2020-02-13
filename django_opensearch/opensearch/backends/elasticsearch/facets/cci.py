@@ -92,6 +92,9 @@ class CCIFacets(ElasticsearchFacetSet):
                 # SW - NE (lon,lat)
                 entry['bbox'] = self._extract_bbox(source['info']['spatial'])
 
+            if source['info'].get('phenomena'):
+                entry['properties']['variables'] = self._extract_variables(source['info']['phenomena'])
+
             results.append(entry)
 
         return results

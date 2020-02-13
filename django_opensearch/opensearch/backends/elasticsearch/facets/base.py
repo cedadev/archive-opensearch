@@ -65,6 +65,14 @@ class ElasticsearchFacetSet(FacetSet):
         return f"{temporal['start_time']}/{temporal['end_time']}"
 
     @staticmethod
+    def _extract_variables(phenomena):
+        variables = []
+        for variable in phenomena:
+            variables.append({key: value for key, value in variable.items() if key not in ['names', 'agg_string']})
+
+        return variables
+
+    @staticmethod
     def _isodate(date):
         return date_parser(date).isoformat()
 
