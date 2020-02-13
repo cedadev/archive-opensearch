@@ -291,7 +291,6 @@ class ElasticsearchFacetSet(FacetSet):
 
         self.facet_values = values
 
-
     def search(self, params, **kwargs):
         """
         Search interface to elasticsearch
@@ -306,8 +305,7 @@ class ElasticsearchFacetSet(FacetSet):
 
         hits = es_search['hits']['hits']
 
-        if source['info'].get('phenomena'):
-            entry['properties']['variables'] = self._extract_variables(source['info']['phenomena'])
+        results = self.build_representation(hits, params, **kwargs)
 
         return es_search['hits']['total'], results
 
