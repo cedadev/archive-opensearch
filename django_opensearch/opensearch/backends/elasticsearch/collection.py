@@ -95,7 +95,6 @@ class Collection(ElasticsearchFacetSet):
         return query
 
     def search(self, params, **kwargs):
-        results = []
 
         if self.path:
             handler = HandlerFactory().get_handler(self.path)
@@ -107,13 +106,21 @@ class Collection(ElasticsearchFacetSet):
 
         hits = es_search['hits']['hits']
 
+        results = self.build_representation(hits, params, **kwargs)
+
+        return es_search['hits']['total'], results
+
+    def build_representation(self, hits, params, **kwargs):
+
         base_url = kwargs['uri']
+
+        results = []
 
         for hit in hits:
             source = hit['_source']
             entry = {
                 'type': 'FeatureCollection',
-                'id': f'{base_url}/request?uuid={ hit["_id"] }',
+                'id': f'{base_url}/request?uuid={hit["_id"]}',
                 'properties': {
                     'title': source['title'],
                     'identifier': source["collection_id"],
@@ -139,18 +146,18 @@ class Collection(ElasticsearchFacetSet):
 
             if source.get('collection_id') != 'cci':
                 entry['properties']['links']['describedby'] = [
-                            {
-                                'title': 'ISO19115',
-                                'href': f'https://catalogue.ceda.ac.uk/export/xml/{source["collection_id"]}.xml'
-                            }
-                        ]
+                    {
+                        'title': 'ISO19115',
+                        'href': f'https://catalogue.ceda.ac.uk/export/xml/{source["collection_id"]}.xml'
+                    }
+                ]
+
+            if source.get('variables'):
+                entry['properties']['variables'] = self._extract_variables(source['variables'])
 
             results.append(entry)
 
-        return es_search['hits']['total'], results
-
-    def build_representation(self, hits, **kwargs):
-        base_url = kwargs['uri']
+        return results
 
     @staticmethod
     def get_path(collection_id):

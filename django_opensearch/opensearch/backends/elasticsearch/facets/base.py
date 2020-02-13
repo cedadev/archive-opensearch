@@ -306,7 +306,8 @@ class ElasticsearchFacetSet(FacetSet):
 
         hits = es_search['hits']['hits']
 
-        results = self.build_representation(hits, params, **kwargs)
+        if source['info'].get('phenomena'):
+            entry['properties']['variables'] = self._extract_variables(source['info']['phenomena'])
 
         return es_search['hits']['total'], results
 
