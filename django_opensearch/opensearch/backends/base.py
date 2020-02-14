@@ -67,6 +67,7 @@ class FacetSet:
     """
 
     default_facets = {
+        'uuid': DEFAULT,
         'query': DEFAULT,
         'maximumRecords': DEFAULT,
         'startPage': DEFAULT,
