@@ -126,6 +126,13 @@ class ElasticsearchFacetSet(FacetSet):
                     }
                 })
 
+            elif param == 'uuid':
+                query['query']['bool']['must'].append({
+                    'term': {
+                        '_id': params[param]
+                    }
+                })
+
             elif param == 'bbox':
 
                 coordinates = params[param].split(',')
