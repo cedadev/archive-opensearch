@@ -75,6 +75,7 @@ class FacetSet:
         'startDate': DEFAULT,
         'endDate': DEFAULT,
         'parentIdentifier': DEFAULT,
+        'bbox': DEFAULT
     }
 
     facet_values = {}
