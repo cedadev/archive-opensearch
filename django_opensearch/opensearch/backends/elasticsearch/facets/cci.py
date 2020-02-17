@@ -27,7 +27,8 @@ class CCIFacets(ElasticsearchFacetSet):
         'dataType': DEFAULT,
         'sensor': DEFAULT,
         'platform': DEFAULT,
-        'fileFormat': 'info.type'
+        'fileFormat': 'info.type',
+        'bbox': 'info.spatial.coordinates.coordinates'
     }
 
     def _build_query(self, params, **kwargs):
