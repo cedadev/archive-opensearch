@@ -72,6 +72,8 @@ class Collection(ElasticsearchFacetSet):
         return ElasticsearchConnection().search_collections(query)
 
     def _build_query(self, params, **kwargs):
+        if params.get('bbox'):
+            self.facets['bbox'] = 'bbox.coordinates'
 
         query = super()._build_query(params, **kwargs)
 
