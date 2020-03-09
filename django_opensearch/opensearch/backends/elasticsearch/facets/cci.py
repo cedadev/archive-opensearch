@@ -75,11 +75,11 @@ class CCIFacets(ElasticsearchFacetSet):
                             'related': [
                                 {
                                     'title': 'Download',
-                                    'href': f'http://dap.ceda.ac.uk/thredds/fileServer{source["info"]["directory"]}/{source["info"]["name"]}',
+                                    'href': f'http://{settings.THREDDS_HOST}/thredds/fileServer{source["info"]["directory"]}/{source["info"]["name"]}',
                                 },
                                 {
                                     'title': 'Opendap',
-                                    'href': f'http://dap.ceda.ac.uk/thredds/dodsC/dap/{source["info"]["directory"]}/{source["info"]["name"]}',
+                                    'href': f'http://{settings.THREDDS_HOST}/thredds/dodsC/dap{source["info"]["directory"]}/{source["info"]["name"]}',
                                 }
                             ]
                     }
