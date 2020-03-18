@@ -136,7 +136,7 @@ class Collection(ElasticsearchFacetSet):
                         'related': [
                             {
                                 'title': 'ftp',
-                                'href': f'ftp://ftp.ceda.ac.uk{source["path"]}',
+                                'href': f'ftp://anon-ftp.ceda.ac.uk{source["path"]}',
                             }
                         ]
                     }

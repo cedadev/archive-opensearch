@@ -15,8 +15,8 @@ TAGS = ['CEDA','NERC']
 DEVELOPER = 'CEDA'
 
 ELASTICSEARCH_HOST = 'https://jasmin-es1.ceda.ac.uk'
-ELASTICSEARCH_INDEX = 'opensearch-cci-test-2'
-ELASTICSEARCH_COLLECTION_INDEX = 'opensearch-collections'
+ELASTICSEARCH_INDEX = 'opensearch-cci-files'
+ELASTICSEARCH_COLLECTION_INDEX = 'opensearch-collections-20200317'
 APPLICATION_ID = 'opensearch'
 
 SOLR_HOST = 'https://esgf-index1.ceda.ac.uk/solr'

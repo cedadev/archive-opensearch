@@ -11,6 +11,9 @@ __contact__ = 'richard.d.smith@stfc.ac.uk'
 from .base import ElasticsearchFacetSet
 from django_opensearch.constants import DEFAULT
 from django_opensearch import settings
+from django_opensearch.opensearch.utils import thredds_path
+import os
+
 
 class CCIFacets(ElasticsearchFacetSet):
     """
@@ -52,7 +55,6 @@ class CCIFacets(ElasticsearchFacetSet):
             })
         return query
 
-
     def build_representation(self, hits, params, **kwargs):
 
         base_url = kwargs['uri']
@@ -62,6 +64,7 @@ class CCIFacets(ElasticsearchFacetSet):
         for hit in hits:
 
             source = hit['_source']
+            file_path  = os.path.join(source["info"]["directory"], source["info"]["name"])
 
             entry = {
                 'type': 'Feature',
@@ -75,16 +78,21 @@ class CCIFacets(ElasticsearchFacetSet):
                             'related': [
                                 {
                                     'title': 'Download',
-                                    'href': f'http://{settings.THREDDS_HOST}/thredds/fileServer{source["info"]["directory"]}/{source["info"]["name"]}',
-                                },
-                                {
-                                    'title': 'Opendap',
-                                    'href': f'http://{settings.THREDDS_HOST}/thredds/dodsC/dap{source["info"]["directory"]}/{source["info"]["name"]}',
+                                    'href': f'http://{thredds_path("http",file_path)}',
                                 }
                             ]
                     }
                 }
             }
+
+            # Add opendap link to netCDF files
+            if source['info'].get('format') == 'NetCDF':
+                entry['properties']['links']['related'].append(
+                    {
+                        'title': 'Opendap',
+                        'href': f'http://{thredds_path("opendap", file_path)}',
+                    }
+                )
 
             if source['info'].get('temporal'):
                 entry['properties']['date'] = self._extract_time_range(source['info']['temporal'])
@@ -92,9 +100,6 @@ class CCIFacets(ElasticsearchFacetSet):
             if source['info'].get('spatial'):
                 # SW - NE (lon,lat)
                 entry['bbox'] = self._extract_bbox(source['info']['spatial'])
-
-            if source['info'].get('phenomena'):
-                entry['properties']['variables'] = self._extract_variables(source['info']['phenomena'])
 
             results.append(entry)
 
