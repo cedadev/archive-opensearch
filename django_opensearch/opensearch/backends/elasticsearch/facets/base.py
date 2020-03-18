@@ -42,11 +42,7 @@ class ElasticsearchFacetSet(FacetSet):
         }
     }
 
-    agg_query = {
-
-    }
-
-    facet_values = {}
+    agg_query = {}
 
     # List of facets to exclude from value aggregation
     exclude_list = ['uuid', 'bbox', 'startDate', 'endDate','title','parentIdentifier']

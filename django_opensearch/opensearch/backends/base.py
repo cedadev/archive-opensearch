@@ -78,13 +78,12 @@ class FacetSet:
         'bbox': DEFAULT
     }
 
-    facet_values = {}
-
     # List of facets to exclude from value aggregation
     exclude_list = ['uuid', 'bbox', 'startDate', 'endDate']
 
     def __init__(self, path=None):
         self.path = path
+        self.facet_values = {}
 
     @property
     def facets(self):
@@ -155,7 +154,7 @@ class FacetSet:
     def get_example_queries(self):
         examples = []
         for facet in self.facets:
-            values_list = self.facet_values.get(facet).get('values')
+            values_list = self.facet_values.get(facet, {}).get('values')
             if values_list:
                 examples.append({facet:values_list[0]['value']})
 
