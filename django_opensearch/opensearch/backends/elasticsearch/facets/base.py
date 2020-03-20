@@ -368,11 +368,11 @@ class HandlerFactory:
         :return: The value from the map object
         """
 
-        while path not in self.map and path != '/':
+        while path not in self.map and path != '/' and path:
             path = os.path.dirname(path)
 
         # No match has been found
-        if path == '/':
-            return None
+        if not path or path == '/':
+            return None, None
 
         return self.map[path], path
