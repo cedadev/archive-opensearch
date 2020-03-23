@@ -9,3 +9,8 @@ __license__ = 'BSD - see LICENSE file in top-level package directory'
 __contact__ = 'richard.d.smith@stfc.ac.uk'
 
 DEFAULT = 'default'
+
+SUFFIX_MAP = {
+    'wms': '?service=WMS&version=1.3.0&request=GetCapabilities',
+    'wcs': '?service=WCS&version=1.0.0&request=GetCapabilities'
+}
