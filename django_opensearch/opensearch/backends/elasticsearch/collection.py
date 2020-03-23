@@ -12,6 +12,8 @@ from .facets.base import ElasticsearchFacetSet
 from .facets.elasticsearch_connection import ElasticsearchConnection
 from .facets.base import HandlerFactory
 from django_opensearch.constants import DEFAULT
+from django_opensearch.opensearch.utils.aggregation_tools import get_thredds_aggregation, get_aggregation_capabilities
+
 
 def collection_search(search_params):
     if 'parentIdentifier' not in search_params:
@@ -131,7 +133,8 @@ class Collection(ElasticsearchFacetSet):
                             {
                                 'title': 'Opensearch Description Document',
                                 'href': f'{base_url}/description.xml?parentIdentifier={source["collection_id"]}',
-                                'type': 'application/xml'}
+                                'type': 'application/xml'
+                            }
                         ],
                         'related': [
                             {
@@ -151,8 +154,35 @@ class Collection(ElasticsearchFacetSet):
                     {
                         'title': 'ISO19115',
                         'href': f'https://catalogue.ceda.ac.uk/export/xml/{source["collection_id"]}.xml'
+                    },
+                    {
+                        'title': 'Dataset Information',
+                        'href': f'https://catalogue.ceda.ac.uk/uuid/{source["collection_id"]}'
                     }
                 ]
+
+            if source.get('aggregations'):
+                entry['properties']['aggregations'] = []
+
+                for aggregation in source.get('aggregations'):
+
+                    agg = {
+                        'id': aggregation,
+                        'type': 'Feature',
+                        'properties': {
+                            'links': {
+                                'described_by': [
+                                    {
+                                        'title': 'THREDDS Catalog',
+                                        'href': get_thredds_aggregation(aggregation, format='html')
+                                    }
+                                ],
+                                'related': get_aggregation_capabilities(aggregation)
+                            }
+                        }
+                    }
+
+                    entry['properties']['aggregations'].append(agg)
 
             if params.get('parentIdentifier'):
                 entry['id'] = f'{base_url}/request?parentIdentifier={params["parentIdentifier"]}&uuid={hit["_id"]}'
