@@ -100,7 +100,10 @@ class CCIFacets(ElasticsearchFacetSet):
 
             if source['info'].get('spatial'):
                 # SW - NE (lon,lat)
-                entry['bbox'] = self._extract_bbox(source['info']['spatial'])
+                bbox = self._extract_bbox(source['info']['spatial'])
+
+                if bbox:
+                    entry['bbox'] = bbox
 
             results.append(entry)
 
