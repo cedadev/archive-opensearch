@@ -18,7 +18,7 @@ from .elasticsearch_connection import ElasticsearchConnection
 import copy
 from dateutil.parser import parse as date_parser
 from django_opensearch.opensearch.utils import NestedDict
-
+from django_opensearch.opensearch.utils.geo_point import Point, Envelope
 
 class ElasticsearchFacetSet(FacetSet):
     """
@@ -50,11 +50,16 @@ class ElasticsearchFacetSet(FacetSet):
 
     @staticmethod
     def _extract_bbox(coordinates):
+        type = coordinates['coordinates']['type']
         coordinates = coordinates['coordinates']['coordinates']
 
-        sw = [coordinates[0][0], coordinates[1][1]]
-        ne = [coordinates[1][0], coordinates[0][1]]
-        return [sw,ne]
+        if type == 'envelope':
+            envelope = Envelope(coordinates)
+            return envelope.bbox()
+
+        elif type == 'Point':
+            point = Point(coordinates)
+            return point.bbox()
 
     @staticmethod
     def _extract_time_range(temporal):
