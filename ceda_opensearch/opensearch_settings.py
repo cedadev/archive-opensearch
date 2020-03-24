@@ -19,6 +19,8 @@ ELASTICSEARCH_INDEX = 'opensearch-cci-files'
 ELASTICSEARCH_COLLECTION_INDEX = 'opensearch-collections'
 APPLICATION_ID = 'opensearch'
 
+THREDDS_HOST = 'cci-odp-data2.ceda.ac.uk'
+
 SOLR_HOST = 'https://esgf-index1.ceda.ac.uk/solr'
 SOLR_CORE = 'datasets'
 

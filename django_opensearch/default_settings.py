@@ -32,10 +32,7 @@ OS_NAMESPACE = 'http://a9.com/-/spec/opensearch/1.1/'
 OS_PREFIX = 'os'
 OS_ROOT_TAG = 'OpenSearchDescription'
 
-
 GEO_NAMESPACE_TAG = 'geo'
 TIME_NAMESPACE_TAG = 'time'
 CEDA_NAMESPACE_TAG = 'ceda'
 DUBLIN_CORE_NAMESPACE_TAG = 'dc'
-
-THREDDS_HOST = 'cci-odp-data2.ceda.ac.uk'
