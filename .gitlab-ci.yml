@@ -1,0 +1,11 @@
+stages:
+  - test
+
+test:
+  stage: test
+  image: python:3.7
+  before_script:
+    - pip install -r $CI_PROJECT_DIR/requirements.txt
+    - pip install -e $CI_PROJECT_DIR
+  script:
+    - python manage.py test django_opensearch.tests
