@@ -19,6 +19,17 @@ import copy
 from dateutil.parser import parse as date_parser
 from django_opensearch.opensearch.utils import NestedDict
 from django_opensearch.opensearch.utils.geo_point import Point, Envelope
+from collections import namedtuple
+
+class PagingError(Exception):
+    """
+    Raised when the requested page is not possible
+    """
+    pass
+
+
+SearchResults = namedtuple('SearchResults', ('total','results','search_before','search_after'))
+
 
 class ElasticsearchFacetSet(FacetSet):
     """
@@ -39,7 +50,19 @@ class ElasticsearchFacetSet(FacetSet):
                 'should': [],
                 'filter': []
             }
-        }
+        },
+        'sort': [
+            {
+                'info.directory': {
+                    'order': 'asc'
+                }
+            },
+            {
+                'info.name': {
+                    'order': 'asc'
+                }
+            }
+        ]
     }
 
     agg_query = {}
@@ -111,8 +134,34 @@ class ElasticsearchFacetSet(FacetSet):
         # Deep copy to avoid aliasing
         query = copy.deepcopy(self.base_query)
 
-        if kwargs.get('start_index'):
-            query['from'] = (kwargs['start_index'] - 1) if kwargs['start_index'] > 0 else 0
+        search_after = kwargs.get('search_after')
+        reverse = kwargs.get('reverse')
+        start_index = kwargs.get('start_index', 1)
+        page_size = kwargs.get('max_results')
+
+        # If search after key use this
+        if search_after:
+            query['search_after'] = search_after
+
+            if reverse:
+                # reverse the ordering of the sort to go back a page
+                for sort_key in query['sort']:
+                    for key in sort_key:
+                        sort_key[key]['order'] = 'desc'
+
+        # If there is no search after
+        elif start_index != 1:
+
+            # Set start index to 0 if below 0 or -1 for zero indexing
+            start_index = start_index if start_index > 0 else 0
+
+            if start_index > 0 and (start_index + page_size) < 10000:
+                    query['from'] = start_index
+
+            # If window is > 10,000 raise error
+            else:
+                raise PagingError(f"Result window is too large, from + size must be"
+                                  f" less than or equal to [10000] but was [{start_index + page_size}].")
 
         if kwargs.get('max_results'):
             # Set number of results
@@ -313,9 +362,18 @@ class ElasticsearchFacetSet(FacetSet):
 
         hits = es_search['hits']['hits']
 
+        reverse = kwargs.get('reverse')
+
+        if reverse:
+            hits.reverse()
+
         results = self.build_representation(hits, params, **kwargs)
 
-        return es_search['hits']['total'], results
+        total_hits = es_search['hits']['total']
+        after_key = hits[-1]['sort'] if hits else None
+        before_key = hits[0]['sort'] if hits else None
+
+        return SearchResults(total_hits, results, before_key, after_key)
 
     def build_representation(self, hits, params, **kwargs):
 
@@ -346,6 +404,7 @@ class ElasticsearchFacetSet(FacetSet):
             results.append(entry)
 
         return results
+
 
 class HandlerFactory:
 
