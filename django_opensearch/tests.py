@@ -1,5 +1,6 @@
 from django.test import TestCase
 from django.test import Client
+import xmltodict
 
 
 # Create your tests here.
@@ -43,7 +44,7 @@ class PageSizeTest(OpensearchTestCase):
         self.assertEqual(len(response_json['features']), 40)
 
 
-class PaginationTestCast(OpensearchTestCase):
+class PaginationTestCase(OpensearchTestCase):
 
     @staticmethod
     def get_page_ids(features):
@@ -198,5 +199,51 @@ class PaginationTestCast(OpensearchTestCase):
         self.assertEqual(results.status_code, 200)
 
 
+class DateRangeTestCase(OpensearchTestCase):
 
+    @classmethod
+    def setUpTestData(cls):
+        description = cls.client.get(
+            cls.get_url(
+                cls.DESCRIPTION_BASE,
+                parentIdentifier='4eb4e801424a47f7b77434291921f889'
+            )
+        )
 
+        description = xmltodict.parse(description.content)
+        params = description['OpenSearchDescription']['Url'][1]['param:Parameter']
+
+        cls.start_date = [param for param in params if param['@name'] == 'startDate'][0]['@minInclusive']
+        cls.end_date = [param for param in params if param['@name'] == 'endDate'][0]['@maxInclusive']
+
+    def test_start_date_query(self):
+
+        results = self.client.get(
+            self.get_url(
+                self.REQUEST_BASE,
+                parentIdentifier = '4eb4e801424a47f7b77434291921f889',
+                startDate=self.start_date
+            )
+        )
+
+        self.assertEqual(results.status_code, 200)
+
+        results = results.json()
+
+        self.assertGreater(results['totalResults'], 10)
+
+    def test_end_date_query(self):
+
+        results = self.client.get(
+            self.get_url(
+                self.REQUEST_BASE,
+                parentIdentifier = '4eb4e801424a47f7b77434291921f889',
+                endDate=self.end_date
+            )
+        )
+
+        self.assertEqual(results.status_code, 200)
+
+        results = results.json()
+
+        self.assertGreater(results['totalResults'], 10)

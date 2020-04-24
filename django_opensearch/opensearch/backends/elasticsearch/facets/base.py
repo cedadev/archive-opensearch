@@ -121,7 +121,7 @@ class ElasticsearchFacetSet(FacetSet):
         date_fields = {
             'start': 'info.temporal.start_time',
             'end': 'info.temporal.end_time',
-            'range': 'info.temporal.time_frame'
+            'range': 'info.temporal.time_range'
         }
 
         return date_fields[key]
