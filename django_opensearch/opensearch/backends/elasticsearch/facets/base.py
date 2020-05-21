@@ -369,7 +369,17 @@ class ElasticsearchFacetSet(FacetSet):
 
         results = self.build_representation(hits, params, **kwargs)
 
-        total_hits = es_search['hits']['total']
+        # Use the response from the query to get the total unless > 10k
+        # In this case will need to query size directly
+        if es_search['hits']['total']['relation'] == 'eq':
+            total_hits = es_search['hits']['total']['value']
+        else:
+            # Some keys are not compatible with the count query
+            for key in ['sort', 'size', 'from', 'search_after']:
+                query.pop(key, None)
+
+            total_hits = ElasticsearchConnection().count(query)['count']
+
         after_key = hits[-1]['sort'] if hits else None
         before_key = hits[0]['sort'] if hits else None
 
