@@ -112,7 +112,16 @@ class Collection(ElasticsearchFacetSet):
 
         results = self.build_representation(hits, params, **kwargs)
 
-        return es_search['hits']['total'], results
+        # Use the response from the query to get the total unless > 10k
+        # In this case will need to query size directly
+        if es_search['hits']['total']['relation'] == 'eq':
+            total_hits = es_search['hits']['total']['value']
+        else:
+            # Size keys are not compatible with the count query
+            query.pop('size')
+            total_hits = ElasticsearchConnection().count_collections(query)['count']
+
+        return total_hits, results
 
     def build_representation(self, hits, params, **kwargs):
 

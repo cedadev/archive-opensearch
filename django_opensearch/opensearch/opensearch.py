@@ -36,7 +36,6 @@ class OpensearchDescription:
 
         response_types = settings.RESPONSE_TYPES
 
-
         if not search_params.get('parentIdentifier'):
 
             # Get top level collection description

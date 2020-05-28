@@ -9,15 +9,16 @@ __license__ = 'BSD - see LICENSE file in top-level package directory'
 __contact__ = 'richard.d.smith@stfc.ac.uk'
 
 
-from elasticsearch import Elasticsearch
 from django.conf import settings
+from ceda_elasticsearch_tools.elasticsearch import CEDAElasticsearchClient
+
 
 class ElasticsearchConnection:
 
-    def __init__(self, index=settings.ELASTICSEARCH_INDEX, host=settings.ELASTICSEARCH_HOST):
+    def __init__(self, index=settings.ELASTICSEARCH_INDEX):
         self.index = index
         self.collection_index = settings.ELASTICSEARCH_COLLECTION_INDEX
-        self.es = Elasticsearch([host])
+        self.es = CEDAElasticsearchClient()
 
     def search(self, query):
         return self.es.search(index=self.index, body=query)
@@ -25,6 +26,11 @@ class ElasticsearchConnection:
     def search_collections(self, query):
         return self.es.search(index=self.collection_index, body=query)
 
+    def count(self, query):
+        return self.es.count(index=self.index, body=query)
+
+    def count_collections(self, query):
+        return self.es.count(index=self.collection_index, body=query)
 
 
 
