@@ -14,7 +14,9 @@ mapping = ('/neodc','')
 
 method_map = {
     'http': '/fileServer',
-    'opendap': '/dodsC'
+    'opendap': '/dodsC',
+    'wms': '/wms',
+    'wcs': '/wcs'
 }
 
 
