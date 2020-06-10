@@ -176,14 +176,14 @@ class Collection(ElasticsearchFacetSet):
                 for aggregation in source.get('aggregations'):
 
                     agg = {
-                        'id': aggregation,
+                        'id': aggregation['id'],
                         'type': 'Feature',
                         'properties': {
                             'links': {
                                 'described_by': [
                                     {
                                         'title': 'THREDDS Catalog',
-                                        'href': get_thredds_aggregation(aggregation, format='html')
+                                        'href': get_thredds_aggregation(aggregation['id'], format='html')
                                     }
                                 ],
                                 'related': get_aggregation_capabilities(aggregation)
