@@ -90,7 +90,7 @@ class CCIFacets(ElasticsearchFacetSet):
             file_path = os.path.join(source["info"]["directory"], source["info"]["name"])
 
             entry = super().build_entry(hit, params, base_url)
-            entry['links']['related'] = [
+            entry['properties']['links']['related'] = [
                 {
                     'title': 'Download',
                     'href': f'http://{thredds_path("http", file_path)}',
