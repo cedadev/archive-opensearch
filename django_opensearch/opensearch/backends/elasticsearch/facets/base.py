@@ -20,6 +20,8 @@ from dateutil.parser import parse as date_parser
 from django_opensearch.opensearch.utils import NestedDict
 from django_opensearch.opensearch.utils.geo_point import Point, Envelope
 from collections import namedtuple
+from django_opensearch.opensearch.utils.aggregation_tools import get_thredds_aggregation, get_aggregation_capabilities
+
 
 class PagingError(Exception):
     """
@@ -28,7 +30,7 @@ class PagingError(Exception):
     pass
 
 
-SearchResults = namedtuple('SearchResults', ('total','results','search_before','search_after'))
+SearchResults = namedtuple('SearchResults', ('total', 'results', 'search_before', 'search_after'))
 
 
 class ElasticsearchFacetSet(FacetSet):
@@ -42,7 +44,7 @@ class ElasticsearchFacetSet(FacetSet):
                 'must': [
                     {
                         'exists': {
-                            'field':f'projects.{settings.APPLICATION_ID}'
+                            'field': f'projects.{settings.APPLICATION_ID}'
 
                         }
                     }
@@ -68,8 +70,7 @@ class ElasticsearchFacetSet(FacetSet):
     agg_query = {}
 
     # List of facets to exclude from value aggregation
-    exclude_list = ['uuid', 'bbox', 'startDate', 'endDate','title','parentIdentifier']
-
+    exclude_list = ['uuid', 'bbox', 'startDate', 'endDate', 'title', 'parentIdentifier']
 
     @staticmethod
     def _extract_bbox(coordinates):
@@ -156,7 +157,7 @@ class ElasticsearchFacetSet(FacetSet):
             start_index = start_index if start_index > 0 else 0
 
             if start_index > 0 and (start_index + page_size) < 10000:
-                    query['from'] = start_index
+                query['from'] = start_index
 
             # If window is > 10,000 raise error
             else:
@@ -223,7 +224,7 @@ class ElasticsearchFacetSet(FacetSet):
 
                         else:
                             # Equal to AND (a OR b) query where there should be at least one match
-                            andor = {'bool':{'should':[], 'minimum_should_match': 1}}
+                            andor = {'bool': {'should': [], 'minimum_should_match': 1}}
 
                             for search_term in search_terms:
                                 andor['bool']['should'].append(
@@ -240,7 +241,7 @@ class ElasticsearchFacetSet(FacetSet):
 
         if 'startDate' in params:
             date_filter.nested_put([
-                'range',self.get_date_field('range'),'gte'],
+                'range', self.get_date_field('range'), 'gte'],
                 self._isodate(params['startDate'])
             )
 
@@ -253,8 +254,7 @@ class ElasticsearchFacetSet(FacetSet):
         if date_filter:
             query['query']['bool']['filter'].append(
                 date_filter.data
-                )
-
+            )
 
         return query
 
@@ -391,29 +391,112 @@ class ElasticsearchFacetSet(FacetSet):
         base_url = kwargs['uri']
 
         for hit in hits:
-
-            source = hit['_source']
-
-            entry = {
-                'type': 'Feature',
-                'id': f'{base_url}?parentIdentifier={params["parentIdentifier"]}&uuid={ hit["_id"] }',
-                'properties': {
-                    'title': source['info']['name'],
-                    'identifier': hit["_id"],
-                    'updated': source['info']['last_modified']
-                }
-            }
-
-            if source['info'].get('temporal'):
-                entry['properties']['date'] = self._extract_time_range(source['info']['temporal'])
-
-            if source['info'].get('spatial'):
-                # SW - NE (lon,lat)
-                entry['bbox'] = self._extract_bbox(source['info']['spatial'])
+            entry = self.build_entry(hit, params, base_url)
 
             results.append(entry)
 
         return results
+
+    def build_collection_entry(self, hit, params, base_url):
+        """
+        Build individual entries at the collection level
+        :param hit: elasticsearch response
+        :param params: url params
+        :param base_url: base_url for service
+        :return: entry
+        """
+
+        source = hit['_source']
+        entry = {
+            'type': 'FeatureCollection',
+            'id': f'{base_url}/request?uuid={hit["_id"]}',
+            'properties': {
+                'title': source['title'],
+                'identifier': source["collection_id"],
+                'links': {
+                    'search': [
+                        {
+                            'title': 'Opensearch Description Document',
+                            'href': f'{base_url}/description.xml?parentIdentifier={source["collection_id"]}',
+                            'type': 'application/opensearchdescription+xml'
+                        }
+                    ],
+                    'related': [
+                        {
+                            'title': 'ftp',
+                            'href': f'ftp://anon-ftp.ceda.ac.uk{source["path"]}',
+                        }
+                    ]
+                }
+            }
+        }
+
+        if source.get('start_date'):
+            entry['properties']['date'] = f"{source['start_date']}/{source['end_date']}"
+
+        if source.get('aggregations'):
+            entry['properties']['aggregations'] = []
+
+            for aggregation in source.get('aggregations'):
+                agg = {
+                    'id': aggregation['id'],
+                    'type': 'Feature',
+                    'properties': {
+                        'links': {
+                            'described_by': [
+                                {
+                                    'title': 'THREDDS Catalog',
+                                    'href': get_thredds_aggregation(aggregation['id'], format='html')
+                                }
+                            ],
+                            'related': get_aggregation_capabilities(aggregation)
+                        }
+                    }
+                }
+
+                entry['properties']['aggregations'].append(agg)
+
+        if params.get('parentIdentifier'):
+            entry['id'] = f'{base_url}/request?parentIdentifier={params["parentIdentifier"]}&uuid={hit["_id"]}'
+
+        if source.get('variables'):
+            entry['properties']['variables'] = self._extract_variables(source['variables'])
+
+        return entry
+
+    def build_entry(self, hit, params, base_url):
+        """
+        Build individual entries at the granule level
+
+        :param hit:
+        :param params:
+        :param base_url:
+        :return:
+        """
+        source = hit['_source']
+
+        entry = {
+            'type': 'Feature',
+            'id': f'{base_url}?parentIdentifier={params["parentIdentifier"]}&uuid={hit["_id"]}',
+            'properties': {
+                'title': source['info']['name'],
+                'identifier': hit["_id"],
+                'updated': source['info']['last_modified'],
+                'filesize': source['info']['size']
+            }
+        }
+
+        if source['info'].get('temporal'):
+            entry['properties']['date'] = self._extract_time_range(source['info']['temporal'])
+
+        if source['info'].get('spatial'):
+            # SW - NE (lon,lat)
+            bbox = self._extract_bbox(source['info']['spatial'])
+
+            if bbox:
+                entry['bbox'] = bbox
+
+        return entry
 
 
 class HandlerFactory:
