@@ -103,6 +103,7 @@ class Collection(ElasticsearchFacetSet):
         if self.path:
             handler = HandlerFactory().get_handler(self.path)
             self.facets.update(handler.facets)
+            kwargs['handler'] = handler
 
         query = self._build_query(params, **kwargs)
 
@@ -126,79 +127,15 @@ class Collection(ElasticsearchFacetSet):
     def build_representation(self, hits, params, **kwargs):
 
         base_url = kwargs['uri']
+        handler = kwargs.pop('handler', None)
 
         results = []
 
         for hit in hits:
-            source = hit['_source']
-            entry = {
-                'type': 'FeatureCollection',
-                'id': f'{base_url}/request?uuid={hit["_id"]}',
-                'properties': {
-                    'title': source['title'],
-                    'identifier': source["collection_id"],
-                    'links': {
-                        'search': [
-                            {
-                                'title': 'Opensearch Description Document',
-                                'href': f'{base_url}/description.xml?parentIdentifier={source["collection_id"]}',
-                                'type': 'application/xml'
-                            }
-                        ],
-                        'related': [
-                            {
-                                'title': 'ftp',
-                                'href': f'ftp://anon-ftp.ceda.ac.uk{source["path"]}',
-                            }
-                        ]
-                    }
-                }
-            }
-
-            if source.get('start_date'):
-                entry['properties']['date'] = f"{source['start_date']}/{source['end_date']}"
-
-            if source.get('collection_id') != 'cci':
-                entry['properties']['links']['describedby'] = [
-                    {
-                        'title': 'ISO19115',
-                        'href': f'https://catalogue.ceda.ac.uk/export/xml/{source["collection_id"]}.xml'
-                    },
-                    {
-                        'title': 'Dataset Information',
-                        'href': f'https://catalogue.ceda.ac.uk/uuid/{source["collection_id"]}'
-                    }
-                ]
-
-            if source.get('aggregations'):
-                entry['properties']['aggregations'] = []
-
-                for aggregation in source.get('aggregations'):
-
-                    agg = {
-                        'id': aggregation['id'],
-                        'type': 'Feature',
-                        'properties': {
-                            'links': {
-                                'described_by': [
-                                    {
-                                        'title': 'THREDDS Catalog',
-                                        'href': get_thredds_aggregation(aggregation['id'], format='html')
-                                    }
-                                ],
-                                'related': get_aggregation_capabilities(aggregation)
-                            }
-                        }
-                    }
-
-                    entry['properties']['aggregations'].append(agg)
-
-            if params.get('parentIdentifier'):
-                entry['id'] = f'{base_url}/request?parentIdentifier={params["parentIdentifier"]}&uuid={hit["_id"]}'
-
-            if source.get('variables'):
-                entry['properties']['variables'] = self._extract_variables(source['variables'])
-
+            if handler:
+                entry = handler.build_collection_entry(hit, params, base_url)
+            else:
+                entry = self.build_collection_entry(hit, params, base_url)
             results.append(entry)
 
         return results

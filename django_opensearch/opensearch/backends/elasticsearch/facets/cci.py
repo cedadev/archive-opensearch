@@ -48,7 +48,6 @@ class CCIFacets(ElasticsearchFacetSet):
         pid = params.get('parentIdentifier')
 
         if pid:
-
             query['query']['bool']['must'].append({
                 'term': {
                     f'projects.{settings.APPLICATION_ID}.datasetId': pid
@@ -56,35 +55,47 @@ class CCIFacets(ElasticsearchFacetSet):
             })
         return query
 
-    def build_representation(self, hits, params, **kwargs):
+    def build_collection_entry(self, hit, params, base_url):
+        source = hit['_source']
+        entry = super().build_collection_entry(hit, params, base_url)
 
-        base_url = kwargs['uri']
+        if source['path'].startswith('http'):
+            # Clear the search links from default entry
+            entry['properties']['links'].pop('search', None)
 
-        results = []
-
-        for hit in hits:
-
-            source = hit['_source']
-            file_path  = os.path.join(source["info"]["directory"], source["info"]["name"])
-
-            entry = {
-                'type': 'Feature',
-                'id': f'{base_url}?parentIdentifier={params["parentIdentifier"]}&uuid={ hit["_id"] }',
-                'properties': {
-                    'title': source['info']['name'],
-                    'identifier': hit["_id"],
-                    'updated': source['info']['last_modified'],
-                    'filesize': source['info']['size'],
-                    'links': {
-                            'related': [
-                                {
-                                    'title': 'Download',
-                                    'href': f'http://{thredds_path("http",file_path)}',
-                                }
-                            ]
-                    }
+            # Overwrite the related links
+            entry['properties']['links']['related'] = [
+                {
+                    'title': 'Dataset',
+                    'href': source['path']
                 }
-            }
+            ]
+
+        if source.get('collection_id') != 'cci':
+            entry['properties']['links']['describedby'] = [
+                {
+                    'title': 'ISO19115',
+                    'href': f'https://catalogue.ceda.ac.uk/export/xml/{source["collection_id"]}.xml'
+                },
+                {
+                    'title': 'Dataset Information',
+                    'href': f'https://catalogue.ceda.ac.uk/uuid/{source["collection_id"]}'
+                }
+            ]
+
+        return entry
+
+    def build_entry(self, hit, params, base_url):
+            source = hit['_source']
+            file_path = os.path.join(source["info"]["directory"], source["info"]["name"])
+
+            entry = super().build_entry(hit, params, base_url)
+            entry['properties']['links']['related'] = [
+                {
+                    'title': 'Download',
+                    'href': f'http://{thredds_path("http", file_path)}',
+                }
+            ]
 
             # Add opendap link to netCDF files
             if source['info'].get('format') == 'NetCDF':
@@ -95,18 +106,5 @@ class CCIFacets(ElasticsearchFacetSet):
                     }
                 )
 
-            if source['info'].get('temporal'):
-                entry['properties']['date'] = self._extract_time_range(source['info']['temporal'])
-
-            if source['info'].get('spatial'):
-                # SW - NE (lon,lat)
-                bbox = self._extract_bbox(source['info']['spatial'])
-
-                if bbox:
-                    entry['bbox'] = bbox
-
-            results.append(entry)
-
-        return results
-
+            return entry
 
