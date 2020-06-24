@@ -20,7 +20,9 @@ from dateutil.parser import parse as date_parser
 from django_opensearch.opensearch.utils import NestedDict
 from django_opensearch.opensearch.utils.geo_point import Point, Envelope
 from collections import namedtuple
-from django_opensearch.opensearch.utils.aggregation_tools import get_thredds_aggregation, get_aggregation_capabilities
+from django_opensearch.opensearch.utils.aggregation_tools import get_thredds_aggregation, get_aggregation_capabilities, \
+    get_aggregation_search_link
+import urllib.parse
 
 
 class PagingError(Exception):
@@ -447,6 +449,17 @@ class ElasticsearchFacetSet(FacetSet):
                                 {
                                     'title': 'THREDDS Catalog',
                                     'href': get_thredds_aggregation(aggregation['id'], format='html')
+                                }
+                            ],
+                            'search': [
+                                {
+                                    'title': 'Files',
+                                    'href': get_aggregation_search_link(
+                                        base_url,
+                                        source['collection_id'],
+                                        aggregation['id'],
+                                        params.get('httpAccept', 'application/geo+json')
+                                    )
                                 }
                             ],
                             'related': get_aggregation_capabilities(aggregation)
