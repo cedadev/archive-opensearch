@@ -175,7 +175,8 @@ class ElasticsearchFacetSet(FacetSet):
             if param == 'query' and params[param]:
                 query['query']['bool']['must'].append({
                     'simple_query_string': {
-                        'query': params[param]
+                        'query': params[param],
+                        'default_operator': 'and'
                     }
                 })
 
