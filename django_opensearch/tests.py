@@ -247,3 +247,27 @@ class DateRangeTestCase(OpensearchTestCase):
         results = results.json()
 
         self.assertGreater(results['totalResults'], 10)
+
+
+class ReturnCodeTestCase(OpensearchTestCase):
+
+    def test_404_response_from_request(self):
+
+        results = self.client.get(
+            self.get_url(
+                self.REQUEST_BASE,
+                parentIdentifier= 'asdas'
+            )
+        )
+
+        self.assertEqual(results.status_code, 404)
+
+    def test_404_response_from_description(self):
+        results = self.client.get(
+            self.get_url(
+                self.DESCRIPTION_BASE,
+                parentIdentifier='asdas'
+            )
+        )
+
+        self.assertEqual(results.status_code, 404)
