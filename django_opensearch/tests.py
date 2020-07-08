@@ -108,7 +108,7 @@ class PaginationTestCase(OpensearchTestCase):
         return self.get_page_ids(features)
 
     def test_page_1(self):
-        
+
         page_ids = self.get_page_feature_ids()
         self.assertListEqual(page_ids, self.pages[1])
 
@@ -217,11 +217,10 @@ class DateRangeTestCase(OpensearchTestCase):
         cls.end_date = [param for param in params if param['@name'] == 'endDate'][0]['@maxInclusive']
 
     def test_start_date_query(self):
-
         results = self.client.get(
             self.get_url(
                 self.REQUEST_BASE,
-                parentIdentifier = '4eb4e801424a47f7b77434291921f889',
+                parentIdentifier='4eb4e801424a47f7b77434291921f889',
                 startDate=self.start_date
             )
         )
@@ -233,11 +232,10 @@ class DateRangeTestCase(OpensearchTestCase):
         self.assertGreater(results['totalResults'], 10)
 
     def test_end_date_query(self):
-
         results = self.client.get(
             self.get_url(
                 self.REQUEST_BASE,
-                parentIdentifier = '4eb4e801424a47f7b77434291921f889',
+                parentIdentifier='4eb4e801424a47f7b77434291921f889',
                 endDate=self.end_date
             )
         )
@@ -247,3 +245,33 @@ class DateRangeTestCase(OpensearchTestCase):
         results = results.json()
 
         self.assertGreater(results['totalResults'], 10)
+
+
+class JSONResponseTestCase(OpensearchTestCase):
+
+    def test_subtitle(self):
+        results = self.client.get(
+            self.get_url(
+                self.REQUEST_BASE,
+                parentIdentifier='cci'
+            )
+        )
+
+        self.assertEqual(results.status_code, 200)
+        results = results.json()
+
+        feature_id = results['features'][0]['properties']['identifier']
+
+        results = self.client.get(
+            self.get_url(
+                self.REQUEST_BASE,
+                parentIdentifier='cci',
+                uuid=feature_id
+            )
+        )
+        self.assertEqual(results.status_code, 200)
+        results = results.json()
+        self.assertEqual(results['subtitle'], 'Showing 1 - 1 of 1')
+
+
+
