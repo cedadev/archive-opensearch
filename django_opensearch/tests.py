@@ -247,6 +247,31 @@ class DateRangeTestCase(OpensearchTestCase):
         self.assertGreater(results['totalResults'], 10)
 
 
+
+class ReturnCodeTestCase(OpensearchTestCase):
+
+    def test_404_response_from_request(self):
+
+        results = self.client.get(
+            self.get_url(
+                self.REQUEST_BASE,
+                parentIdentifier= 'asdas'
+            )
+        )
+
+        self.assertEqual(results.status_code, 404)
+
+    def test_404_response_from_description(self):
+        results = self.client.get(
+            self.get_url(
+                self.DESCRIPTION_BASE,
+                parentIdentifier='asdas'
+            )
+        )
+
+        self.assertEqual(results.status_code, 404)
+
+        
 class JSONResponseTestCase(OpensearchTestCase):
 
     def test_subtitle(self):
@@ -272,6 +297,4 @@ class JSONResponseTestCase(OpensearchTestCase):
         self.assertEqual(results.status_code, 200)
         results = results.json()
         self.assertEqual(results['subtitle'], 'Showing 1 - 1 of 1')
-
-
 

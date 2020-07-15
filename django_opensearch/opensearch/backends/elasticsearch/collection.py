@@ -12,6 +12,7 @@ from .facets.base import ElasticsearchFacetSet
 from .facets.elasticsearch_connection import ElasticsearchConnection
 from .facets.base import HandlerFactory
 from django_opensearch.constants import DEFAULT
+from django.http import Http404
 from django_opensearch.opensearch.utils.aggregation_tools import get_thredds_aggregation, get_aggregation_capabilities
 
 
@@ -155,3 +156,6 @@ class Collection(ElasticsearchFacetSet):
         result = ElasticsearchConnection().search_collections(query)
         if result['hits']['hits']:
             return result['hits']['hits'][0]['_source']['path']
+
+        else:
+            raise Http404(f'Collection not found with id: {collection_id}')

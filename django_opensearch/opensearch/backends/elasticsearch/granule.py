@@ -9,9 +9,7 @@ __license__ = 'BSD - see LICENSE file in top-level package directory'
 __contact__ = 'richard.d.smith@stfc.ac.uk'
 
 from .facets.base import HandlerFactory
-from .collection import Collection
-from django_opensearch import settings
-from .facets.base import ElasticsearchFacetSet
+
 
 class Granule:
 
