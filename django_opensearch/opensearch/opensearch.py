@@ -123,7 +123,13 @@ class OpensearchResponse:
 
         self._generate_responses(search_params, start_index=search_index, max_results=self.itemsPerPage, uri=full_uri, search_after=search_after, reverse=reverse)
 
-        self.subtitle = f'Showing {search_index} - {search_index + self.itemsPerPage -1}' \
+        #
+        if search_index + self.itemsPerPage -1 > self.totalResults:
+            end_of_page = self.totalResults
+        else:
+            end_of_page = search_index + self.itemsPerPage -1
+
+        self.subtitle = f'Showing {search_index} - {end_of_page}' \
                         f' of {self.totalResults}'
 
         if self.totalResults > self.itemsPerPage:
