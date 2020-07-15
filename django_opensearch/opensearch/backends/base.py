@@ -129,7 +129,6 @@ class FacetSet:
         else:
            facet_set = self._get_facet_set()
 
-        # facet_set = self._get_facet_set()
         facet_set_with_vals = []
 
         # Get the aggregated values for each facet
@@ -146,6 +145,11 @@ class FacetSet:
 
                 if facet_data.get('extra_kwargs'):
                     param.extra_kwargs = facet_data.get('extra_kwargs')
+
+            # Exclude start and end dates from facets if there are not start
+            # end values available from the files
+            elif param.name in ('startDate', 'endDate'):
+                continue
 
             facet_set_with_vals.append(param)
 
