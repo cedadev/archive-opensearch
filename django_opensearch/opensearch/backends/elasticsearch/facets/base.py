@@ -49,6 +49,12 @@ class ElasticsearchFacetSet(FacetSet):
                             'field': f'projects.{settings.APPLICATION_ID}'
 
                         }
+                    },
+                    {
+                        'exists': {
+                            'field': 'info'
+
+                        }
                     }
                 ],
                 'should': [],
