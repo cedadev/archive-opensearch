@@ -313,7 +313,7 @@ class ElasticsearchFacetSet(FacetSet):
                         variable_dict = parse_key(bucket['key'])
                         variable_values.append({
                             'label': f'{variable_dict.get("best_name")} ({bucket["doc_count"]})',
-                            'value': variable_dict.pop('var_id', None),
+                            'value': bucket['key'],
                             'text': variable_dict.pop('best_name', None),
                             'extra_kwargs': variable_dict
                         })
