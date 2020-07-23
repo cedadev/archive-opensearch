@@ -53,7 +53,12 @@ class Collection(ElasticsearchFacetSet):
 
     @staticmethod
     def _get_es_path(facet_path, facet_name):
-        return f'{facet_name}' if facet_path is DEFAULT else facet_path
+        if facet_name == 'bbox':
+            return facet_name
+        if facet_name == 'variable':
+            return 'variable.agg_string.keyword'
+
+        return f'{facet_name}.keyword'
 
     @staticmethod
     def get_date_field(key):

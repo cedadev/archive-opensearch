@@ -30,9 +30,10 @@ class CCIFacets(ElasticsearchFacetSet):
         'dataType': DEFAULT,
         'sensor': DEFAULT,
         'platform': DEFAULT,
-        'fileFormat': 'info.type',
+        'fileFormat': 'info.type.keyword',
         'bbox': 'info.spatial.coordinates.coordinates',
-        'drsId': DEFAULT
+        'drsId': DEFAULT,
+        'variable': 'info.phenomena.agg_string'
     }
 
     def _build_query(self, params, **kwargs):

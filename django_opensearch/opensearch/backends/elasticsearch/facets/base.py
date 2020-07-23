@@ -23,6 +23,7 @@ from collections import namedtuple
 from django_opensearch.opensearch.utils.aggregation_tools import get_thredds_aggregation, get_aggregation_capabilities, \
     get_aggregation_search_link
 import urllib.parse
+from django_opensearch.opensearch.utils.aggregation_tools import parse_key
 
 
 class PagingError(Exception):
@@ -118,7 +119,7 @@ class ElasticsearchFacetSet(FacetSet):
         :param param: parameter
         :return str: path to item in elasticsearch index
         """
-        return f'projects.{settings.APPLICATION_ID}.{facet_name}' if facet_path is DEFAULT else facet_path
+        return f'projects.{settings.APPLICATION_ID}.{facet_name}.keyword' if facet_path is DEFAULT else facet_path
 
     @staticmethod
     def get_date_field(key):
@@ -304,6 +305,23 @@ class ElasticsearchFacetSet(FacetSet):
                             'pattern': '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$'
                         }}
 
+                elif result == 'variable':
+
+                    variable_values = []
+
+                    for bucket in aggs['aggregations'][result]['buckets']:
+                        variable_dict = parse_key(bucket['key'])
+                        variable_values.append({
+                            'label': f'{variable_dict.get("best_name")} ({bucket["doc_count"]})',
+                            'value': variable_dict.pop('var_id', None),
+                            'text': variable_dict.pop('best_name', None),
+                            'extra_kwargs': variable_dict
+                        })
+
+                    values[result] = {
+                        'values': variable_values
+                    }
+
                 else:
                     values[result] = {
                         'values': [
@@ -337,7 +355,7 @@ class ElasticsearchFacetSet(FacetSet):
 
                 query['aggs'][facet] = {
                     'terms': {
-                        'field': f'{self._get_es_path(facet_path, facet)}.keyword',
+                        'field': f'{self._get_es_path(facet_path, facet)}',
                         'size': 1000
                     }
                 }
@@ -479,8 +497,8 @@ class ElasticsearchFacetSet(FacetSet):
         if params.get('parentIdentifier'):
             entry['id'] = f'{base_url}/request?parentIdentifier={params["parentIdentifier"]}&uuid={hit["_id"]}'
 
-        if source.get('variables'):
-            entry['properties']['variables'] = self._extract_variables(source['variables'])
+        if source.get('variable'):
+            entry['properties']['variables'] = self._extract_variables(source['variable'])
 
         return entry
 
