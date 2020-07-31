@@ -13,7 +13,7 @@ from .facets.elasticsearch_connection import ElasticsearchConnection
 from .facets.base import HandlerFactory
 from django_opensearch.constants import DEFAULT
 from django.http import Http404
-from django_opensearch.opensearch.utils.aggregation_tools import get_thredds_aggregation, get_aggregation_capabilities
+from django.conf import settings
 
 
 def collection_search(search_params):
@@ -29,7 +29,7 @@ def collection_search(search_params):
             }
         }
 
-        return bool(ElasticsearchConnection().es.count(index='opensearch-collections', body=query)['count'])
+        return bool(ElasticsearchConnection().es.count(index=settings.ELASTICSEARCH_COLLECTION_INDEX, body=query)['count'])
 
     return False
 

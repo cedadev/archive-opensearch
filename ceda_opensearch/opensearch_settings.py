@@ -15,7 +15,7 @@ TAGS = ['CEDA','NERC']
 DEVELOPER = 'CEDA'
 
 ELASTICSEARCH_INDEX = 'opensearch-files'
-ELASTICSEARCH_COLLECTION_INDEX = 'opensearch-collections'
+ELASTICSEARCH_COLLECTION_INDEX = 'opensearch-collections-double-nested'
 APPLICATION_ID = 'opensearch'
 
 THREDDS_HOST = 'data.cci.ceda.ac.uk'
