@@ -22,7 +22,6 @@ from django_opensearch.opensearch.utils.geo_point import Point, Envelope
 from collections import namedtuple
 from django_opensearch.opensearch.utils.aggregation_tools import get_thredds_aggregation, get_aggregation_capabilities, \
     get_aggregation_search_link
-import urllib.parse
 
 
 class PagingError(Exception):

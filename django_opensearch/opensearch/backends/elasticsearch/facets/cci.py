@@ -19,6 +19,7 @@ class CCIFacets(ElasticsearchFacetSet):
     """
 
     """
+    LOOKUP_HANDLER = 'django_opensearch.opensearch.lookup.cci_lookup.CCILookupHandler'
 
     facets = {
         'ecv': DEFAULT,
@@ -107,4 +108,3 @@ class CCIFacets(ElasticsearchFacetSet):
                 )
 
             return entry
-

@@ -27,7 +27,7 @@
                 <param:Parameter name="{{ param.name }}" value="{{ param.val }}" {% for k,v in param.extra_kwargs.items %} {{k}}="{{ v }}" {% endfor %}{% if param.value_list %}>{% else %}
                     />{% endif %}
                 {% for value in param.value_list %}
-                    <param:Option label="{{ value.label }}" value="{{ value.value }}"/>
+                    <param:Option label="{{ value.label }}" value="{{ value.value }}" text="{% if value.text %}{{ value.text |title}}{% else %}{{ value.value}}{% endif %}"/>
                 {% endfor %}
                 {% if param.value_list %}
                     </param:Parameter>
