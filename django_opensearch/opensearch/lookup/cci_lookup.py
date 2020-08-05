@@ -16,6 +16,7 @@ import json
 import re
 
 CAMEL_PATTERN = re.compile(r'(?<!^)(?=[A-Z])')
+LABEL_PATTERN = re.compile(r'(?P<label>.+)\s\((?P<count>\d+)')
 
 
 def camel_to_snake(value):
@@ -59,6 +60,7 @@ class CCILookupHandler(BaseLookupHandler):
             for value in value_list:
                 pref_label = self.facets.get_pref_label_from_alt_label(camel_to_snake(facet), value['value'])
                 if pref_label:
-                    value['text'] = pref_label
+                    count = value['label'].split()[-1]
+                    value['label'] = f'{pref_label.title()} {count}'
 
         return value_list
