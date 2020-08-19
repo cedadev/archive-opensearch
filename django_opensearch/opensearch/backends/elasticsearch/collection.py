@@ -147,7 +147,7 @@ class Collection(ElasticsearchFacetSet):
         query = {
             'query': {
                 'term': {
-                    'collection_id': collection_id
+                    'collection_id.keyword': collection_id
                 }
             },
             'size': 1

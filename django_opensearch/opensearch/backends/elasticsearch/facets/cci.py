@@ -47,6 +47,9 @@ class CCIFacets(ElasticsearchFacetSet):
 
         pid = params.get('parentIdentifier')
 
+        if pid.endswith('.all'):
+            pid = pid[:-4]
+
         if pid:
             query['query']['bool']['must'].append({
                 'term': {
