@@ -29,7 +29,7 @@ def collection_search(search_params):
             }
         }
 
-        return bool(ElasticsearchConnection().es.count(index=settings.ELASTICSEARCH_COLLECTION_INDEX, body=query)['count'])
+        return bool(ElasticsearchConnection().count_collections(query)['count'])
 
     return False
 
