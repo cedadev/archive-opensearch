@@ -31,7 +31,9 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'django_opensearch',
     'django_opensearch_osddvars',
+    'django_opensearch_nested',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
