@@ -11,19 +11,19 @@ __contact__ = 'richard.d.smith@stfc.ac.uk'
 from .collection_map import COLLECTION_MAP
 from pydoc import locate
 import os
-from django_opensearch.constants import DEFAULT
-from django_opensearch.opensearch.backends import NamespaceMap, Param, FacetSet
-from django_opensearch import settings
+from django_opensearch_osddvars.constants import DEFAULT
+from django_opensearch_osddvars.opensearch.backends import NamespaceMap, Param, FacetSet
+from django_opensearch_osddvars import settings
 from .elasticsearch_connection import ElasticsearchConnection
 import copy
 from dateutil.parser import parse as date_parser
-from django_opensearch.opensearch.utils import NestedDict
-from django_opensearch.opensearch.utils.geo_point import Point, Envelope
+from django_opensearch_osddvars.opensearch.utils import NestedDict
+from django_opensearch_osddvars.opensearch.utils.geo_point import Point, Envelope
 from collections import namedtuple
-from django_opensearch.opensearch.utils.aggregation_tools import get_thredds_aggregation, get_aggregation_capabilities, \
+from django_opensearch_osddvars.opensearch.utils.aggregation_tools import get_thredds_aggregation, get_aggregation_capabilities, \
     get_aggregation_search_link
 import urllib.parse
-from django_opensearch.opensearch.utils.aggregation_tools import parse_key
+from django_opensearch_osddvars.opensearch.utils.aggregation_tools import parse_key
 
 
 class PagingError(Exception):

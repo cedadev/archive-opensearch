@@ -9,10 +9,10 @@ __license__ = 'BSD - see LICENSE file in top-level package directory'
 __contact__ = 'richard.d.smith@stfc.ac.uk'
 
 from .base import SolrFacetSet
-from django_opensearch.constants import DEFAULT
+from django_opensearch_osddvars.constants import DEFAULT
 
 
-class Obs4MIPsFacets(SolrFacetSet):
+class CORDEXFacets(SolrFacetSet):
     facets = {
         # Standard
         'uuid': 'id',
@@ -36,7 +36,9 @@ class Obs4MIPsFacets(SolrFacetSet):
         'variable': DEFAULT,
         'version': DEFAULT,
 
-        #Obs4MIPs specific
-        'instrument': 'source_id'
+        # Cordex specific
+        'domain': DEFAULT,
+        'rcmName': 'rcm_name',
+        'rcmVersion': 'rcm_version'
     }
 

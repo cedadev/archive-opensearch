@@ -9,10 +9,10 @@ __license__ = 'BSD - see LICENSE file in top-level package directory'
 __contact__ = 'richard.d.smith@stfc.ac.uk'
 
 from .base import SolrFacetSet
-from django_opensearch.constants import DEFAULT
+from django_opensearch_osddvars.constants import DEFAULT
 
 
-class ESGFFacets(SolrFacetSet):
+class Obs4MIPsFacets(SolrFacetSet):
     facets = {
         # Standard
         'uuid': 'id',
@@ -35,29 +35,8 @@ class ESGFFacets(SolrFacetSet):
         'dataNode': 'data_node',
         'variable': DEFAULT,
         'version': DEFAULT,
+
+        #Obs4MIPs specific
+        'instrument': 'source_id'
     }
 
-    def _build_properties(self, hits, params, base_url):
-
-        results = []
-
-        for hit in hits:
-
-            entry = {
-                'type': 'Feature',
-                'id': f'{base_url}?parentIdentifier={params["parentIdentifier"]}&uuid={hit["id"]}',
-                'properties': {
-                    'title': hit['title'],
-                    'identifier': hit['id'],
-                    'updated': hit['_timestamp'],
-                    'date': f'{hit["datetime_start"]}/{hit["datetime_stop"]}',
-                    'abstract': hit['description'][0],
-                    'data_node': hit['data_node'],
-                    'version': hit['version'],
-                    'number_of_files': hit['number_of_files'],
-                }
-            }
-
-            results.append(entry)
-
-        return results

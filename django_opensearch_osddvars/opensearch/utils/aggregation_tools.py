@@ -9,8 +9,8 @@ __license__ = 'BSD - see LICENSE file in top-level package directory'
 __contact__ = 'richard.d.smith@stfc.ac.uk'
 
 from django.conf import settings
-from django_opensearch.constants import SUFFIX_MAP
-from django_opensearch.opensearch.utils import thredds_path
+from django_opensearch_osddvars.constants import SUFFIX_MAP
+from django_opensearch_osddvars.opensearch.utils import thredds_path
 import urllib.parse
 
 

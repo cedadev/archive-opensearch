@@ -1,6 +1,6 @@
 # encoding: utf-8
 """
-Default settings for the django_opensearch application. These can be overridden by
+Default settings for the django_opensearch_osddvars application. These can be overridden by
 settings in the project level django settings.py file.
 """
 

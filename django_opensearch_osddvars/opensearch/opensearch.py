@@ -1,10 +1,10 @@
-from django_opensearch import settings
+from django_opensearch_osddvars import settings
 import math
-from django_opensearch.opensearch.backends import NamespaceMap
+from django_opensearch_osddvars.opensearch.backends import NamespaceMap
 from importlib import import_module
 
 # Import required backend
-backend = import_module(f'django_opensearch.opensearch.backends.{settings.OPENSEARCH_BACKEND}')
+backend = import_module(f'django_opensearch_osddvars.opensearch.backends.{settings.OPENSEARCH_BACKEND}')
 Collection = getattr(backend, 'Collection')
 Granule = getattr(backend, 'Granule')
 

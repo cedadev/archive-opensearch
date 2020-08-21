@@ -8,8 +8,8 @@ __copyright__ = 'Copyright 2018 United Kingdom Research and Innovation'
 __license__ = 'BSD - see LICENSE file in top-level package directory'
 __contact__ = 'richard.d.smith@stfc.ac.uk'
 
-from django_opensearch.opensearch.backends import FacetSet
-from django_opensearch.constants import DEFAULT
+from django_opensearch_osddvars.opensearch.backends import FacetSet
+from django_opensearch_osddvars.constants import DEFAULT
 from .solr_connection import SolrConnection
 from .util import pairwise
 

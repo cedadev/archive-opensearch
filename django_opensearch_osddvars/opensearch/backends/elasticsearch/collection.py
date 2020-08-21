@@ -11,9 +11,9 @@ __contact__ = 'richard.d.smith@stfc.ac.uk'
 from .facets.base import ElasticsearchFacetSet
 from .facets.elasticsearch_connection import ElasticsearchConnection
 from .facets.base import HandlerFactory
-from django_opensearch.constants import DEFAULT
+from django_opensearch_osddvars.constants import DEFAULT
 from django.http import Http404
-from django_opensearch.opensearch.utils.aggregation_tools import get_thredds_aggregation, get_aggregation_capabilities
+from django_opensearch_osddvars.opensearch.utils.aggregation_tools import get_thredds_aggregation, get_aggregation_capabilities
 
 
 def collection_search(search_params):

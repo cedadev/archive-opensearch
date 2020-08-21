@@ -9,8 +9,8 @@ __license__ = 'BSD - see LICENSE file in top-level package directory'
 __contact__ = 'richard.d.smith@stfc.ac.uk'
 
 
-from django_opensearch import settings
-from django_opensearch.constants import DEFAULT
+from django_opensearch_osddvars import settings
+from django_opensearch_osddvars.constants import DEFAULT
 
 class Param:
 

@@ -8,12 +8,12 @@ __copyright__ = 'Copyright 2018 United Kingdom Research and Innovation'
 __license__ = 'BSD - see LICENSE file in top-level package directory'
 __contact__ = 'richard.d.smith@stfc.ac.uk'
 
-from django_opensearch.opensearch.backends import NamespaceMap, Param, FacetSet
+from django_opensearch_osddvars.opensearch.backends import NamespaceMap, Param, FacetSet
 from .collection_map import COLLECTION_MAP
 from ..solr_connection import SolrConnection
 import os
 from pydoc import locate
-from django_opensearch.constants import DEFAULT
+from django_opensearch_osddvars.constants import DEFAULT
 from ..util import pairwise
 import copy
 

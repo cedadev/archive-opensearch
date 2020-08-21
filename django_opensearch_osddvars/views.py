@@ -8,7 +8,7 @@ import jsonpickle
 
 jsonpickle.set_encoder_options('json', indent=4)
 from django.conf import settings
-from django_opensearch import settings as opensearch_settings
+from django_opensearch_osddvars import settings as opensearch_settings
 
 
 # Create your views here.

@@ -8,7 +8,7 @@ __copyright__ = 'Copyright 2018 United Kingdom Research and Innovation'
 __license__ = 'BSD - see LICENSE file in top-level package directory'
 __contact__ = 'richard.d.smith@stfc.ac.uk'
 
-from django_opensearch import settings as opensearch_settings
+from django_opensearch_osddvars import settings as opensearch_settings
 
 mapping = ('/neodc','')
 
