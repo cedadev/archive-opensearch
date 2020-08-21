@@ -12,12 +12,14 @@ __contact__ = 'richard.d.smith@stfc.ac.uk'
 from django.conf import settings
 from ceda_elasticsearch_tools.elasticsearch import CEDAElasticsearchClient
 
+ELASTICSEARCH_INDEX = 'opensearch-files-double-nested'
+ELASTICSEARCH_COLLECTION_INDEX = 'opensearch-collections-double-nested'
 
 class ElasticsearchConnection:
 
-    def __init__(self, index=settings.ELASTICSEARCH_INDEX):
+    def __init__(self, index=ELASTICSEARCH_INDEX):
         self.index = index
-        self.collection_index = settings.ELASTICSEARCH_COLLECTION_INDEX
+        self.collection_index = ELASTICSEARCH_COLLECTION_INDEX
         self.es = CEDAElasticsearchClient()
 
     def search(self, query):
