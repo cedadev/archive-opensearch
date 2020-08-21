@@ -497,9 +497,6 @@ class ElasticsearchFacetSet(FacetSet):
         if params.get('parentIdentifier'):
             entry['id'] = f'{base_url}/request?parentIdentifier={params["parentIdentifier"]}&uuid={hit["_id"]}'
 
-        if source.get('variable'):
-            entry['properties']['variables'] = self._extract_variables(source['variable'])
-
         return entry
 
     def build_entry(self, hit, params, base_url):
