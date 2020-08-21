@@ -62,6 +62,8 @@ class CCIFacets(ElasticsearchFacetSet):
         source = hit['_source']
         entry = super().build_collection_entry(hit, params, base_url)
 
+        # There are a few CCI datasets which are not archive locations but URLs
+        # This section handles those datasets
         if source['path'].startswith('http'):
             # Clear the search links from default entry
             entry['properties']['links'].pop('search', None)
@@ -74,17 +76,12 @@ class CCIFacets(ElasticsearchFacetSet):
                 }
             ]
 
-        if source.get('collection_id') != 'cci':
-            entry['properties']['links']['describedby'] = [
-                {
-                    'title': 'ISO19115',
-                    'href': f'https://catalogue.ceda.ac.uk/export/xml/{source["collection_id"]}.xml'
-                },
-                {
-                    'title': 'Dataset Information',
-                    'href': f'https://catalogue.ceda.ac.uk/uuid/{source["collection_id"]}'
-                }
-            ]
+        source_links = source.get('links')
+        if source_links:
+            # Merge the coded links with those in the index. Indexed links take priority and if links
+            # exist in both for the same html rel attribute, the base links will be overwritten with
+            # this in the index
+            entry['properties']['links'] = {**entry['properties']['links'],**source_links}
 
         return entry
 
