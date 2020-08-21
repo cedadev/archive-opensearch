@@ -19,6 +19,6 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('opensearch/', include('django_opensearch.urls')),
-    path('opensearch/osddvars/', include('django_opensearch_osddvars.urls')),
-    path('opensearch/nested/', include('django_opensearch_nested.urls'))
+    path('osddvars/opensearch/', include('django_opensearch_osddvars.urls')),
+    path('nested/opensearch/', include('django_opensearch_nested.urls'))
 ]
