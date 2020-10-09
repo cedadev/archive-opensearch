@@ -43,7 +43,8 @@ class NamespaceMap:
         'endDate': dict(name='end', namespace=settings.TIME_NAMESPACE_TAG),
         'uuid': dict(name='uid', namespace=settings.GEO_NAMESPACE_TAG),
         'bbox': dict(name='box', namespace=settings.GEO_NAMESPACE_TAG),
-        'identifier': dict(name='identifier', namespace=settings.DUBLIN_CORE_NAMESPACE_TAG)
+        'identifier': dict(name='identifier', namespace=settings.DUBLIN_CORE_NAMESPACE_TAG),
+        'date': dict(name='date', namespace=settings.DUBLIN_CORE_NAMESPACE_TAG)
     }
 
     @classmethod
