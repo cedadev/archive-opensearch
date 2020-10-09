@@ -38,7 +38,8 @@ class NamespaceMap:
     map = {
         'query': dict(name='searchTerms'),
         'maximumRecords': dict(name='count'),
-        'parentIdentifer': dict(name='parentIdentifier', namespace=settings.GEO_NAMESPACE_TAG),
+        'parentIdentifier': dict(name='parentIdentifier', namespace=settings.GEO_NAMESPACE_TAG),
+        'processingLevel': dict(name='processingLevel', namespace=settings.GEO_NAMESPACE_TAG),
         'startDate': dict(name='start', namespace=settings.TIME_NAMESPACE_TAG),
         'endDate': dict(name='end', namespace=settings.TIME_NAMESPACE_TAG),
         'uuid': dict(name='uid', namespace=settings.GEO_NAMESPACE_TAG),
