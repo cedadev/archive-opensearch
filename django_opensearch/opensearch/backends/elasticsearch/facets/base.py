@@ -22,7 +22,7 @@ from django_opensearch.opensearch.utils.geo_point import Point, Envelope
 from collections import namedtuple
 from django_opensearch.opensearch.utils.aggregation_tools import get_thredds_aggregation, get_aggregation_capabilities, \
     get_aggregation_search_link
-import urllib.parse
+
 from django_opensearch.opensearch.utils.aggregation_tools import parse_key
 
 
@@ -448,10 +448,11 @@ class ElasticsearchFacetSet(FacetSet):
                             'type': 'application/opensearchdescription+xml'
                         }
                     ],
-                    'related': [
+                    'enclosure': [
                         {
                             'title': 'ftp',
                             'href': f'ftp://anon-ftp.ceda.ac.uk{source["path"]}',
+                            'type': 'text/html'
                         }
                     ]
                 }
@@ -496,6 +497,7 @@ class ElasticsearchFacetSet(FacetSet):
 
         if params.get('parentIdentifier'):
             entry['id'] = f'{base_url}/request?parentIdentifier={params["parentIdentifier"]}&uuid={hit["_id"]}'
+
 
         return entry
 

@@ -18,7 +18,7 @@ class ElasticsearchConnection:
     def __init__(self, index=settings.ELASTICSEARCH_INDEX):
         self.index = index
         self.collection_index = settings.ELASTICSEARCH_COLLECTION_INDEX
-        self.es = CEDAElasticsearchClient()
+        self.es = CEDAElasticsearchClient(timeout=30)
 
     def search(self, query):
         return self.es.search(index=self.index, body=query)

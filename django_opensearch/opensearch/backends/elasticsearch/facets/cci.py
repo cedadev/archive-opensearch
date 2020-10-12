@@ -19,6 +19,7 @@ class CCIFacets(ElasticsearchFacetSet):
     """
 
     """
+    LOOKUP_HANDLER = 'django_opensearch.opensearch.lookup.cci_lookup.CCILookupHandler'
 
     facets = {
         'ecv': DEFAULT,
@@ -76,11 +77,13 @@ class CCIFacets(ElasticsearchFacetSet):
             entry['properties']['links']['describedby'] = [
                 {
                     'title': 'ISO19115',
-                    'href': f'https://catalogue.ceda.ac.uk/export/xml/{source["collection_id"]}.xml'
+                    'href': f'https://catalogue.ceda.ac.uk/export/xml/{source["collection_id"]}.xml',
+                    'type': 'application/xml'
                 },
                 {
                     'title': 'Dataset Information',
-                    'href': f'https://catalogue.ceda.ac.uk/uuid/{source["collection_id"]}'
+                    'href': f'https://catalogue.ceda.ac.uk/uuid/{source["collection_id"]}',
+                    'type': 'text/html'
                 }
             ]
 
@@ -91,21 +94,22 @@ class CCIFacets(ElasticsearchFacetSet):
             file_path = os.path.join(source["info"]["directory"], source["info"]["name"])
 
             entry = super().build_entry(hit, params, base_url)
-            entry['properties']['links']['related'] = [
+            entry['properties']['links']['enclosure'] = [
                 {
                     'title': 'Download',
                     'href': f'http://{thredds_path("http", file_path)}',
+                    'type': 'application/octet-stream'
                 }
             ]
 
             # Add opendap link to netCDF files
             if source['info'].get('format') == 'NetCDF':
-                entry['properties']['links']['related'].append(
+                entry['properties']['links']['enclosure'].append(
                     {
                         'title': 'Opendap',
                         'href': f'http://{thredds_path("opendap", file_path)}',
+                        'type': 'application/octet-stream'
                     }
                 )
 
             return entry
-

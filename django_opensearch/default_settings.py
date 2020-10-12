@@ -33,6 +33,7 @@ OS_PREFIX = 'os'
 OS_ROOT_TAG = 'OpenSearchDescription'
 
 GEO_NAMESPACE_TAG = 'geo'
+EO_NAMESPACE_TAG = 'eo'
 TIME_NAMESPACE_TAG = 'time'
 CEDA_NAMESPACE_TAG = 'ceda'
 DUBLIN_CORE_NAMESPACE_TAG = 'dc'

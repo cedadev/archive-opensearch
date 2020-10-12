@@ -11,6 +11,8 @@ __contact__ = 'richard.d.smith@stfc.ac.uk'
 
 from django_opensearch import settings
 from django_opensearch.constants import DEFAULT
+from pydoc import locate
+
 
 class Param:
 
@@ -34,14 +36,19 @@ class Param:
 
 class NamespaceMap:
     map = {
-        'query': {'name': 'searchTerms'},
+        'query': dict(name='searchTerms'),
         'maximumRecords': dict(name='count'),
-        'parentIdentifer': dict(name='parentIdentifier', namespace=settings.GEO_NAMESPACE_TAG),
+        'parentIdentifier': dict(name='parentIdentifier', namespace=settings.EO_NAMESPACE_TAG),
+        'processingLevel': dict(name='processingLevel', namespace=settings.EO_NAMESPACE_TAG),
+        'productVersion': dict(name='productVersion', namespace=settings.EO_NAMESPACE_TAG),
+        'platform': dict(name='platform', namespace=settings.EO_NAMESPACE_TAG),
+        'startRecord': dict(name='startIndex'),
         'startDate': dict(name='start', namespace=settings.TIME_NAMESPACE_TAG),
         'endDate': dict(name='end', namespace=settings.TIME_NAMESPACE_TAG),
         'uuid': dict(name='uid', namespace=settings.GEO_NAMESPACE_TAG),
         'bbox': dict(name='box', namespace=settings.GEO_NAMESPACE_TAG),
-        'identifier': dict(name='identifier', namespace=settings.DUBLIN_CORE_NAMESPACE_TAG)
+        'identifier': dict(name='identifier', namespace=settings.DUBLIN_CORE_NAMESPACE_TAG),
+        'date': dict(name='date', namespace=settings.DUBLIN_CORE_NAMESPACE_TAG)
     }
 
     @classmethod
@@ -65,6 +72,8 @@ class FacetSet:
     """
     Class to provide opensearch URL template with facets and parameter options
     """
+
+    LOOKUP_HANDLER = None
 
     default_facets = {
         'uuid': DEFAULT,
@@ -117,10 +126,12 @@ class FacetSet:
         for this collection and add values where possible.
         :return list: List of parameter object for each facet
         """
+        lookup_handler = None
 
         # Returns list of parameter objects
         if self.path:
             handler = self.get_handler()
+            lookup_handler = handler.get_lookup_handler()
 
             self.facets.update(handler.facets)
 
@@ -141,7 +152,14 @@ class FacetSet:
             if facet_data is not None:
 
                 if facet_data.get('values'):
-                    param.value_list = facet_data.get('values')
+
+                    value_list = facet_data.get('values')
+
+                    # Check for term lookups
+                    if lookup_handler:
+                        value_list = lookup_handler.lookup_values(param.name, value_list)
+
+                    param.value_list = value_list
 
                 if facet_data.get('extra_kwargs'):
                     param.extra_kwargs = facet_data.get('extra_kwargs')
@@ -171,6 +189,16 @@ class FacetSet:
         :return dict: List of values for each facet
         """
         raise NotImplementedError
+
+    def get_lookup_handler(self):
+        """
+        Get handler to perform term lookups
+        :return: class
+        """
+        if self.LOOKUP_HANDLER:
+            handler = locate(self.LOOKUP_HANDLER)
+            if handler:
+                return handler()
 
     def search(self, params, **kwargs):
         """
