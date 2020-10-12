@@ -433,6 +433,7 @@ class ElasticsearchFacetSet(FacetSet):
                         {
                             'title': 'ftp',
                             'href': f'ftp://anon-ftp.ceda.ac.uk{source["path"]}',
+                            'type': 'text/html'
                         }
                     ]
                 }

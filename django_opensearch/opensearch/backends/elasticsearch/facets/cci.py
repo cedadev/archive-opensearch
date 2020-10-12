@@ -76,11 +76,13 @@ class CCIFacets(ElasticsearchFacetSet):
             entry['properties']['links']['describedby'] = [
                 {
                     'title': 'ISO19115',
-                    'href': f'https://catalogue.ceda.ac.uk/export/xml/{source["collection_id"]}.xml'
+                    'href': f'https://catalogue.ceda.ac.uk/export/xml/{source["collection_id"]}.xml',
+                    'type': 'application/xml'
                 },
                 {
                     'title': 'Dataset Information',
-                    'href': f'https://catalogue.ceda.ac.uk/uuid/{source["collection_id"]}'
+                    'href': f'https://catalogue.ceda.ac.uk/uuid/{source["collection_id"]}',
+                    'type': 'text/html'
                 }
             ]
 
@@ -95,6 +97,7 @@ class CCIFacets(ElasticsearchFacetSet):
                 {
                     'title': 'Download',
                     'href': f'http://{thredds_path("http", file_path)}',
+                    'type': 'application/octet-stream'
                 }
             ]
 
@@ -104,6 +107,7 @@ class CCIFacets(ElasticsearchFacetSet):
                     {
                         'title': 'Opendap',
                         'href': f'http://{thredds_path("opendap", file_path)}',
+                        'type': 'application/octet-stream'
                     }
                 )
 
