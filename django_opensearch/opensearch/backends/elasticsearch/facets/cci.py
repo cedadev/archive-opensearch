@@ -19,6 +19,7 @@ class CCIFacets(ElasticsearchFacetSet):
     """
 
     """
+    LOOKUP_HANDLER = 'django_opensearch.opensearch.lookup.cci_lookup.CCILookupHandler'
 
     facets = {
         'ecv': DEFAULT,
@@ -76,6 +77,24 @@ class CCIFacets(ElasticsearchFacetSet):
                 }
             ]
 
+        ### THIS SECTION WORKS WITH THE ORIGINAL INDEX. IN THE FUTURE IT MAKES SENSE TO
+        ### INDEX LINKS. THIS MAKES IT MORE FLEXIBLE WHEN ADDING MANY DIFFERENT COLLECTIONS
+        if source.get('collection_id') != 'cci':
+            entry['properties']['links']['describedby'] = [
+                {
+                    'title': 'ISO19115',
+                    'href': f'https://catalogue.ceda.ac.uk/export/xml/{source["collection_id"]}.xml',
+                    'type': 'application/xml'
+                },
+                {
+                    'title': 'Dataset Information',
+                    'href': f'https://catalogue.ceda.ac.uk/uuid/{source["collection_id"]}',
+                    'type': 'text/html'
+                }
+            ]
+
+        ### END OF SECTION ###
+
         source_links = source.get('links')
         if source_links:
             # Merge the coded links with those in the index. Indexed links take priority and if links
@@ -90,21 +109,22 @@ class CCIFacets(ElasticsearchFacetSet):
             file_path = os.path.join(source["info"]["directory"], source["info"]["name"])
 
             entry = super().build_entry(hit, params, base_url)
-            entry['properties']['links']['related'] = [
+            entry['properties']['links']['enclosure'] = [
                 {
                     'title': 'Download',
                     'href': f'http://{thredds_path("http", file_path)}',
+                    'type': 'application/octet-stream'
                 }
             ]
 
             # Add opendap link to netCDF files
             if source['info'].get('format') == 'NetCDF':
-                entry['properties']['links']['related'].append(
+                entry['properties']['links']['enclosure'].append(
                     {
                         'title': 'Opendap',
                         'href': f'http://{thredds_path("opendap", file_path)}',
+                        'type': 'application/octet-stream'
                     }
                 )
 
             return entry
-
