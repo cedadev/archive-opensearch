@@ -38,12 +38,17 @@ class NamespaceMap:
     map = {
         'query': dict(name='searchTerms'),
         'maximumRecords': dict(name='count'),
-        'parentIdentifer': dict(name='parentIdentifier', namespace=settings.GEO_NAMESPACE_TAG),
+        'parentIdentifier': dict(name='parentIdentifier', namespace=settings.EO_NAMESPACE_TAG),
+        'processingLevel': dict(name='processingLevel', namespace=settings.EO_NAMESPACE_TAG),
+        'productVersion': dict(name='productVersion', namespace=settings.EO_NAMESPACE_TAG),
+        'platform': dict(name='platform', namespace=settings.EO_NAMESPACE_TAG),
+        'startRecord': dict(name='startIndex'),
         'startDate': dict(name='start', namespace=settings.TIME_NAMESPACE_TAG),
         'endDate': dict(name='end', namespace=settings.TIME_NAMESPACE_TAG),
         'uuid': dict(name='uid', namespace=settings.GEO_NAMESPACE_TAG),
         'bbox': dict(name='box', namespace=settings.GEO_NAMESPACE_TAG),
-        'identifier': dict(name='identifier', namespace=settings.DUBLIN_CORE_NAMESPACE_TAG)
+        'identifier': dict(name='identifier', namespace=settings.DUBLIN_CORE_NAMESPACE_TAG),
+        'date': dict(name='date', namespace=settings.DUBLIN_CORE_NAMESPACE_TAG)
     }
 
     @classmethod
