@@ -91,7 +91,7 @@ class CCIFacets(ElasticsearchFacetSet):
             file_path = os.path.join(source["info"]["directory"], source["info"]["name"])
 
             entry = super().build_entry(hit, params, base_url)
-            entry['properties']['links']['related'] = [
+            entry['properties']['links']['enclosure'] = [
                 {
                     'title': 'Download',
                     'href': f'http://{thredds_path("http", file_path)}',
@@ -100,7 +100,7 @@ class CCIFacets(ElasticsearchFacetSet):
 
             # Add opendap link to netCDF files
             if source['info'].get('format') == 'NetCDF':
-                entry['properties']['links']['related'].append(
+                entry['properties']['links']['enclosure'].append(
                     {
                         'title': 'Opendap',
                         'href': f'http://{thredds_path("opendap", file_path)}',

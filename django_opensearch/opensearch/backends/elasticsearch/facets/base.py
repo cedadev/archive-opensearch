@@ -429,7 +429,7 @@ class ElasticsearchFacetSet(FacetSet):
                             'type': 'application/opensearchdescription+xml'
                         }
                     ],
-                    'related': [
+                    'enclosure': [
                         {
                             'title': 'ftp',
                             'href': f'ftp://anon-ftp.ceda.ac.uk{source["path"]}',
