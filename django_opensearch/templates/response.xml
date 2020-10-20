@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<feed xmlns:dc="http://purl.org/dc/terms/" xmlns:os="http://a9.com/-/spec/opensearch/1.1/"
-      xmlns:geo="http://a9.com/-/opensearch/extensions/geo/1.0/">
+<feed xmlns:dc="http://purl.org/dc/terms/"
+      xmlns:os="http://a9.com/-/spec/opensearch/1.1/"
+      xmlns:geo="http://a9.com/-/opensearch/extensions/geo/1.0/"
+      xmlns:time="http://a9.com/-/opensearch/extensions/time/1.0/"
+>
     <title>Opensearch response</title>
     <id>{{ request.build_absolute_uri }}</id>
     <subtitle type="html">{{ osr.subtitle }}</subtitle>
