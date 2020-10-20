@@ -196,16 +196,16 @@ class ElasticsearchFacetSet(FacetSet):
 
                 coordinates = params[param].split(',')
 
-                # Coordinates supplied top-left (lon,lat), bottom-right (lon,lat)
+                # Coordinates supplied west, south, east, north
                 query['query']['bool']['filter'].append({
                     'geo_bounding_box': {
                         self.facets.get(param): {
                             'top_left': {
-                                'lat': coordinates[1],
+                                'lat': coordinates[3],
                                 'lon': coordinates[0]
                             },
                             'bottom_right': {
-                                'lat': coordinates[3],
+                                'lat': coordinates[1],
                                 'lon': coordinates[2]
                             }
                         }
