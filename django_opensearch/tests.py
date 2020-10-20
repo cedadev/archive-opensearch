@@ -1,9 +1,15 @@
 from django.test import TestCase
 from django.test import Client
+from django.test import override_settings
 import xmltodict
 
 
 # Create your tests here.
+@override_settings(ELASTICSEARCH_CONNECTION_PARAMS={
+    'timeout': 30,
+    'hosts': ['https://elasticsearch.ceda.ac.uk'],
+    'ca_certs': None
+})
 class OpensearchTestCase(TestCase):
     REQUEST_BASE = '/opensearch/request'
 
