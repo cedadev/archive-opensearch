@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-{% load namespace_tags %}
+{% load namespace_tags coordinate_tags %}
 <feed xmlns="http://www.w3.org/2005/Atom" 
       xmlns:dc="http://purl.org/dc/elements/1.1/" 
       xmlns:os="http://a9.com/-/spec/opensearch/1.1/"
       xmlns:geo="http://a9.com/-/opensearch/extensions/geo/1.0/" 
       xmlns:eo="http://a9.com/-/opensearch/extensions/eo/1.0/"
-      xmlns:time="http://a9.com/-/opensearch/extensions/time/1.0/">
+      xmlns:time="http://a9.com/-/opensearch/extensions/time/1.0/"
+      xmlns:georss="http://www.georss.org/georss">
     <title>Opensearch response</title>
     <id>{{ request.build_absolute_uri }}</id>
     <subtitle type="html">{{ osr.subtitle }}</subtitle>
@@ -40,6 +41,9 @@
     {% for entry in osr.features %}
         <entry>
             <id>{{ entry.id }}</id>
+            {% if entry.bbox %}
+                <georss:box>{{ entry.bbox|expand_coordinates }}</georss:box>
+            {% endif %}
 
             {# Loop attributes #}
             {% for k,v in entry.properties.items %}
