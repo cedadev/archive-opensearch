@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 def camel_to_snake(value):
     """
     Convert camel case to snake case
+
     :param value: String to convert
     :return: converted string
     """
@@ -32,6 +33,14 @@ def camel_to_snake(value):
 
 
 class CCILookupHandler(BaseLookupHandler):
+    """
+    Class to handle lookups from the extracted terms to the preferred lables
+    in the SKOS vocabulary.
+
+    :attr MAPPABLE_FACETS: Facets to perform the lookup on. Others are ignored to
+    reduce the overhead of lookups.
+
+    """
     MAPPABLE_FACETS = [
         'ecv',
         'processingLevel',
@@ -45,8 +54,13 @@ class CCILookupHandler(BaseLookupHandler):
 
     @staticmethod
     def _load_facets():
+        """
+        Load the facets from the server
 
-        # Try to get the live vocabs from the server
+        :return: vocab mapping
+        :rtype: dict
+        """
+
         data = {}
         try:
             data = Facets().to_json()
@@ -76,9 +90,13 @@ class CCILookupHandler(BaseLookupHandler):
     def lookup_values(self, facet, value_list):
         """
         Perform term lookup and conversion
-        :param facet:
-        :param value_list:
-        :return:
+
+        :param facet: the facet you wish to perform the lookup on
+        :type facet: str
+        :param value_list: the list of values for that facet
+        :type value_list: list(dict)
+
+        :return: Modified value list
         """
 
         # Reduce calls to lookup

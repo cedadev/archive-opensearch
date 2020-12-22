@@ -75,7 +75,7 @@ class TestElasticsearchFacetSet(TestCase):
 
         kwargs.update(extra_kwargs)
 
-        query = self.efc._build_query(params, **kwargs)
+        query = self.efc.build_query(params, **kwargs)
 
         return ElasticsearchConnection().search(query)
 

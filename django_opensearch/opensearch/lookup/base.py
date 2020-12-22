@@ -18,5 +18,12 @@ class BaseLookupHandler(ABC):
     """
 
     @abstractmethod
-    def lookup_values(self,facet, values_list):
+    def lookup_values(self, facet, values_list):
+        """
+        Abstract method to define interface
+        :param facet:
+        :param values_list:
+        :return:
+        :raises NotImplementedError:
+        """
         pass
