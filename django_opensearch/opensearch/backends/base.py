@@ -113,14 +113,6 @@ class FacetSet:
         self.facet_values = {}
 
     @property
-    def facets(self):
-        """
-        Abstract property to require available facets for collection
-        :raises NotImplementedError:
-        """
-        raise NotImplementedError
-
-    @property
     def all_facets(self):
         """
         Merge the facet dictionaries into one
@@ -129,14 +121,10 @@ class FacetSet:
         """
         return {**self.default_facets, **self.facets}
 
-    def build_query(self, params, **kwargs):
+    @property
+    def facets(self):
         """
-        Abstract method to build the elasticsearch query
-        :param params: Search parameters
-        :type params: dict
-
-        :param kwargs:
-
+        Abstract property to require available facets for collection
         :raises NotImplementedError:
         """
         raise NotImplementedError
@@ -150,13 +138,45 @@ class FacetSet:
 
         return [Param(*NamespaceMap.get_namespace(facet)) for facet in self.all_facets]
 
-    def get_handler(self):
+    def build_query(self, params, **kwargs):
         """
-        Abstract methid to get the handler for the given collection
+        Abstract method to build the elasticsearch query
+        :param params: Search parameters
+        :type params: dict
+
+        :param kwargs:
 
         :raises NotImplementedError:
         """
         raise NotImplementedError
+
+    def build_representation(self, data):
+        """
+        Abstract method to prompt method for building the representation
+        for the collection
+
+        :param data:
+        :return:
+        :raises NotImplementedError:
+        """
+
+        raise NotImplementedError
+
+    def get_example_queries(self):
+        """
+        Generate example queries as part of the description document from the
+        facets available in the current context.
+
+        :return: List of examples
+        :rtype: list
+        """
+        examples = []
+        for facet in self.facets:
+            values_list = self.facet_values.get(facet, {}).get('values')
+            if values_list:
+                examples.append({facet:values_list[0]['value']})
+
+        return examples
 
     def get_facet_set(self, search_params):
         """
@@ -212,28 +232,20 @@ class FacetSet:
 
         return facet_set_with_vals
 
-    def get_example_queries(self):
-        """
-        Generate example queries as part of the description document from the
-        facets available in the current context.
-
-        :return: List of examples
-        :rtype: list
-        """
-        examples = []
-        for facet in self.facets:
-            values_list = self.facet_values.get(facet, {}).get('values')
-            if values_list:
-                examples.append({facet:values_list[0]['value']})
-
-        return examples
-
     def get_facet_values(self, search_params):
         """
         Perform aggregations to get the range of possible values
         for each facet to put in the description document.
 
         :return dict: List of values for each facet
+        :raises NotImplementedError:
+        """
+        raise NotImplementedError
+
+    def get_handler(self):
+        """
+        Abstract methid to get the handler for the given collection
+
         :raises NotImplementedError:
         """
         raise NotImplementedError
@@ -255,18 +267,6 @@ class FacetSet:
 
         :param params: Opensearch parameters
         :param kwargs:
-        :return:
-        :raises NotImplementedError:
-        """
-
-        raise NotImplementedError
-
-    def build_representation(self, data):
-        """
-        Abstract method to prompt method for building the representation
-        for the collection
-
-        :param data:
         :return:
         :raises NotImplementedError:
         """
