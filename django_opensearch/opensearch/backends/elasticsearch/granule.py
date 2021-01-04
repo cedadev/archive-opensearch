@@ -12,16 +12,51 @@ from .facets.base import HandlerFactory
 
 
 class Granule:
+    """
+    Class to handle the granule level search and response
+
+    :param path: Filepath of collection:
+    :type path: str
+    """
 
     def __init__(self, path=None):
+        """
+        :param path: filepath
+        :type path: str
+        """
         if path:
             self.handler = HandlerFactory().get_handler(path)
 
     def get_facet_set(self, search_params):
+        """
+        Used to build the description document. Get available facets
+        for this collection and add values where possible.
+
+        :return list: List of parameter object for each facet
+        :rtype: list
+        """
+
         return self.handler.get_facet_set(search_params)
 
     def get_example_queries(self):
+        """
+        Generate example queries as part of the description document from the
+        facets available in the current context.
+
+        :return: List of examples
+        :rtype: list
+        """
         return self.handler.get_example_queries()
 
     def search(self, params, **kwargs):
+        """
+        Search the collection based on the query parameters
+
+        :param params: URL parameters
+        :type params: <class 'django.http.request.QueryDict'>
+        :param kwargs:
+
+        :return: search results
+        :rtype: SearchResults
+        """
         return self.handler.search(params, **kwargs)

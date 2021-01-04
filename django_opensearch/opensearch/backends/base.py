@@ -35,6 +35,12 @@ class Param:
 
 
 class NamespaceMap:
+    """
+    Maps common facet terms to an XML namespace
+
+    :attr map: The mapping between facets and their namespaces
+    """
+
     map = {
         'query': dict(name='searchTerms'),
         'maximumRecords': dict(name='count'),
@@ -53,6 +59,15 @@ class NamespaceMap:
 
     @classmethod
     def get_namespace(cls, key):
+        """
+        Get the namespace with the given parameter.
+
+        :param key: the parameter to retrieve the namespace fore
+        :type key: str
+
+        :return: tuple(key, mapped_value)
+        :rtype: tuple(str, str)
+        """
 
         mapping = cls.map.get(key)
 
@@ -71,6 +86,10 @@ class NamespaceMap:
 class FacetSet:
     """
     Class to provide opensearch URL template with facets and parameter options
+
+    :attr LOOKUP_HANDLER: Handler class for external vocab lookups
+    :attr default_facets:
+    :attr exclude_list: List of facets to exclude from value aggregation
     """
 
     LOOKUP_HANDLER = None
@@ -87,7 +106,6 @@ class FacetSet:
         'bbox': DEFAULT
     }
 
-    # List of facets to exclude from value aggregation
     exclude_list = ['uuid', 'bbox', 'startDate', 'endDate']
 
     def __init__(self, path=None):
@@ -95,35 +113,76 @@ class FacetSet:
         self.facet_values = {}
 
     @property
-    def facets(self):
-        raise NotImplementedError
-
-    @property
     def all_facets(self):
         """
         Merge the facet dictionaries into one
+
         :return: dict
         """
         return {**self.default_facets, **self.facets}
 
-    def _build_query(self, params, **kwargs):
+    @property
+    def facets(self):
+        """
+        Abstract property to require available facets for collection
+        :raises NotImplementedError:
+        """
         raise NotImplementedError
 
     def _get_facet_set(self):
         """
         Turns facets into parameter objects
-        :return:
+
+        :return: List of parameter objects
         """
 
         return [Param(*NamespaceMap.get_namespace(facet)) for facet in self.all_facets]
 
-    def get_handler(self):
+    def build_query(self, params, **kwargs):
+        """
+        Abstract method to build the elasticsearch query
+        :param params: Search parameters
+        :type params: dict
+
+        :param kwargs:
+
+        :raises NotImplementedError:
+        """
         raise NotImplementedError
+
+    def build_representation(self, data):
+        """
+        Abstract method to prompt method for building the representation
+        for the collection
+
+        :param data:
+        :return:
+        :raises NotImplementedError:
+        """
+
+        raise NotImplementedError
+
+    def get_example_queries(self):
+        """
+        Generate example queries as part of the description document from the
+        facets available in the current context.
+
+        :return: List of examples
+        :rtype: list
+        """
+        examples = []
+        for facet in self.facets:
+            values_list = self.facet_values.get(facet, {}).get('values')
+            if values_list:
+                examples.append({facet:values_list[0]['value']})
+
+        return examples
 
     def get_facet_set(self, search_params):
         """
         Used to build the description document. Get available facets
         for this collection and add values where possible.
+
         :return list: List of parameter object for each facet
         """
         lookup_handler = None
@@ -173,26 +232,28 @@ class FacetSet:
 
         return facet_set_with_vals
 
-    def get_example_queries(self):
-        examples = []
-        for facet in self.facets:
-            values_list = self.facet_values.get(facet, {}).get('values')
-            if values_list:
-                examples.append({facet:values_list[0]['value']})
-
-        return examples
-
     def get_facet_values(self, search_params):
         """
         Perform aggregations to get the range of possible values
         for each facet to put in the description document.
+
         :return dict: List of values for each facet
+        :raises NotImplementedError:
+        """
+        raise NotImplementedError
+
+    def get_handler(self):
+        """
+        Abstract methid to get the handler for the given collection
+
+        :raises NotImplementedError:
         """
         raise NotImplementedError
 
     def get_lookup_handler(self):
         """
         Get handler to perform term lookups
+
         :return: class
         """
         if self.LOOKUP_HANDLER:
@@ -202,13 +263,12 @@ class FacetSet:
 
     def search(self, params, **kwargs):
         """
-        Search interface to the CMIP5 collection
+        Abstract method Search interface to the CMIP5 collection
+
         :param params: Opensearch parameters
         :param kwargs:
         :return:
+        :raises NotImplementedError:
         """
 
-        raise NotImplementedError
-
-    def build_representation(self, data):
         raise NotImplementedError

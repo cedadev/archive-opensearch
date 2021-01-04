@@ -17,8 +17,12 @@ import os
 
 class CCIFacets(ElasticsearchFacetSet):
     """
+    Class to handle the representation of the CCI collection
 
+    :attr LOOKUP_HANDLER: Handler for vocab lookups
+    :attr facets: Facet map from facet term to path in the elasticsearch index
     """
+
     LOOKUP_HANDLER = 'django_opensearch.opensearch.lookup.cci_lookup.CCILookupHandler'
 
     facets = {
@@ -36,15 +40,20 @@ class CCIFacets(ElasticsearchFacetSet):
         'drsId': DEFAULT
     }
 
-    def _build_query(self, params, **kwargs):
+    def build_query(self, params, **kwargs):
         """
         Filter file results by path
-        :param params:
+
+        :param params: URL Params
+        :type params: <class 'django.http.request.QueryDict'>
+
         :param kwargs:
-        :return:
+
+        :return: Elasticsearch query
+        :rtuype: dict
         """
 
-        query = super()._build_query(params, **kwargs)
+        query = super().build_query(params, **kwargs)
 
         pid = params.get('parentIdentifier')
 
@@ -57,6 +66,22 @@ class CCIFacets(ElasticsearchFacetSet):
         return query
 
     def build_collection_entry(self, hit, params, base_url):
+        """
+        Build individual entries at the collection level
+
+        :param hit: Elasticsearch query hits
+        :type hit: dict
+
+        :param params: url params
+        :type params: <class 'django.http.request.QueryDict'>
+
+        :param base_url: base_url for service
+        :type base_url: str
+
+        :return: entry
+        :rtype: dict
+        """
+
         source = hit['_source']
         entry = super().build_collection_entry(hit, params, base_url)
 
@@ -89,26 +114,42 @@ class CCIFacets(ElasticsearchFacetSet):
         return entry
 
     def build_entry(self, hit, params, base_url):
-            source = hit['_source']
-            file_path = os.path.join(source["info"]["directory"], source["info"]["name"])
+        """
+        Build individual entries at the granule level
 
-            entry = super().build_entry(hit, params, base_url)
-            entry['properties']['links']['enclosure'] = [
+        :param hit: elasticsearch response hit
+        :type hit: dict
+
+        :param params: URL Params
+        :type params: django.http.request.QueryDict
+
+        :param base_url: url of running opensearch service
+        :type param: str
+
+        :return: entry
+        :rtype: dict
+        """
+
+        source = hit['_source']
+        file_path = os.path.join(source["info"]["directory"], source["info"]["name"])
+
+        entry = super().build_entry(hit, params, base_url)
+        entry['properties']['links']['enclosure'] = [
+            {
+                'title': 'Download',
+                'href': f'http://{thredds_path("http", file_path)}',
+                'type': 'application/octet-stream'
+            }
+        ]
+
+        # Add opendap link to netCDF files
+        if source['info'].get('format') == 'NetCDF':
+            entry['properties']['links']['enclosure'].append(
                 {
-                    'title': 'Download',
-                    'href': f'http://{thredds_path("http", file_path)}',
+                    'title': 'Opendap',
+                    'href': f'http://{thredds_path("opendap", file_path)}',
                     'type': 'application/octet-stream'
                 }
-            ]
+            )
 
-            # Add opendap link to netCDF files
-            if source['info'].get('format') == 'NetCDF':
-                entry['properties']['links']['enclosure'].append(
-                    {
-                        'title': 'Opendap',
-                        'href': f'http://{thredds_path("opendap", file_path)}',
-                        'type': 'application/octet-stream'
-                    }
-                )
-
-            return entry
+        return entry
