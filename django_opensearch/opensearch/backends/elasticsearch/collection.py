@@ -17,6 +17,16 @@ from django.conf import settings
 
 
 def collection_search(search_params):
+    """
+    Function to determine whether the current search is a collection
+    or a granule
+
+    :param search_params: URL params
+    :type search_params: <class 'django.http.request.QueryDict'>
+
+    :return bool:
+    """
+
     if 'parentIdentifier' not in search_params:
         return True
 
@@ -35,6 +45,13 @@ def collection_search(search_params):
 
 
 class Collection(ElasticsearchFacetSet):
+    """
+    Class to handle the collection search and response
+
+    :attr facets:
+    :attr base_query:
+    """
+
     facets = {
         'parentIdentifier': DEFAULT,
         'title': DEFAULT
@@ -52,15 +69,33 @@ class Collection(ElasticsearchFacetSet):
     }
 
     @staticmethod
-    def _get_es_path(facet_path, facet_name):
+    def get_es_path(facet_path, facet_name):
+        """
+        Return the path to the target in elasticsearch index. Extracted
+        to method to allow subclasses to modify the behaviour.
+
+        :param facet_path: route to facet in the target index
+        :type facet_path: str
+
+        :param facet_name: name of the facet being processed
+        :type facet_name: str
+
+        :return: path to item in elasticsearch index
+        :rtype: str
+        """
+
         return f'{facet_name}' if facet_path is DEFAULT else facet_path
 
     @staticmethod
     def get_date_field(key):
         """
         Date field for the target index
+
         :param key: one of 'start'|'end'|'range'
+        :type key: str
+
         :return: field name attached to key
+        :rtype: str
         """
 
         date_fields = {
@@ -71,14 +106,34 @@ class Collection(ElasticsearchFacetSet):
 
         return date_fields[key]
 
-    def _query_elasticsearch(self, query):
+    def query_elasticsearch(self, query):
+        """
+        Execute the query
+        :param query: Elasticsearch query dict
+        :type query: dict
+
+        :return: elasticsearch response
+        :rtype: dict
+        """
+
         return ElasticsearchConnection().search_collections(query)
 
-    def _build_query(self, params, **kwargs):
+    def build_query(self, params, **kwargs):
+        """
+        Helper method to build the elasticsearch query
+        :param params: Search parameters
+        :type params: dict
+
+        :param kwargs:
+
+        :return: elasticsearch query
+        :rtype: dict
+        """
+
         if params.get('bbox'):
             self.facets['bbox'] = 'bbox.coordinates'
 
-        query = super()._build_query(params, **kwargs)
+        query = super().build_query(params, **kwargs)
 
         pid = params.get('parentIdentifier')
 
@@ -100,13 +155,22 @@ class Collection(ElasticsearchFacetSet):
         return query
 
     def search(self, params, **kwargs):
+        """
+        Search interface to elasticsearch
+
+        :param params: Opensearch parameters
+        :param kwargs:
+
+        :return: search results
+        :rtype: SearchResults
+        """
 
         if self.path:
             handler = HandlerFactory().get_handler(self.path)
             self.facets.update(handler.facets)
             kwargs['handler'] = handler
 
-        query = self._build_query(params, **kwargs)
+        query = self.build_query(params, **kwargs)
 
         es_search = ElasticsearchConnection().search_collections(query)
 
@@ -126,6 +190,17 @@ class Collection(ElasticsearchFacetSet):
         return total_hits, results
 
     def build_representation(self, hits, params, **kwargs):
+        """
+        Build the dict representation of the granule and return the
+        result list
+
+        :param hits: Elasticsearch query hits
+        :param params: url params
+        :param kwargs:
+
+        :return: Result list
+        :rtype: list
+        """
 
         base_url = kwargs['uri']
         handler = kwargs.pop('handler', None)
@@ -143,6 +218,16 @@ class Collection(ElasticsearchFacetSet):
 
     @staticmethod
     def get_path(collection_id):
+        """
+        Return the root filepath for the given collection ID
+
+        :param collection_id: Collection ID
+        :type collection_id: str
+
+        :return: filepath
+        :rtype: str
+        :raises Http404: Collection not found
+        """
 
         query = {
             'query': {

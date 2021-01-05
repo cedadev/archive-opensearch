@@ -37,6 +37,10 @@ SearchResults = namedtuple('SearchResults', ('total', 'results', 'search_before'
 class ElasticsearchFacetSet(FacetSet):
     """
     Class to provide opensearch URL template with facets and parameter options
+
+    :attr base_query: Base Elasticsearch Query
+    :attr agg_query: Base elasticsearch aggregation query (default: {})
+    :attr exclude_list: List of facets to exclude from value aggregation
     """
 
     base_query = {
@@ -81,6 +85,30 @@ class ElasticsearchFacetSet(FacetSet):
 
     @staticmethod
     def _extract_bbox(coordinates):
+        """
+        Extract the bounding box from the elasticsearch response::
+
+            {
+                "coordinates" : {
+                    "coordinates" : [
+                        [
+                            -179.979,
+                            89.979
+                        ],
+                        [
+                            -0.021,
+                            -89.979
+                        ]
+                ],
+                "type" : "envelope"
+                }
+            }
+
+        :param coordinates: spatial attribute of file from FBI index
+        :type coordinates: dict
+
+        :return: object based on input type
+        """
         type = coordinates['coordinates']['type']
         coordinates = coordinates['coordinates']['coordinates']
 
@@ -94,10 +122,64 @@ class ElasticsearchFacetSet(FacetSet):
 
     @staticmethod
     def _extract_time_range(temporal):
+        """
+        Extract the time rage from the elasticsearch response::
+
+            {
+                "start_time" : "1985-06-25T10:01:26",
+                "time_range" : {
+                    "gte" : "1985-06-25T10:01:26",
+                    "lte" : "1985-06-25T10:01:26"
+                },
+                "end_time" : "1985-06-25T10:01:26"
+            }
+
+        :param temporal: Temporal attribute of file from FBI index
+        :type temporal: dict
+
+        :return: ISO 8601 formatted date range
+        :rtype: str
+        """
+
         return f"{temporal['start_time']}/{temporal['end_time']}"
 
     @staticmethod
     def _extract_variables(phenomena):
+        """
+        Extract the variables from the elasticsearch response::
+
+            [
+                {
+                    "standard_name" : "time",
+                    "long_name" : "reference time",
+                    "var_id" : "time",
+                    "names" : [
+                        "\"reference time\"",
+                        "\"time\""
+                    ],
+                    "best_name" : "reference time",
+                "   agg_string" : "\"long_name\":\"reference time\",\"names\":\"reference time\";\"time\",\"standard_name\":\"time\",\"var_id\":\"time\""
+                },...
+            ]
+
+        Returns::
+
+            [
+                {
+                    "standard_name" : "time",
+                    "long_name" : "reference time",
+                    "var_id" : "time",
+                    "best_name" : "reference time",
+                },...
+            ]
+
+
+
+        :param phenomena: Phenomena attribute of file from FBI index
+        :type phenomena: list
+
+        :return: List of variables creating a dict of the variable attributes
+        """
         variables = []
         for variable in phenomena:
             variables.append({key: value for key, value in variable.items() if key not in ['names', 'agg_string']})
@@ -106,16 +188,31 @@ class ElasticsearchFacetSet(FacetSet):
 
     @staticmethod
     def _isodate(date):
+        """
+        Convert a given date string to isoformat
+
+        :param date: date string as extracted from elasticsearch
+        :type date: str
+
+        :return: ISO Formatted date
+        :rtype: str
+        """
         return date_parser(date).isoformat()
 
     @staticmethod
-    def _get_es_path(facet_path, facet_name):
+    def get_es_path(facet_path, facet_name):
         """
         Return the path to the target in elasticsearch index. Extracted
         to method to allow subclasses to modify the behaviour.
-        :param facet: facet path
-        :param param: parameter
-        :return str: path to item in elasticsearch index
+
+        :param facet_path: route to facet in the target index
+        :type facet_path: str
+
+        :param facet_name: name of the facet being processed
+        :type facet_name: str
+
+        :return: path to item in elasticsearch index
+        :rtype: str
         """
         return f'projects.{settings.APPLICATION_ID}.{facet_name}' if facet_path is DEFAULT else facet_path
 
@@ -123,8 +220,12 @@ class ElasticsearchFacetSet(FacetSet):
     def get_date_field(key):
         """
         Date field for the target index
+
         :param key: one of 'start'|'end'|'range'
+        :type key: str
+
         :return: field name attached to key
+        :rtype: str
         """
         date_fields = {
             'start': 'info.temporal.start_time',
@@ -135,13 +236,30 @@ class ElasticsearchFacetSet(FacetSet):
         return date_fields[key]
 
     def get_handler(self):
+        """
+        Get the handler for the given collection
+
+        :return: The correct handler for the requested collection
+        :rtype: ElasticsearchFacetSet
+        """
         return HandlerFactory().get_handler(self.path)
 
-    def _build_query(self, params, **kwargs):
+    def build_query(self, params, **kwargs):
+        """
+        Helper method to build the elasticsearch query
+        :param params: Search parameters
+        :type params: dict
+
+        :param kwargs:
+
+        :return: elasticsearch query
+        :rtype: dict
+        """
 
         # Deep copy to avoid aliasing
         query = copy.deepcopy(self.base_query)
 
+        # Get parameters from kwargs
         search_after = kwargs.get('search_after')
         reverse = kwargs.get('reverse')
         start_index = kwargs.get('start_index', 1)
@@ -171,10 +289,11 @@ class ElasticsearchFacetSet(FacetSet):
                 raise PagingError(f"Result window is too large, from + size must be"
                                   f" less than or equal to [10000] but was [{start_index + page_size}].")
 
+        # Set number of results
         if kwargs.get('max_results'):
-            # Set number of results
             query['size'] = kwargs['max_results']
 
+        # Loop search parameters
         for param in params:
 
             if param == 'query' and params[param]:
@@ -212,12 +331,13 @@ class ElasticsearchFacetSet(FacetSet):
                     }
                 })
 
+            # Handle all other search facets
             else:
                 facet_path = self.facets.get(param)
 
                 if facet_path and param not in self.exclude_list:
 
-                    es_path = self._get_es_path(facet_path, param)
+                    es_path = self.get_es_path(facet_path, param)
                     search_terms = params.getlist(param)
 
                     if search_terms:
@@ -266,7 +386,15 @@ class ElasticsearchFacetSet(FacetSet):
 
         return query
 
-    def _query_elasticsearch(self, query):
+    def query_elasticsearch(self, query):
+        """
+        Execute the query
+        :param query: Elasticsearch query dict
+        :type query: dict
+
+        :return: elasticsearch response
+        :rtype: dict
+        """
         return ElasticsearchConnection().search(query)
 
     @staticmethod
@@ -275,7 +403,10 @@ class ElasticsearchFacetSet(FacetSet):
         Process the aggregations and return the facet values
 
         :param aggs: elasticsearch query response
+        :type aggs: dict
+
         :return: {} Dict of values with the facet as the key
+        :rtype: dict
         """
         values = {}
 
@@ -319,10 +450,11 @@ class ElasticsearchFacetSet(FacetSet):
         """
         Perform aggregations to get the range of possible values
         for each facet to put in the description document.
-        :return dict: List of values for each facet
+
+        result is set as self.facet_values
         """
 
-        query = self._build_query(search_params)
+        query = self.build_query(search_params)
 
         query.update({
             'aggs': {},
@@ -336,7 +468,7 @@ class ElasticsearchFacetSet(FacetSet):
 
                 query['aggs'][facet] = {
                     'terms': {
-                        'field': f'{self._get_es_path(facet_path, facet)}.keyword',
+                        'field': f'{self.get_es_path(facet_path, facet)}.keyword',
                         'size': 1000
                     }
                 }
@@ -350,21 +482,25 @@ class ElasticsearchFacetSet(FacetSet):
             "max": {"field": self.get_date_field('end')}
         }
 
-        aggs = self._query_elasticsearch(query)
+        aggs = self.query_elasticsearch(query)
 
         values = self._process_aggregations(aggs)
 
+        #TODO: Move self.facet_values to __init__ and return the values dict for setting elsewhere
         self.facet_values = values
 
     def search(self, params, **kwargs):
         """
         Search interface to elasticsearch
+
         :param params: Opensearch parameters
         :param kwargs:
-        :return:
+
+        :return: search results
+        :rtype: SearchResults
         """
 
-        query = self._build_query(params, **kwargs)
+        query = self.build_query(params, **kwargs)
 
         es_search = ElasticsearchConnection().search(query)
 
@@ -394,6 +530,17 @@ class ElasticsearchFacetSet(FacetSet):
         return SearchResults(total_hits, results, before_key, after_key)
 
     def build_representation(self, hits, params, **kwargs):
+        """
+        Build the dict representation of the granule and return the
+        result list
+
+        :param hits: Elasticsearch query hits
+        :param params: url params
+        :param kwargs:
+
+        :return: Result list
+        :rtype: list
+        """
 
         results = []
         base_url = kwargs['uri']
@@ -408,10 +555,18 @@ class ElasticsearchFacetSet(FacetSet):
     def build_collection_entry(self, hit, params, base_url):
         """
         Build individual entries at the collection level
-        :param hit: elasticsearch response
+
+        :param hit: Elasticsearch query hits
+        :type hit: dict
+
         :param params: url params
+        :type params: django.http.request.QueryDict
+
         :param base_url: base_url for service
+        :type base_url: str
+
         :return: entry
+        :rtype: dict
         """
 
         source = hit['_source']
@@ -429,7 +584,7 @@ class ElasticsearchFacetSet(FacetSet):
                             'type': 'application/opensearchdescription+xml'
                         }
                     ],
-                    'enclosure': [
+                    'related': [
                         {
                             'title': 'ftp',
                             'href': f'ftp://anon-ftp.ceda.ac.uk{source["path"]}',
@@ -488,10 +643,17 @@ class ElasticsearchFacetSet(FacetSet):
         """
         Build individual entries at the granule level
 
-        :param hit:
-        :param params:
-        :param base_url:
-        :return:
+        :param hit: elasticsearch response hit
+        :type hit: dict
+
+        :param params: URL Params
+        :type params: django.http.request.QueryDict
+
+        :param base_url: url of running opensearch service
+        :type param: str
+
+        :return: entry
+        :rtype: dict
         """
         source = hit['_source']
 
@@ -521,6 +683,10 @@ class ElasticsearchFacetSet(FacetSet):
 
 
 class HandlerFactory:
+    """
+    Returns the correct handler for the given path to know how to interpret the
+    search facets and display the results.
+    """
 
     def __init__(self):
         self.map = COLLECTION_MAP
@@ -530,8 +696,11 @@ class HandlerFactory:
         Takes a system path and returns the file extensions to look for and
         the correct handler for the collection.
 
-        :param path:
-        :return: granule extension, handler class
+        :param path: filepath
+        :type path: str
+
+        :return: handler class
+        :rtype: ElasticsearchFacetSet
         """
 
         collection, root_path = self.get_collection_map(path)
@@ -542,8 +711,12 @@ class HandlerFactory:
     def get_collection_map(self, path):
         """
         Takes an arbitrary path and returns a collection path
+
         :param path: Path to the data of interest
-        :return: The value from the map object
+        :type path: str
+
+        :return: handler class string, collection root path
+        :rtype: tuple(str, str)
         """
 
         while path not in self.map and path != '/' and path:

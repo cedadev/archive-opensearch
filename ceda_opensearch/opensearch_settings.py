@@ -17,6 +17,9 @@ DEVELOPER = 'CEDA'
 ELASTICSEARCH_INDEX = 'opensearch-files-double-nested'
 ELASTICSEARCH_COLLECTION_INDEX = 'opensearch-collections-double-nested'
 APPLICATION_ID = 'opensearch'
+ELASTICSEARCH_CONNECTION_PARAMS = {
+    'timeout': 30
+}
 
 THREDDS_HOST = 'data.cci.ceda.ac.uk'
 
