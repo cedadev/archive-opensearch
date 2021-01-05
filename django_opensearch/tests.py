@@ -2,6 +2,7 @@ from django.test import TestCase
 from django.test import Client
 from django.test import override_settings
 import xmltodict
+import random
 
 # Global variables used in tests
 LARGE_RESPONSE_COLLECTION_ID = '908017206d085b33b12789dcdea6cc92cac586dc'
@@ -96,6 +97,8 @@ class PaginationTestCase(OpensearchTestCase):
 
         results = response.json()
 
+        # Save total results for later tests
+        cls.total_results = results['totalResults']
         cls.pages = {}
 
         for i, page in enumerate(cls.chunk(results['features'], 10), start=1):
@@ -206,6 +209,26 @@ class PaginationTestCase(OpensearchTestCase):
             )
         )
         self.assertEqual(results.status_code, 200)
+
+    def test_random_page_past_10k(self):
+        page_size = 100
+        total_pages = self.total_results//page_size
+
+        # Calculate the minimum page number to go over 10,000 given the page size
+        min_page = -(10000//-page_size)
+        page_number = random.randint(min_page, total_pages)
+
+        results = self.client.get(
+            self.get_url(
+                self.REQUEST_BASE,
+                parentIdentifier=LARGE_RESPONSE_COLLECTION_ID,
+                startPage=page_number,
+                maximumRecords=page_size
+            )
+        )
+
+        self.assertEqual(results.status_code, 200)
+
 
 
 class DateRangeTestCase(OpensearchTestCase):

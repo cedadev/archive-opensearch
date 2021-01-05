@@ -9,12 +9,19 @@ __license__ = 'BSD - see LICENSE file in top-level package directory'
 __contact__ = 'richard.d.smith@stfc.ac.uk'
 
 
+# Application Imports
 from django_opensearch import settings
 from django_opensearch.constants import DEFAULT
+
+# Python Imports
+import os
 from pydoc import locate
 
 
 class Param:
+    """
+    Container object to store information about OpenSearch Parameters
+    """
 
     def __init__(self, name, value, required=False, value_list=[], **kwargs):
         self.name = name
@@ -32,6 +39,53 @@ class Param:
 
     def __str__(self):
         return self.name
+
+
+class HandlerFactory:
+    """
+    Returns the correct handler for the given path to know how to interpret the
+    search facets and display the results.
+    """
+
+    def __init__(self):
+        self.map = locate(f'django_opensearch.opensearch.backends.{settings.OPENSEARCH_BACKEND}.facets.collection_map.COLLECTION_MAP')
+
+    def get_handler(self, path):
+        """
+        Takes a system path and returns the file extensions to look for and
+        the correct handler for the collection.
+
+        :param path: filepath
+        :type path: str
+
+        :return: handler class
+        :rtype: FacetSet
+        """
+
+        collection, root_path = self.get_collection_map(path)
+        if collection is not None:
+            handler = locate(collection['handler'])
+            return handler(path)
+
+    def get_collection_map(self, path):
+        """
+        Takes an arbitrary path and returns a collection path
+
+        :param path: Path to the data of interest
+        :type path: str
+
+        :return: handler class string, collection root path
+        :rtype: tuple(str, str)
+        """
+
+        while path not in self.map and path != '/' and path:
+            path = os.path.dirname(path)
+
+        # No match has been found
+        if not path or path == '/':
+            return None, None
+
+        return self.map[path], path
 
 
 class NamespaceMap:
@@ -272,3 +326,55 @@ class FacetSet:
         """
 
         raise NotImplementedError
+
+
+class Granule:
+    """
+    Class to handle the granule level search and response
+
+    :param path: Filepath of collection:
+    :type path: str
+    """
+
+    def __init__(self, path=None):
+        """
+        :param path: filepath
+        :type path: str
+        """
+        if path:
+            self.handler = HandlerFactory().get_handler(path)
+
+    def get_facet_set(self, search_params):
+        """
+        Used to build the description document. Get available facets
+        for this collection and add values where possible.
+
+        :return list: List of parameter object for each facet
+        :rtype: list
+        """
+
+        return self.handler.get_facet_set(search_params)
+
+    def get_example_queries(self):
+        """
+        Generate example queries as part of the description document from the
+        facets available in the current context.
+
+        :return: List of examples
+        :rtype: list
+        """
+        return self.handler.get_example_queries()
+
+    def search(self, params, request, **kwargs):
+        """
+        Search the collection based on the query parameters
+
+        :param params: URL parameters
+        :type params: <class 'django.http.request.QueryDict'>
+        :param kwargs:
+
+        :return: search results
+        :rtype: SearchResults
+        """
+
+        return self.handler.search(params, **kwargs)
