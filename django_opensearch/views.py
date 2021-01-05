@@ -7,19 +7,11 @@ from .opensearch.opensearch import OpensearchDescription, OpensearchResponse
 import jsonpickle
 
 jsonpickle.set_encoder_options('json', indent=4)
-from django.conf import settings
 from django_opensearch import settings as opensearch_settings
 
 
-# Create your views here.
-
-
-class Index():
-    pass
-
-
 class Description(TemplateView):
-    template_name = 'description.xml'
+    template_name = 'django_opensearch/description.xml'
     content_type = 'application/xml'
 
     def get_context_data(self, **kwargs):
@@ -55,7 +47,7 @@ class Response(ContextMixin, View):
         if response_type in opensearch_settings.RESPONSE_TYPES:
 
             if response_type == 'application/atom+xml':
-                return render(request, 'response.xml', context, content_type='application/xml')
+                return render(request, 'django_opensearch/response.xml', context, content_type='application/xml')
 
             if response_type == 'application/geo+json':
                 return HttpResponse(jsonpickle.encode(context['osr'], unpicklable=False), content_type='application/geo+json')
