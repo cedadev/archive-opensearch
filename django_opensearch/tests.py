@@ -3,8 +3,11 @@ from django.test import Client
 from django.test import override_settings
 import xmltodict
 
+# Global variables used in tests
+LARGE_RESPONSE_COLLECTION_ID = '908017206d085b33b12789dcdea6cc92cac586dc'
+CCI_COLLECTION_ID= 'cci'
 
-# Create your tests here.
+
 @override_settings(ELASTICSEARCH_CONNECTION_PARAMS={
     'timeout': 30,
     'hosts': ['https://elasticsearch.ceda.ac.uk'],
@@ -41,7 +44,7 @@ class PageSizeTest(OpensearchTestCase):
         response = self.client.get(
             self.get_url(
                 self.REQUEST_BASE,
-                parentIdentifier='aa09603e91b44f3cb1573c9dd415e8a8',
+                parentIdentifier=LARGE_RESPONSE_COLLECTION_ID,
                 maximumRecords=40
             )
         )
@@ -86,7 +89,7 @@ class PaginationTestCase(OpensearchTestCase):
         response = cls.client.get(
             cls.get_url(
                 cls.REQUEST_BASE,
-                parentIdentifier='aa09603e91b44f3cb1573c9dd415e8a8',
+                parentIdentifier=LARGE_RESPONSE_COLLECTION_ID,
                 maximumRecords=40
             )
         )
@@ -103,7 +106,7 @@ class PaginationTestCase(OpensearchTestCase):
         results = self.client.get(
             self.get_url(
                 self.REQUEST_BASE,
-                parentIdentifier='aa09603e91b44f3cb1573c9dd415e8a8',
+                parentIdentifier=LARGE_RESPONSE_COLLECTION_ID,
                 startPage=page_number
             )
         )
@@ -177,7 +180,7 @@ class PaginationTestCase(OpensearchTestCase):
         results = self.client.get(
             self.get_url(
                 self.REQUEST_BASE,
-                parentIdentifier='42f7230ab55641cdac1bba84eabd446a',
+                parentIdentifier=LARGE_RESPONSE_COLLECTION_ID,
                 startPage=99,
                 maximumRecords=100
             )
@@ -187,7 +190,7 @@ class PaginationTestCase(OpensearchTestCase):
         results = self.client.get(
             self.get_url(
                 self.REQUEST_BASE,
-                parentIdentifier='42f7230ab55641cdac1bba84eabd446a',
+                parentIdentifier=LARGE_RESPONSE_COLLECTION_ID,
                 startPage=100,
                 maximumRecords=100
             )
@@ -197,7 +200,7 @@ class PaginationTestCase(OpensearchTestCase):
         results = self.client.get(
             self.get_url(
                 self.REQUEST_BASE,
-                parentIdentifier='42f7230ab55641cdac1bba84eabd446a',
+                parentIdentifier=LARGE_RESPONSE_COLLECTION_ID,
                 startPage=101,
                 maximumRecords=100
             )
@@ -212,7 +215,7 @@ class DateRangeTestCase(OpensearchTestCase):
         description = cls.client.get(
             cls.get_url(
                 cls.DESCRIPTION_BASE,
-                parentIdentifier='4eb4e801424a47f7b77434291921f889'
+                parentIdentifier=LARGE_RESPONSE_COLLECTION_ID
             )
         )
 
@@ -226,7 +229,7 @@ class DateRangeTestCase(OpensearchTestCase):
         results = self.client.get(
             self.get_url(
                 self.REQUEST_BASE,
-                parentIdentifier='4eb4e801424a47f7b77434291921f889',
+                parentIdentifier=LARGE_RESPONSE_COLLECTION_ID,
                 startDate=self.start_date
             )
         )
@@ -241,7 +244,7 @@ class DateRangeTestCase(OpensearchTestCase):
         results = self.client.get(
             self.get_url(
                 self.REQUEST_BASE,
-                parentIdentifier='4eb4e801424a47f7b77434291921f889',
+                parentIdentifier=LARGE_RESPONSE_COLLECTION_ID,
                 endDate=self.end_date
             )
         )
@@ -284,7 +287,7 @@ class JSONResponseTestCase(OpensearchTestCase):
         results = self.client.get(
             self.get_url(
                 self.REQUEST_BASE,
-                parentIdentifier='cci'
+                parentIdentifier=CCI_COLLECTION_ID
             )
         )
 
@@ -296,7 +299,7 @@ class JSONResponseTestCase(OpensearchTestCase):
         results = self.client.get(
             self.get_url(
                 self.REQUEST_BASE,
-                parentIdentifier='cci',
+                parentIdentifier=CCI_COLLECTION_ID,
                 uuid=feature_id
             )
         )
@@ -311,7 +314,7 @@ class CollectionVariablesTestCase(OpensearchTestCase):
         results = self.client.get(
             self.get_url(
                 self.REQUEST_BASE,
-                parentIdentifier='cci',
+                parentIdentifier=CCI_COLLECTION_ID,
                 maximumRecords=1
             )
         )
@@ -324,7 +327,7 @@ class CollectionVariablesTestCase(OpensearchTestCase):
         results = self.client.get(
             self.get_url(
                 self.REQUEST_BASE,
-                parentIdentifier='cci',
+                parentIdentifier=CCI_COLLECTION_ID,
                 uuid=feature_id
             )
         )
