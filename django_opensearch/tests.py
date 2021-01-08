@@ -1,3 +1,5 @@
+
+
 from django.test import TestCase
 from django.test import Client
 from django.test import override_settings
@@ -303,7 +305,7 @@ class ReturnCodeTestCase(OpensearchTestCase):
 
         self.assertEqual(results.status_code, 404)
 
-        
+
 class JSONResponseTestCase(OpensearchTestCase):
 
     def test_subtitle(self):
@@ -358,4 +360,60 @@ class CollectionVariablesTestCase(OpensearchTestCase):
         results = results.json()
         self.assertTrue(results['features'][0]['properties']['variables'])
 
+
+from django_opensearch.opensearch.backends.elasticsearch.pagination import DjangoElasticsearchPaginationCache
+from ceda_elasticsearch_tools.elasticsearch import CEDAElasticsearchClient
+from django.conf import settings
+
+
+class DjangoElasticsearchPaginationCacheTestCase(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        es_client = CEDAElasticsearchClient()
+        cls.depcache = DjangoElasticsearchPaginationCache(es_client, settings.ELASTICSEARCH_INDEX)
+
+        super().setUpClass()
+
+    def test__get_page_indices(self):
+        """
+        Test that the correct pages will be retrived from the cache
+        based on different query parameters
+        """
+
+        max_results = [5, 10]
+        start_index = 10
+        page_size = 5
+        expected_results = [[2], [2, 3]]
+
+        for i, window in enumerate(max_results):
+            indices = self.depcache._get_page_indices(window, start_index, page_size)
+            self.assertListEqual(list(indices), expected_results[i])
+
+    def test__select_pages(self):
+        """
+        Test that the correct data is returned from the page subset
+        based on the query parameters including returning a subset which
+        uses results across pages.
+        """
+
+        cache = {
+            0: [0, 1, 2, 3, 4],
+            1: [5, 6, 7, 8, 9],
+            2: [10, 11, 12, 13, 14],
+            3: [15, 16, 17, 18, 19],
+            4: [20, 21, 22, 23, 24]
+        }
+        max_results = 5
+        start_index = [10, 11]
+        page_size = 5
+
+        expected_results = [
+            list(range(10,15)),
+            list(range(11,16))
+        ]
+
+        for i, idx in enumerate(start_index):
+            results = self.depcache._select_pages(max_results, idx, cache, page_size)
+            self.assertListEqual(results, expected_results[i])
 

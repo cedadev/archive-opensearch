@@ -11,6 +11,7 @@ __contact__ = 'richard.d.smith@stfc.ac.uk'
 
 from django.conf import settings
 from ceda_elasticsearch_tools.elasticsearch import CEDAElasticsearchClient
+import copy
 
 
 class ElasticsearchConnection:
@@ -61,6 +62,13 @@ class ElasticsearchConnection:
         :return: Elasticsearch count response
         :rtype: dict
         """
+        # Deep copy to avoid aliasing
+        query = copy.deepcopy(query)
+
+        # Some keys are not compatible with count query
+        for key in ['sort', 'size', 'from', 'search_after']:
+            query.pop(key, None)
+
         return self.es.count(index=self.index, body=query)
 
     def count_collections(self, query):
@@ -74,6 +82,9 @@ class ElasticsearchConnection:
         :rtype: dict
         """
         return self.es.count(index=self.collection_index, body=query)
+
+    def get_client(self):
+        return self.es
 
 
 

@@ -24,16 +24,16 @@ class Granule(Granule):
         :return:
         """
 
-        search_after, reverse = self._check_scrolling(request)
-
-        kwargs.update({
-            'search_after': search_after,
-            'reverse': reverse
-        })
+        # search_after, reverse = self._check_scrolling(request)
+        #
+        # kwargs.update({
+        #     'search_after': search_after,
+        #     'reverse': reverse
+        # })
 
         results = super().search(params, request, **kwargs)
 
-        self._set_search_after(request, results)
+        # self._set_search_after(request, results)
 
         return results
 

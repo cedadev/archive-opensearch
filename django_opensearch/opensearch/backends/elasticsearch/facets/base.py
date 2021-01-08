@@ -18,6 +18,10 @@ from django_opensearch.opensearch.utils.aggregation_tools import get_thredds_agg
     get_aggregation_search_link
 from django_opensearch.opensearch.backends.base import HandlerFactory
 from .elasticsearch_connection import ElasticsearchConnection
+from django_opensearch.opensearch.backends.elasticsearch.pagination import DjangoElasticsearchPaginationCache
+
+# Django Imports
+from django.conf import settings
 
 # Third-party imports
 from dateutil.parser import parse as date_parser
@@ -85,6 +89,14 @@ class ElasticsearchFacetSet(FacetSet):
 
     # List of facets to exclude from value aggregation
     exclude_list = ['uuid', 'bbox', 'startDate', 'endDate', 'title', 'parentIdentifier']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.depcache = DjangoElasticsearchPaginationCache(
+            es_client= ElasticsearchConnection().get_client(),
+            source_index= settings.ELASTICSEARCH_INDEX
+        )
 
     @staticmethod
     def _extract_bbox(coordinates):
@@ -281,16 +293,13 @@ class ElasticsearchFacetSet(FacetSet):
         # If there is no search after
         elif start_index != 1:
 
-            # Set start index to 0 if below 0 or -1 for zero indexing
-            start_index = start_index if start_index > 0 else 0
-
-            if start_index > 0 and (start_index + page_size) < 10000:
+            if (start_index + page_size) < 10000:
                 query['from'] = start_index
 
             # If window is > 10,000 raise error
-            else:
-                raise PagingError(f"Result window is too large, from + size must be"
-                                  f" less than or equal to [10000] but was [{start_index + page_size}].")
+            # else:
+            #     raise PagingError(f"Result window is too large, from + size must be"
+            #                       f" less than or equal to [10000] but was [{start_index + page_size}].")
 
         # Set number of results
         if kwargs.get('max_results'):
@@ -492,6 +501,44 @@ class ElasticsearchFacetSet(FacetSet):
         #TODO: Move self.facet_values to __init__ and return the values dict for setting elsewhere
         self.facet_values = values
 
+    def _search(self, params, **kwargs):
+        """
+
+        :param params:
+        :param kwargs:
+        :return:
+        """
+
+        query = self.build_query(params, **kwargs)
+
+        # Get the explicit count. This is needed because, elasticsearch
+        # will approximate any number > 10k
+        total_hits = ElasticsearchConnection().count(query)['count']
+
+        if total_hits > 10000:
+
+            cache_state = self.depcache.get_cache_state(params)
+
+            if not self.depcache.request_exceeds_limit(**kwargs):
+                hits = self.depcache.get_cached_results(
+                    cache_state,
+                    query,
+                    **kwargs
+                )
+
+            else:
+                es_search = self.query_elasticsearch(query)
+
+                hits = es_search['hits']['hits']
+
+                # reverse = kwargs.get('reverse')
+                # print(reverse)
+                #
+                # if reverse:
+                #     hits.reverse()
+
+        return hits, total_hits
+
     def search(self, params, **kwargs):
         """
         Search interface to elasticsearch
@@ -503,29 +550,9 @@ class ElasticsearchFacetSet(FacetSet):
         :rtype: SearchResults
         """
 
-        query = self.build_query(params, **kwargs)
-
-        es_search = ElasticsearchConnection().search(query)
-
-        hits = es_search['hits']['hits']
-
-        reverse = kwargs.get('reverse')
-
-        if reverse:
-            hits.reverse()
+        hits, total_hits = self._search(params, **kwargs)
 
         results = self.build_representation(hits, params, **kwargs)
-
-        # Use the response from the query to get the total unless > 10k
-        # In this case will need to query size directly
-        if es_search['hits']['total']['relation'] == 'eq':
-            total_hits = es_search['hits']['total']['value']
-        else:
-            # Some keys are not compatible with the count query
-            for key in ['sort', 'size', 'from', 'search_after']:
-                query.pop(key, None)
-
-            total_hits = ElasticsearchConnection().count(query)['count']
 
         after_key = hits[-1]['sort'] if hits else None
         before_key = hits[0]['sort'] if hits else None
