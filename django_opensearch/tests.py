@@ -210,26 +210,6 @@ class PaginationTestCase(OpensearchTestCase):
         )
         self.assertEqual(results.status_code, 200)
 
-    def test_random_page_past_10k(self):
-        page_size = 100
-        total_pages = self.total_results//page_size
-
-        # Calculate the minimum page number to go over 10,000 given the page size
-        min_page = -(10000//-page_size)
-        page_number = random.randint(min_page, total_pages)
-
-        results = self.client.get(
-            self.get_url(
-                self.REQUEST_BASE,
-                parentIdentifier=LARGE_RESPONSE_COLLECTION_ID,
-                startPage=page_number,
-                maximumRecords=page_size
-            )
-        )
-
-        self.assertEqual(results.status_code, 200)
-
-
 
 class DateRangeTestCase(OpensearchTestCase):
 
