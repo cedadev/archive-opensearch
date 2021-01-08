@@ -119,11 +119,8 @@ class OpensearchResponse:
 
         search_index = search_index if search_index > 1 else 1
 
-        search_after, reverse = self.check_scrolling()
+        self._generate_responses(search_params, start_index=search_index, max_results=self.itemsPerPage, uri=full_uri, request=request)
 
-        self._generate_responses(search_params, start_index=search_index, max_results=self.itemsPerPage, uri=full_uri, search_after=search_after, reverse=reverse)
-
-        #
         if search_index + self.itemsPerPage -1 > self.totalResults:
             end_of_page = self.totalResults
         else:
@@ -165,6 +162,12 @@ class OpensearchResponse:
                         ]
 
     def __getstate__(self):
+        """
+        Used to allow the object to be pickled as JSON using JSONPickle
+
+        :return: state
+        :rtype: dict
+        """
         state = self.__dict__.copy()
         del state['request']
         return state
@@ -205,7 +208,7 @@ class OpensearchResponse:
 
         return nav_url
 
-    def _generate_responses(self, search_params, **kwargs):
+    def _generate_responses(self, search_params, request, **kwargs):
 
         self._generate_request_query(search_params)
 
@@ -217,13 +220,12 @@ class OpensearchResponse:
 
         if backend.collection.collection_search(search_params):
             # Search for collections
-            self.totalResults, self.features = Collection(path=collection_path).search(search_params, **kwargs)
+            self.totalResults, self.features = Collection(path=collection_path).search(search_params, request, **kwargs)
 
         else:
-            results = Granule(collection_path).search(search_params, **kwargs)
+            results = Granule(collection_path).search(search_params, request, **kwargs)
             self.totalResults = results.total
             self.features = results.results
-            self.set_search_after(results)
 
     def _generate_request_query(self, search_params):
 
@@ -234,92 +236,5 @@ class OpensearchResponse:
             request[value] = search_params[param]
 
         self.queries['request'] = [request]
-
-    def check_scrolling(self):
-        """
-        Retrieve the search_after key if the request is the same with a page within 1 of the previous search
-        :param request:
-        :return:
-        """
-
-        session = self.request.session
-
-        search_params = self.request.GET
-        start_page = int(search_params.get('startPage',1))
-        last_query = session.get('last_query')
-
-        # Only need to check if we are looking at a page higher than the first page
-        if start_page > 1:
-
-            # Check if we have a last_query in the session
-            if last_query:
-
-                last_query_page = int(last_query.get('startPage', 1))
-
-                # If the page is not within 1 we can't use search after
-                if not abs(start_page - last_query_page) <= 1:
-                    return None, None
-
-                # Check that the search parameters are the same
-                ignored_params = ('startPage', 'httpAccept')
-                current_search = {key for key in search_params if key not in ignored_params}
-                last_search = {key for key in last_query if key not in ignored_params}
-
-                # If searches are not the same, cannot use last query
-                if not current_search == last_search:
-                    return None, None
-
-                # Check if values for search facets are the same
-                for key in current_search:
-                    if not search_params[key] == last_query[key]:
-                        return None, None
-
-                # Page is  +/-1, search params are the same and values for them
-                # are the same. Retrieve the search_after key
-                diff = start_page - last_query_page
-
-                if diff == -1:
-                    search_after = session.get('before_key')
-                elif diff == 0:
-                    search_after = session.get('current_key')
-                else:
-                    search_after = session.get('after_key')
-
-                reverse = any((diff < 0, session.get('downpage')))
-
-                return search_after, reverse
-
-        return None, None
-
-    def set_search_after(self, results):
-
-        before_key = results.search_before
-        after_key = results.search_after
-
-        session = self.request.session
-        search_params = self.request.GET
-
-        last_query = session.get('last_query')
-        start_page = int(search_params.get('startPage', 1))
-
-        # Set the last query
-        session['last_query'] = search_params
-
-        if start_page > 1:
-            if last_query:
-                last_query_page = int(last_query.get('startPage', 1))
-
-                diff = start_page - last_query_page
-
-                if diff == -1:
-                    session['current_key'] = session['before_key']
-                    session['downpage'] = True
-
-                elif diff == 1:
-                    session['current_key'] = session['after_key']
-                    session['downpage'] = False
-
-        session['before_key'] = before_key
-        session['after_key'] = after_key
 
 

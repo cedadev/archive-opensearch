@@ -8,20 +8,23 @@ __copyright__ = 'Copyright 2018 United Kingdom Research and Innovation'
 __license__ = 'BSD - see LICENSE file in top-level package directory'
 __contact__ = 'richard.d.smith@stfc.ac.uk'
 
-from .collection_map import COLLECTION_MAP
-from pydoc import locate
-import os
+# Application Imports
 from django_opensearch.constants import DEFAULT
 from django_opensearch.opensearch.backends import NamespaceMap, Param, FacetSet
 from django_opensearch import settings
-from .elasticsearch_connection import ElasticsearchConnection
-import copy
-from dateutil.parser import parse as date_parser
 from django_opensearch.opensearch.utils import NestedDict
 from django_opensearch.opensearch.utils.geo_point import Point, Envelope
-from collections import namedtuple
 from django_opensearch.opensearch.utils.aggregation_tools import get_thredds_aggregation, get_aggregation_capabilities, \
     get_aggregation_search_link
+from django_opensearch.opensearch.backends.base import HandlerFactory
+from .elasticsearch_connection import ElasticsearchConnection
+
+# Third-party imports
+from dateutil.parser import parse as date_parser
+
+# Python Imports
+import copy
+from collections import namedtuple
 
 
 class PagingError(Exception):
@@ -682,48 +685,3 @@ class ElasticsearchFacetSet(FacetSet):
         return entry
 
 
-class HandlerFactory:
-    """
-    Returns the correct handler for the given path to know how to interpret the
-    search facets and display the results.
-    """
-
-    def __init__(self):
-        self.map = COLLECTION_MAP
-
-    def get_handler(self, path):
-        """
-        Takes a system path and returns the file extensions to look for and
-        the correct handler for the collection.
-
-        :param path: filepath
-        :type path: str
-
-        :return: handler class
-        :rtype: ElasticsearchFacetSet
-        """
-
-        collection, root_path = self.get_collection_map(path)
-        if collection is not None:
-            handler = locate(collection['handler'])
-            return handler(path)
-
-    def get_collection_map(self, path):
-        """
-        Takes an arbitrary path and returns a collection path
-
-        :param path: Path to the data of interest
-        :type path: str
-
-        :return: handler class string, collection root path
-        :rtype: tuple(str, str)
-        """
-
-        while path not in self.map and path != '/' and path:
-            path = os.path.dirname(path)
-
-        # No match has been found
-        if not path or path == '/':
-            return None, None
-
-        return self.map[path], path

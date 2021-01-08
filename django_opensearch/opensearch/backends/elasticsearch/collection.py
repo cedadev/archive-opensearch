@@ -10,7 +10,7 @@ __contact__ = 'richard.d.smith@stfc.ac.uk'
 
 from .facets.base import ElasticsearchFacetSet
 from .facets.elasticsearch_connection import ElasticsearchConnection
-from .facets.base import HandlerFactory
+from django_opensearch.opensearch.backends.base import HandlerFactory
 from django_opensearch.constants import DEFAULT
 from django.http import Http404
 from django.conf import settings
@@ -154,7 +154,7 @@ class Collection(ElasticsearchFacetSet):
 
         return query
 
-    def search(self, params, **kwargs):
+    def search(self, params, request, **kwargs):
         """
         Search interface to elasticsearch
 
