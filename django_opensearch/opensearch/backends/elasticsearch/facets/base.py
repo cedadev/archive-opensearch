@@ -134,14 +134,21 @@ class ElasticsearchFacetSet(FacetSet):
                 "end_time" : "1985-06-25T10:01:26"
             }
 
+        As per the DCMI, either start or end date can be missing.
+        https://www.dublincore.org/specifications/dublin-core/dcmi-terms/terms/date/
+
         :param temporal: Temporal attribute of file from FBI index
         :type temporal: dict
 
         :return: ISO 8601 formatted date range
         :rtype: str
         """
+        start = temporal.get('start_time','..')
+        end = temporal.get('end_time','..')
 
-        return f"{temporal['start_time']}/{temporal['end_time']}"
+        return f"{start}/{end}"
+
+
 
     @staticmethod
     def _extract_variables(phenomena):
