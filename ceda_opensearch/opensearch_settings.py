@@ -14,8 +14,8 @@ DESCRIPTION = 'Opensearch interface to the CEDA archive'
 TAGS = ['CEDA','NERC']
 DEVELOPER = 'CEDA'
 
-ELASTICSEARCH_INDEX = 'opensearch-files-double-nested'
-ELASTICSEARCH_COLLECTION_INDEX = 'opensearch-collections-double-nested'
+ELASTICSEARCH_INDEX = 'opensearch-files-staging'
+ELASTICSEARCH_COLLECTION_INDEX = 'opensearch-collections-staging'
 APPLICATION_ID = 'opensearch'
 ELASTICSEARCH_CONNECTION_PARAMS = {
     'timeout': 30
