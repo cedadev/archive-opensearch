@@ -137,7 +137,7 @@ class CCIFacets(ElasticsearchFacetSet):
         entry['properties']['links']['related'] = [
             {
                 'title': 'Download',
-                'href': f'http://{thredds_path("http", file_path)}',
+                'href': thredds_path("http", file_path),
                 'type': 'application/octet-stream'
             }
         ]
@@ -147,7 +147,7 @@ class CCIFacets(ElasticsearchFacetSet):
             entry['properties']['links']['related'].append(
                 {
                     'title': 'Opendap',
-                    'href': f'http://{thredds_path("opendap", file_path)}',
+                    'href': thredds_path("opendap", file_path),
                     'type': 'application/octet-stream'
                 }
             )
