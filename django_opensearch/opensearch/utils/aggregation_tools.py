@@ -15,7 +15,7 @@ import urllib.parse
 
 
 def get_thredds_aggregation(id, format='xml'):
-    return f'http://{settings.THREDDS_HOST}/thredds/datasets/{id}.{format}?dataset={id}'
+    return f'{settings.THREDDS_HOST}/thredds/datasets/{id}.{format}?dataset={id}'
 
 
 def get_aggregation_search_link(base_url, collection_id, aggregation_id, format):
@@ -33,7 +33,7 @@ def get_aggregation_capabilities(agg_dict):
     for service in agg_dict['services']:
         services.append({
             'title': service,
-            'href': f'http://{thredds_path(service,"")}/{agg_dict["id"]}{SUFFIX_MAP.get(service,"")}'
+            'href': f'{thredds_path(service,"")}/{agg_dict["id"]}{SUFFIX_MAP.get(service,"")}'
         })
 
     return services
