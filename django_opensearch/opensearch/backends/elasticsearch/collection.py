@@ -135,6 +135,35 @@ class Collection(ElasticsearchFacetSet):
 
         query = super().build_query(params, **kwargs)
 
+        # Add sorting
+        query['sort'] = [
+            {
+                "dataType.keyword": {
+                    "order": "asc"
+                }
+            },
+            {
+                "processingLevel.keyword": {
+                    "order": "desc"
+                }
+            },
+            {
+                "productString.keyword": {
+                    "order": "asc"
+                }
+            },
+            {
+                "productVersion.keyword": {
+                    "order": "desc"
+                }
+            },
+            {
+                "title.keyword": {
+                    "order": "asc"
+                }
+            }
+        ]
+
         pid = params.get('parentIdentifier')
 
         if pid:
