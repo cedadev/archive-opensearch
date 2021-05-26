@@ -32,6 +32,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'django_opensearch',
+    'manifest',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

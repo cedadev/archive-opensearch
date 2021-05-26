@@ -13,6 +13,7 @@ from django_opensearch.constants import DEFAULT
 from django_opensearch import settings
 from django_opensearch.opensearch.utils import thredds_path
 import os
+from django.urls import reverse
 
 
 class CCIFacets(ElasticsearchFacetSet):
@@ -110,6 +111,14 @@ class CCIFacets(ElasticsearchFacetSet):
                     'type': 'text/html'
                 }
             ]
+
+            if source.get('manifest'):
+                entry['properties']['links']['describedby'].append(
+                    {
+                        'title': 'Dataset Manifest',
+                        'href': f"{base_url.rstrip('/opensearch')}{reverse('manifest:get_manifest', kwargs={'uuid': source['collection_id']})}"
+                    }
+                )
 
         return entry
 
