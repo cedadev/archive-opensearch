@@ -113,12 +113,15 @@ class CCIFacets(ElasticsearchFacetSet):
             ]
 
             if source.get('manifest'):
-                entry['properties']['links']['describedby'].append(
+                via = entry['properties']['links'].get('via',[])
+                via.append(
                     {
                         'title': 'Dataset Manifest',
                         'href': f"{base_url.rstrip('/opensearch')}{reverse('manifest:get_manifest', kwargs={'uuid': source['collection_id']})}"
                     }
                 )
+
+                entry['properties']['links']['via'] = via
 
         return entry
 
