@@ -6,7 +6,7 @@ git+https://github.com/cedadev/ceda-elasticsearch-tools.git@v2.3.0
 git+https://github.com/rsmith013/cci-tagger.git
 idna==2.8
 jsonpickle==1.2
-psycopg2-binary==2.8.4
+psycopg2-binary==2.9.1
 pysolr==3.8.1
 python-dateutil==2.8.0
 pytz==2019.1
@@ -15,3 +15,4 @@ six==1.12.0
 sqlparse==0.3.0
 urllib3==1.25.8
 xmltodict==0.12.0
+djangorestframework~=3.12.4
