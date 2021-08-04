@@ -38,8 +38,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # Events Apps
     'rest_framework',
-    'events'
+    'rest_framework.authtoken',
+    'events',
 ]
 
 MIDDLEWARE = [
@@ -143,3 +146,10 @@ try:
     from .settings_local import *
 except ImportError:
     pass
+
+# Import Events Settings
+try:
+    from events.events_settings import *
+except ImportError:
+    pass
+
