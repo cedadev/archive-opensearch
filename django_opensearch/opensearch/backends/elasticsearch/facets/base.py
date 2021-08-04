@@ -141,8 +141,8 @@ class ElasticsearchFacetSet(FacetSet):
         :rtype: str
         """
 
-        return f"{temporal['start_time'] if 'start_time' in temporal.keys() else '...'}" \
-               f"/{temporal['end_time'] if 'end_time' in temporal.keys() else '...'}"
+        return f"{temporal.get('start_time','...')}" \
+               f"/{temporal.get('end_time','...')}"
 
 
     @staticmethod
