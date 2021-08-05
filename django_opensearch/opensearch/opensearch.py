@@ -188,18 +188,18 @@ class OpensearchResponse:
         """
         nav_url = None
 
-        if link_type is 'first':
+        if link_type == 'first':
             nav_url = f'{url}?{self._stitch_query_params(search_params)}&startPage=1'
 
-        elif link_type is 'last':
+        elif link_type == 'last':
             last_page = f'startPage={math.ceil(self.totalResults/self.itemsPerPage)}'
             nav_url = f'{url}?{self._stitch_query_params(search_params)}&{last_page}'
 
-        elif link_type is 'prev':
+        elif link_type == 'prev':
             prev_page = f'startPage={self.startPage - 1}'
             nav_url = f'{url}?{self._stitch_query_params(search_params)}&{prev_page}'
 
-        elif link_type is 'next':
+        elif link_type == 'next':
             next_page = f'startPage={self.startPage + 1}'
             nav_url = f'{url}?{self._stitch_query_params(search_params)}&{next_page}'
 
