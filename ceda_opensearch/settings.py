@@ -114,6 +114,14 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Django Rest Framework Settings
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ]
+}
+
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
@@ -144,12 +152,6 @@ except ImportError:
 # Import local settings
 try:
     from .settings_local import *
-except ImportError:
-    pass
-
-# Import Events Settings
-try:
-    from events.events_settings import *
 except ImportError:
     pass
 

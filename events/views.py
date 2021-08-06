@@ -16,7 +16,30 @@ class EventViewSet(
     generics.GenericAPIView,
     APIView,
 ):
-    """A class based view for Events"""
+    """Get a list of Event Objects.
+
+    Available end points:
+        - /api/events/ - Will list all Events in the database
+        - /api/events/?<Query>=<Value>/ - returns list of all Events matching the query
+
+    Available Methods:
+        - GET
+        - POST
+
+    Available filters:
+        - from_date
+        - collection_id
+        - action
+
+    How to use filters:
+        These filters can be used like django query filters.
+        - /api/events/?from_date=2021-08-05
+        - /api/events/?action=updated
+        - /api/events/?collection_id=ef1627f523764eae8bbb6b81bf1f7a0a
+
+        Filters can be stack to be an 'AND' relationship. e.g.
+        - /api/events/?from_date=2021-08-05&action=updated
+    """
 
     queryset = Event.objects.all()
     serializer_class = EventSerializer
