@@ -4,7 +4,8 @@ import json
 from django.contrib.auth.models import User
 from django.test import TestCase
 from rest_framework.authtoken.models import Token
-from rest_framework.test import APITestCase, RequestsClient
+from rest_framework.test import APITestCase
+from rest_framework.test import RequestsClient
 
 from events.models import Event
 
@@ -33,10 +34,10 @@ MULTI_ITEM_JSON = [
         "collection_id": "4",
         "collection_title": "igpay atinlay",
         "action": "added",
-        "datetime": "2000-11-01T00:00:00.00"
-    }
+        "datetime": "2000-11-01T00:00:00.00",
+    },
 ]
-URL = 'http://testserver/api/events/'
+URL = "http://testserver/api/events/"
 
 
 class AuthenticationTests(APITestCase, TestCase):
@@ -50,33 +51,35 @@ class AuthenticationTests(APITestCase, TestCase):
             collection_id="0",
             collection_title="blank",
             action="added",
-            datetime="2000-11-01"
+            datetime="2000-11-01",
         )
 
     def test_anonymous_get(self):
         """
-        Test ability for anyone to GET information from the api
+        Test anonymous user can GET request successfully
         """
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), [
-            {
-                'collection_id': '0',
-                'collection_title': 'blank',
-                'action': 'added',
-                'datetime': '2000-11-01'
-            }
-        ])
+        self.assertEqual(
+            response.json(),
+            [
+                {
+                    "collection_id": "0",
+                    "collection_title": "blank",
+                    "action": "added",
+                    "datetime": "2000-11-01",
+                }
+            ],
+        )
 
     def test_unauthenticated_post(self):
         """
-        Test invalidation for unauthenticated POST request
-        unauthenticated request is a 401 Forbidden
+        Test unauthenticated users are 401 Forbidden to POST request
         """
         headers = {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
+            "Content-Type": "application/json",
+            "Accept": "application/json",
         }
         data = json.dumps(MULTI_ITEM_JSON, indent=4)
         response = self.client.post(self.url, data=data, headers=headers)
@@ -85,13 +88,12 @@ class AuthenticationTests(APITestCase, TestCase):
 
     def test_authenticated_post(self):
         """
-        Test ability for authenticated users to POST request
-        form should be accepted and return 201 Created
+        Test authenticated users are allowed to POST request with 201 Create
         """
         headers = {
-            'Authorization': f'Token {self.key}',
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
+            "Authorization": f"Token {self.key}",
+            "Content-Type": "application/json",
+            "Accept": "application/json",
         }
         data = json.dumps(MULTI_ITEM_JSON, indent=4)
         response = self.client.post(self.url, data=data, headers=headers)
@@ -107,22 +109,21 @@ class SerializerTests(APITestCase, TestCase):
         self.key = token.key
         self.url = URL
         self.headers = {
-            'Authorization': f'Token {self.key}',
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
+            "Authorization": f"Token {self.key}",
+            "Content-Type": "application/json",
+            "Accept": "application/json",
         }
 
     def test_json_to_model(self):
         """
-        Test a validated json is correctly serialised into an Events model and
-        data is correctly formatted.
+        Test JSON object is successfully and accurately converted to Events Model Object
         """
         data = [
             {
-                'collection_id': '0',
-                'collection_title': 'blank',
-                'action': 'added',
-                'datetime': datetime.datetime.now().isoformat()
+                "collection_id": "0",
+                "collection_title": "blank",
+                "action": "added",
+                "datetime": datetime.datetime.now().isoformat(),
             }
         ]
         data = json.dumps(data, indent=4)
@@ -130,52 +131,58 @@ class SerializerTests(APITestCase, TestCase):
         model = Event.objects.all().first()
         post_json = response.json()[0]
         self.assertTrue(Event.objects.all())
-        self.assertEqual(model.collection_title, post_json.get('collection_title'))
-        self.assertEqual(model.collection_id, post_json.get('collection_id'))
-        self.assertEqual(model.datetime.strftime("%Y-%m-%d"), post_json.get('datetime'))
+        self.assertEqual(model.collection_title, post_json.get("collection_title"))
+        self.assertEqual(model.collection_id, post_json.get("collection_id"))
+        self.assertEqual(model.datetime.strftime("%Y-%m-%d"), post_json.get("datetime"))
 
     def test_invalid_format_request(self):
         """
-        If an invalid POST request not following the collection_id, collection_title, action, datetime
-        format, it should return 400 Bad Request
+        Test invalid JSON of wrong format returns 400 Bad Request
         """
-        data = [
-            {
-                "invalid": "format"
-            }
-        ]
+        data = [{"invalid": "format"}]
         data = json.dumps(data, indent=4)
         response = self.client.post(self.url, data=data, headers=self.headers)
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), [
-            {
-                'collection_id': ['This field is required.'],
-                'collection_title': ['This field is required.'],
-                'action': ['This field is required.'],
-                'datetime': ['This field is required.']
-            }
-        ])
+        self.assertEqual(
+            response.json(),
+            [
+                {
+                    "collection_id": ["This field is required."],
+                    "collection_title": ["This field is required."],
+                    "action": ["This field is required."],
+                    "datetime": ["This field is required."],
+                }
+            ],
+        )
 
     def test_not_iso_datetime(self):
         """
-        If POST request format is correct but the datetime field does not follow the ISO standard format
-        then the request should return 400 Bad Request
+        Test if datetime in JSON is not ISO-8601 then return 400 Bad Request
         """
         data = [
             {
                 "collection_id": "1",
                 "collection_title": "title",
                 "action": "updated",
-                "datetime": "2000-11-01"
+                "datetime": "2000-11-01",
             }
         ]
         data = json.dumps(data, indent=4)
         response = self.client.post(self.url, data=data, headers=self.headers)
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json(), [{'datetime': ['Date has wrong format. Use one of these formats instead: '
-                                                         'YYYY-MM-DDThh:mm:ss.uuuuuu.']}])
+        self.assertEqual(
+            response.json(),
+            [
+                {
+                    "datetime": [
+                        "Date has wrong format. Use one of these formats instead: "
+                        "YYYY-MM-DDThh:mm:ss.uuuuuu."
+                    ]
+                }
+            ],
+        )
 
 
 class QuerySearchTests(APITestCase, TestCase):
@@ -186,22 +193,21 @@ class QuerySearchTests(APITestCase, TestCase):
         key = token.key
         self.url = URL
         headers = {
-            'Authorization': f'Token {key}',
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
+            "Authorization": f"Token {key}",
+            "Content-Type": "application/json",
+            "Accept": "application/json",
         }
         data = json.dumps(MULTI_ITEM_JSON, indent=4)
         self.client.post(self.url, data=data, headers=headers)
 
     def test_simple_queries(self):
         """
-        Test simple query filters one at a time against expected filtered queryset based on
-        dummy data
+        Test each query filter and return expected number of models returned that match query
         """
-        response_id = self.client.get(self.url + '?collection_id=1')
-        response_date = self.client.get(self.url + '?from_date=2020-01-01')
-        response_action = self.client.get(self.url + '?action=added')
-        response_none = self.client.get(self.url + '?collection_id=0')
+        response_id = self.client.get(self.url + "?collection_id=1")
+        response_date = self.client.get(self.url + "?from_date=2020-01-01")
+        response_action = self.client.get(self.url + "?action=added")
+        response_none = self.client.get(self.url + "?collection_id=0")
 
         self.assertEqual(len(response_id.json()), 1)
         self.assertEqual(len(response_action.json()), 2)
@@ -210,11 +216,12 @@ class QuerySearchTests(APITestCase, TestCase):
 
     def test_multiple_queries(self):
         """
-        Test when multiple queries are added to the URL that the queryset returned is valid
-        respective to the requests.
+        Test multiple queries in one filter and return expected number of models that match all queries
         """
-        url = self.url + f'?from_date={datetime.datetime.now().strftime("%Y-%m-%d")}' \
-                         f'&action=added'
+        url = (
+            self.url + f'?from_date={datetime.datetime.now().strftime("%Y-%m-%d")}'
+            f"&action=added"
+        )
         response = self.client.get(url)
 
         self.assertEqual(len(response.json()), 1)
