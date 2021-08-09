@@ -18,27 +18,35 @@ class EventViewSet(
 ):
     """Get a list of Event Objects.
 
-    Available end points:
-        - /api/events/ - Will list all Events in the database
-        - /api/events/?<Query>=<Value>/ - returns list of all Events matching the query
+    ### Available end points:
 
-    Available Methods:
-        - GET
-        - POST
+    - `/api/events/` - Will list all Events in the database
+    - `/api/events/?<Query>=<Value>/` - returns list of all Events matching the query
 
-    Available filters:
-        - from_date
-        - collection_id
-        - action
+    ### Available Methods:
 
-    How to use filters:
-        These filters can be used like django query filters.
-        - /api/events/?from_date=2021-08-05
-        - /api/events/?action=updated
-        - /api/events/?collection_id=ef1627f523764eae8bbb6b81bf1f7a0a
+    - `GET`
+    - `POST`
 
-        Filters can be stack to be an 'AND' relationship. e.g.
-        - /api/events/?from_date=2021-08-05&action=updated
+
+    ### Available filters:
+
+    - `from_date`
+    - `collection_id`
+    - `action`
+
+
+    ### How to use filters:
+
+    These filters can be used like django query filters.
+
+    - `/api/events/?from_date=2021-08-05`
+    - `/api/events/?action=updated`
+    - `/api/events/?collection_id=ef1627f523764eae8bbb6b81bf1f7a0a`
+
+    Filters can be stack to be an 'AND' relationship. e.g.
+
+    - `/api/events/?from_date=2021-08-05&action=updated`
     """
 
     queryset = Event.objects.all()
@@ -64,11 +72,13 @@ class EventViewSet(
     def get_queryset(self):
         """Get request method with queryset, returns filtered list of Event model objects
 
-        Usage: url/?<query>=<value>&...
+        Usage: `url/?<query>=<value>&...`
+
         Where query is choice from:
-        -   'from_date': filter events from this date in YYYY-MM-DD format
-        -   'collection_id': filter events of a particular collection id
-        -   'action': filter event by action of choice ['added','removed','updated']
+
+        -   `from_date`: filter events from this date in YYYY-MM-DD format
+        -   `collection_id`: filter events of a particular collection id
+        -   `action`: filter event by action of choice ['added','removed','updated']
         """
         queryset = Event.objects.all()
         datetime = self.request.query_params.get("from_date")
