@@ -142,8 +142,8 @@ class ElasticsearchFacetSet(FacetSet):
         :rtype: str
         """
 
-        return f"{temporal.get('start_time','..')}/{temporal.get('end_time','..')}"
 
+        return f"{temporal.get('start_time','..')}/{temporal.get('end_time','..')}"
 
     @staticmethod
     def _extract_variables(phenomena):
