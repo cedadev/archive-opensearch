@@ -101,7 +101,7 @@ class CCIFacets(ElasticsearchFacetSet):
             entry['properties']['links']['describedby'] = [
                 {
                     'title': 'ISO19115',
-                    'href': f'https://catalogue.ceda.ac.uk/export/xml/{source["collection_id"]}.xml',
+                    'href': f'https://catalogue.ceda.ac.uk/export/xml/gemini2.3/{source["collection_id"]}.xml',
                     'type': 'application/xml'
                 },
                 {
