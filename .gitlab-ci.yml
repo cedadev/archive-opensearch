@@ -9,4 +9,4 @@ test:
     - pip install -e $CI_PROJECT_DIR
     - python -c "import secrets; print(f'SECRET_KEY = \"{secrets.token_hex(16)}\"')" > $CI_PROJECT_DIR/ceda_opensearch/settings_local.py
   script:
-    - python manage.py test django_opensearch.tests
+    - python manage.py test django_opensearch.tests events.tests
