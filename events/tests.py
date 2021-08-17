@@ -16,19 +16,19 @@ MULTI_ITEM_JSON = [
         "collection_id": "1",
         "collection_title": "lorem ipsum",
         "action": "added",
-        "datetime": datetime.datetime.now().isoformat(),
+        "datetime": datetime.datetime.today().strftime('%Y-%m-%d'),
     },
     {
         "collection_id": "2",
         "collection_title": "dummy text",
         "action": "removed",
-        "datetime": datetime.datetime.now().isoformat(),
+        "datetime": datetime.datetime.today().strftime('%Y-%m-%d'),
     },
     {
         "collection_id": "3",
         "collection_title": "abc",
         "action": "updated",
-        "datetime": datetime.datetime.now().isoformat(),
+        "datetime": datetime.datetime.today().strftime('%Y-%m-%d'),
     },
     {
         "collection_id": "4",
