@@ -34,7 +34,7 @@ MULTI_ITEM_JSON = [
         "collection_id": "4",
         "collection_title": "igpay atinlay",
         "action": "added",
-        "datetime": "2000-11-01T00:00:00.00",
+        "datetime": "2000-11-01",
     },
 ]
 URL = "http://testserver/api/events/"
@@ -123,7 +123,7 @@ class SerializerTests(APITestCase, TestCase):
                 "collection_id": "0",
                 "collection_title": "blank",
                 "action": "added",
-                "datetime": datetime.datetime.now().isoformat(),
+                "datetime": datetime.datetime.today().strftime('%Y-%m-%d'),
             }
         ]
         data = json.dumps(data, indent=4)
@@ -152,34 +152,6 @@ class SerializerTests(APITestCase, TestCase):
                     "collection_title": ["This field is required."],
                     "action": ["This field is required."],
                     "datetime": ["This field is required."],
-                }
-            ],
-        )
-
-    def test_not_iso_datetime(self):
-        """
-        Test if datetime in JSON is not ISO-8601 then return 400 Bad Request
-        """
-        data = [
-            {
-                "collection_id": "1",
-                "collection_title": "title",
-                "action": "updated",
-                "datetime": "2000-11-01",
-            }
-        ]
-        data = json.dumps(data, indent=4)
-        response = self.client.post(self.url, data=data, headers=self.headers)
-
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(
-            response.json(),
-            [
-                {
-                    "datetime": [
-                        "Date has wrong format. Use one of these formats instead: "
-                        "YYYY-MM-DDThh:mm:ss.uuuuuu."
-                    ]
                 }
             ],
         )
