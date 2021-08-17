@@ -4,7 +4,7 @@ from rest_framework import serializers
 from .models import Event
 
 
-class EventSerializer(serializers.HyperlinkedModelSerializer):
+class EventSerializer(serializers.ModelSerializer):
     """Serializer class to transform JSON or list of JSON to django model.
 
     Expected format produced from script:
@@ -18,7 +18,7 @@ class EventSerializer(serializers.HyperlinkedModelSerializer):
     ```
     """
 
-    datetime = fields.DateField(input_formats=["%Y-%m-%dT%H:%M:%S.%f"])
+    datetime = fields.DateField(input_formats=["%Y-%m-%d"])
 
     class Meta:
         model = Event
