@@ -15,7 +15,7 @@ def get_manifest(request, uuid):
         response = json.loads(response['_source']['manifest'])
         return JsonResponse(response)
 
-    except NotFoundError:
-        return Http404
+    except (NotFoundError, KeyError):
+        raise Http404(f'Manifest not found for collection {uuid}')
 
 

@@ -19,5 +19,6 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('opensearch/', include('django_opensearch.urls')),
-    path('manifest/', include('manifest.urls'))
+    path('manifest/', include('manifest.urls')),
+    path('api/', include('events.urls')),
 ]

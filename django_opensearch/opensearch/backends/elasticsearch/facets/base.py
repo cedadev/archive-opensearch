@@ -137,11 +137,13 @@ class ElasticsearchFacetSet(FacetSet):
         :param temporal: Temporal attribute of file from FBI index
         :type temporal: dict
 
-        :return: ISO 8601 formatted date range
+        :return: ISO 8601 formatted date range as per dc:date
+        https://www.dublincore.org/specifications/dublin-core/dcmi-terms/terms/date/
         :rtype: str
         """
 
-        return f"{temporal['start_time']}/{temporal['end_time']}"
+
+        return f"{temporal.get('start_time','..')}/{temporal.get('end_time','..')}"
 
     @staticmethod
     def _isodate(date):

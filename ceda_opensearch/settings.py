@@ -39,6 +39,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # Events Apps
+    'rest_framework',
+    'rest_framework.authtoken',
+    'events',
 ]
 
 MIDDLEWARE = [
@@ -110,6 +115,14 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Django Rest Framework Settings
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ]
+}
+
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
@@ -142,3 +155,4 @@ try:
     from .settings_local import *
 except ImportError:
     pass
+
