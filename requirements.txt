@@ -13,7 +13,7 @@ jsonpickle==1.2
 Markdown==3.3.4
 netCDF4==1.5.7
 numpy==1.21.1
-psycopg2-binary==2.9.1
+psycopg2-binary==2.8.6
 pyparsing==2.4.7
 pysolr==3.8.1
 python-dateutil==2.8.0
