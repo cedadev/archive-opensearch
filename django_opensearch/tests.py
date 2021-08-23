@@ -305,31 +305,3 @@ class JSONResponseTestCase(OpensearchTestCase):
         self.assertEqual(results['subtitle'], 'Showing 1 - 1 of 1')
 
 
-class CollectionVariablesTestCase(OpensearchTestCase):
-
-    def test_variables_in_collection(self):
-        results = self.client.get(
-            self.get_url(
-                self.REQUEST_BASE,
-                parentIdentifier='cci',
-                maximumRecords=1
-            )
-        )
-        self.assertEqual(results.status_code, 200)
-
-        results = results.json()
-        self.assertEqual(len(results['features']),1)
-
-        feature_id = results['features'][0]['properties']['identifier']
-        results = self.client.get(
-            self.get_url(
-                self.REQUEST_BASE,
-                parentIdentifier='cci',
-                uuid=feature_id
-            )
-        )
-        self.assertEqual(results.status_code, 200)
-        results = results.json()
-        self.assertTrue(results['features'][0]['properties']['variables'])
-
-

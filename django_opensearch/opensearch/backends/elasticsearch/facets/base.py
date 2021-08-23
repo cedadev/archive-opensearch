@@ -146,49 +146,6 @@ class ElasticsearchFacetSet(FacetSet):
         return f"{temporal.get('start_time','..')}/{temporal.get('end_time','..')}"
 
     @staticmethod
-    def _extract_variables(phenomena):
-        """
-        Extract the variables from the elasticsearch response::
-
-            [
-                {
-                    "standard_name" : "time",
-                    "long_name" : "reference time",
-                    "var_id" : "time",
-                    "names" : [
-                        "\"reference time\"",
-                        "\"time\""
-                    ],
-                    "best_name" : "reference time",
-                "   agg_string" : "\"long_name\":\"reference time\",\"names\":\"reference time\";\"time\",\"standard_name\":\"time\",\"var_id\":\"time\""
-                },...
-            ]
-
-        Returns::
-
-            [
-                {
-                    "standard_name" : "time",
-                    "long_name" : "reference time",
-                    "var_id" : "time",
-                    "best_name" : "reference time",
-                },...
-            ]
-
-
-
-        :param phenomena: Phenomena attribute of file from FBI index
-        :type phenomena: list
-
-        :return: List of variables creating a dict of the variable attributes
-        """
-        variables = []
-        for variable in phenomena:
-            variables.append({key: value for key, value in variable.items() if key not in ['names', 'agg_string']})
-
-        return variables
-
-    @staticmethod
     def _isodate(date):
         """
         Convert a given date string to isoformat
@@ -635,9 +592,6 @@ class ElasticsearchFacetSet(FacetSet):
 
         if params.get('parentIdentifier'):
             entry['id'] = f'{base_url}/request?parentIdentifier={params["parentIdentifier"]}&uuid={hit["_id"]}'
-
-        if source.get('variable'):
-            entry['properties']['variables'] = self._extract_variables(source['variable'])
 
         return entry
 
