@@ -158,6 +158,7 @@ class CCIFacets(ElasticsearchFacetSet):
         if source['info'].get('format') == 'NetCDF':
             # Check if any of the values are of int64 type. Dap cannot serve int64
             if any(isinstance(i, list) for i in source['info'].get('phenomena')):
+                # Check if the source phenomena if it is a nested list, requires a further loop if nested.
                 int64 = any([
                     phenom.get('dtype')
                     for phenoms in source['info'].get('phenomena', [[]])
