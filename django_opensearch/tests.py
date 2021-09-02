@@ -305,3 +305,49 @@ class JSONResponseTestCase(OpensearchTestCase):
         self.assertEqual(results['subtitle'], 'Showing 1 - 1 of 1')
 
 
+class ResponseTreeTestCase(OpensearchTestCase):
+
+    def test_root_description(self):
+        results = self.client.get(
+            self.get_url(
+                self.DESCRIPTION_BASE
+            )
+        )
+        self.assertEqual(results.status_code, 200)
+
+        content = xmltodict.parse(results.content)
+        desc = content['OpenSearchDescription']['Description']
+        self.assertEqual(desc, "Opensearch interface to the CEDA archive")
+
+    def test_filter_collection(self):
+        results = self.client.get(
+            self.get_url(
+                self.REQUEST_BASE,
+                httpAccept='application/geo%2Bjson'
+            )
+        )
+        self.assertEqual(results.status_code, 200)
+        results = results.json()
+        ids = PaginationTestCase.get_page_ids(results['features'])
+        self.assertEqual(ids, ['cci'])
+
+    def test_collection_response(self):
+        results = self.client.get(
+            self.get_url(
+                self.REQUEST_BASE,
+                parentIdentifier='cci',
+                httpAccept='application/geo%2Bjson'
+            )
+        )
+        self.assertEqual(results.status_code, 200)
+
+    def test_granule_response(self):
+        results = self.client.get(
+            self.get_url(
+                self.REQUEST_BASE,
+                parentIdentifier="2e656d34d016414c8d6bced18634772c",
+                httpAccept="application/geo%2Bjson"
+            )
+        )
+        self.assertEqual(results.status_code, 200)
+
