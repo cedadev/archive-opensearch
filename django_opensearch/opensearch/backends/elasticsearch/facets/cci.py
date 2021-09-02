@@ -113,7 +113,7 @@ class CCIFacets(ElasticsearchFacetSet):
             ]
 
             if source.get('manifest'):
-                via = entry['properties']['links'].get('via',[])
+                via = entry['properties']['links'].get('via', [])
                 via.append(
                     {
                         'title': 'Dataset Manifest',
@@ -157,7 +157,15 @@ class CCIFacets(ElasticsearchFacetSet):
         # Add opendap link to netCDF files
         if source['info'].get('format') == 'NetCDF':
             # Check if any of the values are of int64 type. Dap cannot serve int64
-            int64 = any([phenom.get('dtype') for phenom in source['info'].get('phenomena', [])])
+            if any(isinstance(i, dict) for i in source['info'].get('phenomena')):
+                # Check if the source phenomena if it is a nested list, requires a further loop if nested.
+                int64 = any([phenom.get('dtype') for phenom in source['info'].get('phenomena', [])])
+            else:
+                int64 = any([
+                    phenom.get('dtype')
+                    for phenoms in source['info'].get('phenomena', [[]])
+                    for phenom in phenoms
+                ])
 
             if not int64:
                 entry['properties']['links']['related'].append(
