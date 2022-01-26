@@ -30,6 +30,7 @@ setup(
     long_description_content_type='text/markdown',
     license='BSD - See ceda_example/LICENSE file for details',
     packages=find_packages(),
+    include_package_data=True,
     package_data={
         'ceda_opensearch': [
             'LICENSE',
