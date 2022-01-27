@@ -1,0 +1,2 @@
+include ceda_opensearch/LICENSE
+recursive-include django_opensearch/templates *.xml
