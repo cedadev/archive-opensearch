@@ -10,9 +10,6 @@ Here are some example queries to get you started. All urls are appended onto the
 
 /opensearch/description.xml
 
-### Get CMIP5 collection
-
-/opensearch/atom?title=CMIP5
 
 ### Get description document for collection
 
@@ -20,4 +17,4 @@ Here are some example queries to get you started. All urls are appended onto the
 
 ### Search CMIP5 collection 
 
-/opensearch/atom?collectionId=1&model=CMCC-CM&startRecord=30
+/opensearch/request?collectionId=1&model=CMCC-CM&startRecord=30&httpAccetp=application/geo%2Bjson
