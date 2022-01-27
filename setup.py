@@ -30,11 +30,7 @@ setup(
     long_description_content_type='text/markdown',
     license='BSD - See ceda_example/LICENSE file for details',
     packages=find_packages(),
-    package_data={
-        'ceda_opensearch': [
-            'LICENSE',
-        ],
-    },
+    include_package_data=True,
     install_requires=['django'],
 
     # This qualifier can be used to selectively exclude Python versions - 
