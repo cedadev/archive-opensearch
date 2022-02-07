@@ -157,7 +157,7 @@ class CCIFacets(ElasticsearchFacetSet):
         # Add opendap link to netCDF files
         if source['info'].get('format') == 'NetCDF':
             # Check if any of the values are of int64 type. Dap cannot serve int64
-            int64 = any([phenom.get('dtype') for phenom in source['info'].get('phenomena', [])])
+            int64 = any([phenom.get('dtype') == 'int64' for phenom in source['info'].get('phenomena', [])])
 
             if not int64:
                 entry['properties']['links']['related'].append(
