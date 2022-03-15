@@ -17,4 +17,4 @@ Here are some example queries to get you started. All urls are appended onto the
 
 ### Search CMIP5 collection 
 
-/opensearch/request?collectionId=1&model=CMCC-CM&startRecord=30&httpAccetp=application/geo%2Bjson
+/opensearch/request?collectionId=1&model=CMCC-CM&startRecord=30&httpAccept=application/geo%2Bjson
