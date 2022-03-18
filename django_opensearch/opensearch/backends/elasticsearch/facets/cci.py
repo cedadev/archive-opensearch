@@ -103,7 +103,7 @@ class CCIFacets(ElasticsearchFacetSet):
                 {
                     'title': 'ISO19115',
                     'href': f'https://catalogue.ceda.ac.uk/export/xml/gemini2.3/{source["collection_id"]}.xml',
-                    'type': 'application/xml'
+                    'type': 'application/vnd.iso.19139+xml'
                 },
                 {
                     'title': 'Dataset Information',
