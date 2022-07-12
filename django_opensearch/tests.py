@@ -169,9 +169,9 @@ class PaginationTestCase(OpensearchTestCase):
         self.test_page_2()
 
     def test_page2_3_3(self):
+        self.test_page_2()
         self.test_page_3()
-        self.test_page_2()
-        self.test_page_2()
+        self.test_page_3()
 
     def test_page_past_10k(self):
         results = self.client.get(
