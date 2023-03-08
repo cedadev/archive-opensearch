@@ -123,6 +123,10 @@ class CCIFacets(ElasticsearchFacetSet):
 
                 entry['properties']['links']['via'] = via
 
+        relationships = self.get_relationships(source.get('collection_id'))
+        if relationships is not None:
+                entry["relationships"] = relationships
+
         return entry
 
     def build_entry(self, hit, params, base_url):
@@ -169,3 +173,25 @@ class CCIFacets(ElasticsearchFacetSet):
                 )
 
         return entry
+
+    def get_relationships(self, uid, prefix=None):
+        if prefix is None:
+            url_string = f"{settings.DATA_BRIDGE_URL}/dataset/http://catalogue.ceda.ac.uk/uuid/{uid}?format=json"
+        else:
+            url_string = prefix
+
+        import requests
+
+        try:
+            response = requests.get(url_string, verify=False)
+            # requests.status_code
+            return response.json()[0]["relationships"]
+
+        except Exception as ex:
+            print(f"ERROR {ex}")
+            if prefix is None:
+                return self.get_relationships(uid, url_string.replace("http://", "https://"))
+            print(f"ERROR {url_string}")
+            return None
+
+        return
