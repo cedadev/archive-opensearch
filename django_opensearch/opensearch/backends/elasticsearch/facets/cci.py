@@ -197,7 +197,7 @@ class CCIFacets(ElasticsearchFacetSet):
         @return a list of related datasets
 
         """
-        url_string = f"{settings.DATA_BRIDGE_URL}/dataset/http://catalogue.ceda.ac.uk/uuid/{uid}?format=json"
+        url_string = f"{settings.DATA_BRIDGE_URL}/dataset/https://catalogue.ceda.ac.uk/uuid/{uid}?format=json"
 
         try:
             response = requests.get(url_string, verify=False)
