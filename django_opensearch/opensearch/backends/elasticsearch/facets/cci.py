@@ -91,7 +91,7 @@ class CCIFacets(ElasticsearchFacetSet):
         external_data_source_found = False
         for external_data_source in EXTERNAL_DATA_SOURCES:
             if source['path'].startswith(external_data_source):
-                external_data_source_found = False
+                external_data_source_found = True
                 # Overwrite the related links
                 entry['properties']['links']['related'] = [
                     {
