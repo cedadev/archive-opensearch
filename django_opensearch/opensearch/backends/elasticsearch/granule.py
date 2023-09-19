@@ -26,6 +26,8 @@ class Granule:
         """
         if path:
             self.handler = HandlerFactory().get_handler(path)
+        if self.handler is None:
+            self.handler = HandlerFactory().get_handler("/neodc/esacci")
 
     def get_facet_set(self, search_params):
         """
