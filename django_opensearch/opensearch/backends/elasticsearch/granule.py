@@ -8,6 +8,10 @@ __copyright__ = 'Copyright 2018 United Kingdom Research and Innovation'
 __license__ = 'BSD - see LICENSE file in top-level package directory'
 __contact__ = 'richard.d.smith@stfc.ac.uk'
 
+from django_opensearch.opensearch.backends.elasticsearch.facets.collection_map import (
+    DEFAULT_COLLECTION,
+)
+
 from .facets.base import HandlerFactory
 
 
@@ -27,7 +31,7 @@ class Granule:
         if path:
             self.handler = HandlerFactory().get_handler(path)
         if self.handler is None:
-            self.handler = HandlerFactory().get_handler("/neodc/esacci")
+            self.handler = HandlerFactory().get_handler(DEFAULT_COLLECTION)
 
     def get_facet_set(self, search_params):
         """
