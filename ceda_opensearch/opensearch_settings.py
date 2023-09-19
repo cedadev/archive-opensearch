@@ -29,3 +29,5 @@ SOLR_CORE = 'datasets'
 OPENSEARCH_BACKEND = 'elasticsearch'
 
 DATA_BRIDGE_URL = 'https://130.246.3.2'
+
+EXTERNAL_DATA_SOURCES = ['https://wui.cmsaf.eu/s']

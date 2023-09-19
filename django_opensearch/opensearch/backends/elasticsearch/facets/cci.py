@@ -9,6 +9,7 @@ __license__ = 'BSD - see LICENSE file in top-level package directory'
 __contact__ = 'richard.d.smith@stfc.ac.uk'
 
 from .base import ElasticsearchFacetSet
+from ceda_opensearch.opensearch_settings import EXTERNAL_DATA_SOURCES
 from django_opensearch.constants import DEFAULT
 from django_opensearch import settings
 from django_opensearch.opensearch.utils import thredds_path
@@ -86,7 +87,19 @@ class CCIFacets(ElasticsearchFacetSet):
         source = hit['_source']
         entry = super().build_collection_entry(hit, params, base_url)
 
-        if source['path'].startswith('http'):
+        external_data_source_found = False
+        for external_data_source in EXTERNAL_DATA_SOURCES:
+            if source['path'].startswith(external_data_source):
+                external_data_source_found = False
+                # Overwrite the related links
+                entry['properties']['links']['related'] = [
+                    {
+                        'title': 'Dataset',
+                        'href': source['path']
+                    }
+                ]
+
+        if not external_data_source_found and source['path'].startswith('http'):
             # Clear the search links from default entry
             entry['properties']['links'].pop('search', None)
 
