@@ -15,6 +15,7 @@ from django_opensearch import settings
 from django_opensearch.opensearch.utils import thredds_path
 import os
 from django.urls import reverse
+import requests
 
 
 class CCIFacets(ElasticsearchFacetSet):
@@ -187,24 +188,24 @@ class CCIFacets(ElasticsearchFacetSet):
 
         return entry
 
-    def get_relationships(self, uid, prefix=None):
-        if prefix is None:
-            url_string = f"{settings.DATA_BRIDGE_URL}/dataset/http://catalogue.ceda.ac.uk/uuid/{uid}?format=json"
-        else:
-            url_string = prefix
+    def get_relationships(self, uid):
+        """
+        Call out to the data bridge service to find related datasets.
 
-        import requests
+        @param uid (str): the uid of dataset
+
+        @return a list of related datasets
+
+        """
+        url_string = f"{settings.DATA_BRIDGE_URL}/dataset/http://catalogue.ceda.ac.uk/uuid/{uid}?format=json"
 
         try:
             response = requests.get(url_string, verify=False)
-            # requests.status_code
+            if response.status_code != 200:
+                return None
             return response.json()[0]["relationships"]
 
         except Exception as ex:
             print(f"ERROR {ex}")
-            if prefix is None:
-                return self.get_relationships(uid, url_string.replace("http://", "https://"))
             print(f"ERROR {url_string}")
             return None
-
-        return
