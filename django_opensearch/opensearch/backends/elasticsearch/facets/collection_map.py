@@ -12,3 +12,5 @@ COLLECTION_MAP = {
     '/badc/cmip5/data': dict(handler='django_opensearch.opensearch.backends.elasticsearch.facets.CMIP5Facets'),
     '/neodc/esacci': dict(handler='django_opensearch.opensearch.backends.elasticsearch.facets.CCIFacets')
 }
+
+DEFAULT_COLLECTION = '/neodc/esacci'

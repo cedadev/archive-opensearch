@@ -27,3 +27,7 @@ SOLR_HOST = 'https://esgf-index1.ceda.ac.uk/solr'
 SOLR_CORE = 'datasets'
 
 OPENSEARCH_BACKEND = 'elasticsearch'
+
+DATA_BRIDGE_URL = 'https://eo-data-bridge.ceda.ac.uk'
+
+EXTERNAL_DATA_SOURCES = ['https://wui.cmsaf.eu/s']

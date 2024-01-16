@@ -9,11 +9,13 @@ __license__ = 'BSD - see LICENSE file in top-level package directory'
 __contact__ = 'richard.d.smith@stfc.ac.uk'
 
 from .base import ElasticsearchFacetSet
+from ceda_opensearch.opensearch_settings import EXTERNAL_DATA_SOURCES
 from django_opensearch.constants import DEFAULT
 from django_opensearch import settings
 from django_opensearch.opensearch.utils import thredds_path
 import os
 from django.urls import reverse
+import requests
 
 
 class CCIFacets(ElasticsearchFacetSet):
@@ -86,7 +88,19 @@ class CCIFacets(ElasticsearchFacetSet):
         source = hit['_source']
         entry = super().build_collection_entry(hit, params, base_url)
 
-        if source['path'].startswith('http'):
+        external_data_source_found = False
+        for external_data_source in EXTERNAL_DATA_SOURCES:
+            if source['path'].startswith(external_data_source):
+                external_data_source_found = True
+                # Overwrite the related links
+                entry['properties']['links']['related'] = [
+                    {
+                        'title': 'Dataset',
+                        'href': source['path']
+                    }
+                ]
+
+        if not external_data_source_found and source['path'].startswith('http'):
             # Clear the search links from default entry
             entry['properties']['links'].pop('search', None)
 
@@ -122,6 +136,10 @@ class CCIFacets(ElasticsearchFacetSet):
                 )
 
                 entry['properties']['links']['via'] = via
+
+        relationships = self.get_relationships(source.get('collection_id'))
+        if relationships is not None:
+                entry["relationships"] = relationships
 
         return entry
 
@@ -169,3 +187,25 @@ class CCIFacets(ElasticsearchFacetSet):
                 )
 
         return entry
+
+    def get_relationships(self, uid):
+        """
+        Call out to the data bridge service to find related datasets.
+
+        @param uid (str): the uid of dataset
+
+        @return a list of related datasets
+
+        """
+        url_string = f"{settings.DATA_BRIDGE_URL}/dataset/https://catalogue.ceda.ac.uk/uuid/{uid}?format=json"
+
+        try:
+            response = requests.get(url_string, verify=False)
+            if response.status_code != 200:
+                return None
+            return response.json()[0]["relationships"]
+
+        except Exception as ex:
+            print(f"ERROR {ex}")
+            print(f"ERROR {url_string}")
+            return None
