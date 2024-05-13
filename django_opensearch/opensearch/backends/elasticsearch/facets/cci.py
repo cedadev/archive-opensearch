@@ -186,6 +186,17 @@ class CCIFacets(ElasticsearchFacetSet):
                     }
                 )
 
+                # Check if character array. Dap converts these into strings
+                for phenom in source["info"].get("phenomena", []):
+                    if (
+                        phenom is not None
+                        and phenom.get("dtype") == "bytes8"
+                        and len(phenom.get("dimensions", [])) == 1
+                    ):
+                        # add a flag for the toolbox
+                        entry['properties']['links']['related'][-1]['opendap_fully_compatible'] = False
+                        break
+
         return entry
 
     def get_relationships(self, uid):
