@@ -197,6 +197,16 @@ class CCIFacets(ElasticsearchFacetSet):
                         entry['properties']['links']['related'][-1]['opendap_fully_compatible'] = False
                         break
 
+        if source['info'].get('kerchunk_location') is not None:
+            kerchunk_location = source['info'].get('kerchunk_location')
+            entry['properties']['links']['related'].append(
+                {
+                    'title': 'Kerchunk',
+                    'href': thredds_path("http", kerchunk_location),
+                    'type': 'application/octet-stream'
+                }
+            )
+
         return entry
 
     def get_relationships(self, uid):
