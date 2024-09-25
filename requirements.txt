@@ -1,5 +1,5 @@
 git+https://github.com/rsmith013/cci-tagger.git
-git+https://github.com/cedadev/ceda-elasticsearch-tools.git@v2.3.0
+git+https://github.com/cedadev/ceda-elasticsearch-tools.git@v2.3.3
 certifi==2019.3.9
 cftime==1.5.0
 chardet==3.0.4
