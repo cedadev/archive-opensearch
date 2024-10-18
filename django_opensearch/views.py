@@ -15,7 +15,8 @@ from django_opensearch import settings as opensearch_settings
 
 
 class Index():
-    pass
+    def get(self, request):
+        return HttpResponse("OK", status=200)
 
 
 class Description(TemplateView):
