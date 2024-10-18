@@ -18,6 +18,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    path('', Index.as_view(), name='index'),
     path('description.xml', views.Description.as_view()),
     path('request', views.Response.as_view()),
     path('files', views.Response.as_view()),
