@@ -22,4 +22,5 @@ urlpatterns = [
     path('opensearch/', include('django_opensearch.urls')),
     path('manifest/', include('manifest.urls')),
     path('api/', include('events.urls')),
+    path('', Index.as_view(), name='index'),
 ]
