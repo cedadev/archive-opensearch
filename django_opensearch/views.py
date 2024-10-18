@@ -14,7 +14,7 @@ from django_opensearch import settings as opensearch_settings
 # Create your views here.
 
 
-class Index():
+class Index(View):
     def get(self, request):
         return HttpResponse("OK", status=200)
 
