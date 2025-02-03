@@ -8,13 +8,18 @@ __copyright__ = 'Copyright 2018 United Kingdom Research and Innovation'
 __license__ = 'BSD - see LICENSE file in top-level package directory'
 __contact__ = 'richard.d.smith@stfc.ac.uk'
 
+import os
+
+def get_from_env(env):
+    return os.environ.get(env)
+
 SHORT_NAME = 'CEDA Opensearch'
 LONG_NAME = 'CEDA Opensearch'
 DESCRIPTION = 'Opensearch interface to the CEDA archive'
 TAGS = ['CEDA','NERC']
 DEVELOPER = 'CEDA'
 
-ELASTICSEARCH_INDEX = 'opensearch-files'
+ELASTICSEARCH_INDEX = get_from_env('ES_INDEX') or 'opensearch-files'
 ELASTICSEARCH_COLLECTION_INDEX = 'opensearch-collections'
 APPLICATION_ID = 'opensearch'
 ELASTICSEARCH_CONNECTION_PARAMS = {
