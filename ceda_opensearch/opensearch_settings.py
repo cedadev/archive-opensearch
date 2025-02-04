@@ -9,9 +9,22 @@ __license__ = 'BSD - see LICENSE file in top-level package directory'
 __contact__ = 'richard.d.smith@stfc.ac.uk'
 
 import os
+import yaml
 
 def get_from_env(env):
-    return os.environ.get(env)
+    """
+    Get elasticsearch index value from config file
+    if present.
+    """
+    if not os.path.isfile('/etc/es_config.yaml'):
+        return None
+    
+    with open('/etc/es_config.yaml') as f:
+        conf = yaml.safe_load(f)
+    try:
+        conf['elasticsearch']['index']
+    except:
+        raise ValueError('Invalid config provided')
 
 SHORT_NAME = 'CEDA Opensearch'
 LONG_NAME = 'CEDA Opensearch'
