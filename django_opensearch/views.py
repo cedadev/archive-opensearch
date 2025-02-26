@@ -16,7 +16,7 @@ from django_opensearch import settings as opensearch_settings
 
 class Index(View):
     def get(self, request):
-        return HttpResponse("OK", status=200)
+        return HttpResponse(f"OK - Listening on {settings.ELASTICSEARCH_INDEX}", status=200)
 
 
 class Description(TemplateView):
