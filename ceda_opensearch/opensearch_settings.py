@@ -11,7 +11,7 @@ __contact__ = 'richard.d.smith@stfc.ac.uk'
 import os
 import yaml
 
-def get_from_env(env):
+def get_from_conf(env):
     """
     Get elasticsearch index value from config file
     if present.
@@ -22,7 +22,9 @@ def get_from_env(env):
     with open('/etc/es_config.yaml') as f:
         conf = yaml.safe_load(f)
     try:
-        conf['elasticsearch']['index']
+        for prop in env.split('.'):
+            conf = conf.get(prop,{})
+        return conf
     except:
         raise ValueError('Invalid config provided')
 
@@ -32,7 +34,7 @@ DESCRIPTION = 'Opensearch interface to the CEDA archive'
 TAGS = ['CEDA','NERC']
 DEVELOPER = 'CEDA'
 
-ELASTICSEARCH_INDEX = get_from_env('ES_INDEX') or 'opensearch-files'
+ELASTICSEARCH_INDEX = get_from_conf('elasticsearch.index') or 'opensearch-files'
 ELASTICSEARCH_COLLECTION_INDEX = 'opensearch-collections'
 APPLICATION_ID = 'opensearch'
 ELASTICSEARCH_CONNECTION_PARAMS = {
