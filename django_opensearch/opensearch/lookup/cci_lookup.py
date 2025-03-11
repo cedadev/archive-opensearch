@@ -62,10 +62,11 @@ class CCILookupHandler(BaseLookupHandler):
         """
 
         data = {}
-        try:
-            data = Facets().to_json()
-        except Exception as e:
-            logger.error(f'Failed to get vocabs from vocab server: {e}')
+        if settings.READ_FROM_VOCAB:
+            try:
+                data = Facets().to_json()
+            except Exception as e:
+                logger.error(f'Failed to get vocabs from vocab server: {e}')
 
         # If vocabs successfully retrieved, save to disk
         if data:

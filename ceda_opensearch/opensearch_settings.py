@@ -41,6 +41,8 @@ ELASTICSEARCH_CONNECTION_PARAMS = {
     'timeout': 30
 }
 
+READ_FROM_VOCAB = False
+
 THREDDS_HOST = 'https://data.cci.ceda.ac.uk'
 
 SOLR_HOST = 'https://esgf-index1.ceda.ac.uk/solr'
