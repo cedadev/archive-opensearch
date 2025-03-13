@@ -16,10 +16,13 @@ def get_from_conf(env):
     Get elasticsearch index value from config file
     if present.
     """
-    if not os.path.isfile('/etc/es_config.yaml'):
+
+    deploy_settings = '/etc/django/settings.d/20-runtime-settings.yaml'
+
+    if not os.path.isfile(deploy_settings):
         return None
     
-    with open('/etc/es_config.yaml') as f:
+    with open(deploy_settings) as f:
         conf = yaml.safe_load(f)
     try:
         for prop in env.split('.'):
