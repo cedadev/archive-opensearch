@@ -35,6 +35,7 @@ class CCIFacets(ElasticsearchFacetSet):
         'processingLevel': DEFAULT,
         'productString': DEFAULT,
         'productVersion': DEFAULT,
+        'project':DEFAULT,
         'dataType': DEFAULT,
         'sensor': DEFAULT,
         'platform': DEFAULT,
@@ -131,7 +132,7 @@ class CCIFacets(ElasticsearchFacetSet):
                 via.append(
                     {
                         'title': 'Dataset Manifest',
-                        'href': f"{base_url.rstrip('/opensearch')}{reverse('manifest:get_manifest', kwargs={'uuid': source['collection_id']})}"
+                        'href': f"{base_url.replace('/opensearch','')}{reverse('manifest:get_manifest', kwargs={'uuid': source['collection_id']})}"
                     }
                 )
 
