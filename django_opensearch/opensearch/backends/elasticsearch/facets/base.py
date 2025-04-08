@@ -201,6 +201,7 @@ class ElasticsearchFacetSet(FacetSet):
         :return: The correct handler for the requested collection
         :rtype: ElasticsearchFacetSet
         """
+        print('PATH:',self.path)
         return HandlerFactory().get_handler(self.path)
 
     def build_query(self, params, **kwargs):
