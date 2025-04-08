@@ -204,6 +204,9 @@ class FacetSet:
         # Get the aggregated values for each facet
         self.get_facet_values(search_params)
 
+        print('SEARCH:',search_params)
+        print('FACETS:',facet_set)
+
         for param in facet_set:
             facet_data = self.facet_values.get(param.name)
 
