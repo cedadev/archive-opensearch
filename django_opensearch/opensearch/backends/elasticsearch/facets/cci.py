@@ -132,7 +132,7 @@ class CCIFacets(ElasticsearchFacetSet):
                 via.append(
                     {
                         'title': 'Dataset Manifest',
-                        'href': f"{base_url.replace('/opensearch','')}{reverse('manifest:get_manifest', kwargs={'uuid': source['collection_id']})}"
+                        'href': f"{base_url.replacesuffix('/opensearch','')}{reverse('manifest:get_manifest', kwargs={'uuid': source['collection_id']})}"
                     }
                 )
 
