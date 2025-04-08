@@ -37,7 +37,7 @@ class OpensearchDescription:
         response_types = settings.RESPONSE_TYPES
 
         if not search_params.get('parentIdentifier'):
-
+            print('No PID')
             # Get top level collection description
             params = Collection().get_facet_set(search_params)
 
@@ -47,6 +47,7 @@ class OpensearchDescription:
         else:
 
             parentID = search_params.get('parentIdentifier')
+            print('PID:',parentID)
             collection_path = Collection.get_path(parentID)
 
             if backend.collection.collection_search(search_params):
