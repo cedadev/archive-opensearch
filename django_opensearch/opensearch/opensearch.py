@@ -37,9 +37,9 @@ class OpensearchDescription:
         response_types = settings.RESPONSE_TYPES
 
         if not search_params.get('parentIdentifier'):
-            print('No PID')
+            default_path = '/neodc/esacci'
             # Get top level collection description
-            params = Collection().get_facet_set(search_params)
+            params = Collection(path=default_path).get_facet_set(search_params)
 
             for response in response_types:
                 self.generate_url_section(response, params)
