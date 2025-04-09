@@ -441,6 +441,7 @@ class ElasticsearchFacetSet(FacetSet):
         query['aggs']['endDate'] = {
             "max": {"field": self.get_date_field('end')}
         }
+        print(query)
 
         aggs = self.query_elasticsearch(query)
 
