@@ -54,7 +54,7 @@ class CCILookupHandler(BaseLookupHandler):
 
         # Emergency fix for this specific version.
         import requests
-        self.facets = requests.get('https://raw.githubusercontent.com/cedadev/archive-opensearch/refs/heads/master/ceda_opensearch/facets_json.json').json()
+        self.facets = Facets.from_json(requests.get('https://raw.githubusercontent.com/cedadev/archive-opensearch/refs/heads/master/ceda_opensearch/facets_json.json').json())
 
     @staticmethod
     def _load_facets():
