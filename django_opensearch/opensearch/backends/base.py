@@ -256,10 +256,14 @@ class FacetSet:
 
         :return: class
         """
+        print('LH',self.LOOKUP_HANDLER)
+
         if self.LOOKUP_HANDLER:
             handler = locate(self.LOOKUP_HANDLER)
             if handler:
+                print('handler',handler)
                 return handler()
+        print('NO HANDLER')
 
     def search(self, params, **kwargs):
         """
