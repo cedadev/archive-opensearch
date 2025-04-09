@@ -105,6 +105,7 @@ class CCILookupHandler(BaseLookupHandler):
 
             for value in value_list:
                 pref_label = self.facets.get_pref_label_from_alt_label(camel_to_snake(facet), value['value'])
+                print('CAMEL: ',facet, pref_label)
                 if pref_label:
                     count = value['label'].split()[-1]
                     value['label'] = f'{pref_label.title()} {count}'
