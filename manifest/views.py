@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import JsonResponse, Http404
-from ceda_elasticsearch_tools.elasticsearch import CEDAElasticsearchClient
+from elasticsearch import Elasticsearch
 from django.conf import settings
 from elasticsearch.exceptions import NotFoundError
 import json
@@ -8,7 +8,10 @@ import json
 
 def get_manifest(request, uuid):
 
-    es = CEDAElasticsearchClient()
+    es = Elasticsearch(
+        hosts=['https://elasticsearch.ceda.ac.uk'],
+        headers={'x-api-key':settings.ES_API_KEY}
+    )
 
     try:
         response = es.get(index=settings.ELASTICSEARCH_COLLECTION_INDEX, id=uuid, _source_includes=['manifest'])
