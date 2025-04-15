@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+{% load namespace_tags coordinate_tags %}
+<feed xmlns="http://www.w3.org/2005/Atom" 
+      xmlns:dc="http://purl.org/dc/elements/1.1/" 
+      xmlns:os="http://a9.com/-/spec/opensearch/1.1/"
+      xmlns:geo="http://a9.com/-/opensearch/extensions/geo/1.0/" 
+      xmlns:eo="http://a9.com/-/opensearch/extensions/eo/1.0/"
+      xmlns:time="http://a9.com/-/opensearch/extensions/time/1.0/"
+      xmlns:georss="http://www.georss.org/georss">
+    <title>Opensearch response</title>
+    <id>{{ request.build_absolute_uri }}</id>
+    <subtitle type="html">{{ osr.subtitle }}</subtitle>
+    <os:totalResults>{{ osr.totalResults }}</os:totalResults>
+    <os:startIndex>{{ osr.startPage }}</os:startIndex>
+    <os:itemsPerPage>{{ osr.itemsPerPage }}</os:itemsPerPage>
+
+    {# Page level links #}
+    {% for link in osr.links %}
+        {% for role, links in link.items %}
+            {% for link in links %}
+                <link>href="{{ link.href }}" rel="{{ role }}" {% if link.title %}title="{{ link.title }}"{% endif %}
+                    {% if link.type %}
+                        type="{{ link.type }}"{% endif %}</link>
+            {% endfor %}
+        {% endfor %}
+    {% endfor %}
+
+    {# Expand Query tag #}
+    {% for role, queries in osr.queries.items %}
+        {% for query in queries %}
+            <os:Query
+                    role="{{ role }}"
+            {% for key,value in query.items %}
+                {{ key }}="{{ value }}"
+            {% endfor %}
+            />
+        {% endfor %}
+    {% endfor %}
+
+    {# Generate the feed #}
+    {% for entry in osr.features %}
+        <entry>
+            <id>{{ entry.id }}</id>
+            {% if entry.bbox %}
+                <georss:box>{{ entry.bbox|expand_coordinates }}</georss:box>
+            {% endif %}
+
+            {# Loop attributes #}
+            {% for k,v in entry.properties.items %}
+
+                {# filter out links from attributes #}
+                {% if k == 'variables' %}
+                    {% for variable in v %}
+                        <variable
+                        {% for k,v in variable.items %}
+                            {{ k }}="{{ v }}"
+                        {% endfor %}
+                        >
+                        </variable>
+                    {% endfor %}
+
+                {% elif k != 'links' and k != 'aggregations' %}
+                    <{{ k | xml_namespace }}>{{ v }}</{{ k | xml_namespace}}>
+
+                {% endif %}
+            {% endfor %}
+
+        {# Generate entry aggregations #}
+        {% if entry.properties.aggregations %}
+            {% for aggregation in entry.properties.aggregations %}
+                <aggregation>
+                    <id>{{ aggregation.id }}</id>
+                    {% for rel, links in aggregation.properties.links.items %}
+                        {% for link in links %}
+                            <link href="{{ link.href }}" rel="{{ rel }}"
+                                  {% if link.title %}title="{{ link.title }}"{% endif %}
+                                  {% if link.type %}type="{{ link.type }}"{% endif %}/>
+                        {% endfor %}
+                    {% endfor %}
+                </aggregation>
+            {% endfor %}
+        {% endif %}
+
+        {# Generate entry links #}
+        {% for rel,links in entry.properties.links.items %}
+            {% for link in links %}
+                <link href="{{ link.href }}" rel="{{ rel }}" {% if link.title %}title="{{ link.title }}"{% endif %}
+                      {% if link.type %}type="{{ link.type }}"{% endif %}/>
+            {% endfor %}
+        {% endfor %}
+        </entry>
+    {% endfor %}
+</feed>

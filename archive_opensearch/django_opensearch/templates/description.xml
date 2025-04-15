@@ -1,0 +1,41 @@
+<?xml version="1.0" ?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/" xmlns:ceda="http://localhost/ceda/opensearch"
+                       xmlns:eo="http://a9.com/-/opensearch/extensions/eo/1.0/"
+                       xmlns:geo="http://a9.com/-/opensearch/extensions/geo/1.0/"
+                       xmlns:safe="http://www.esa.int/safe/sentinel/1.1"
+                       xmlns:time="http://a9.com/-/opensearch/extensions/time/1.0/"
+                       xmlns:param="http://a9.com/-/spec/opensearch/extensions/parameters/1.0/"
+                       xmlns:sru="http://a9.com/-/opensearch/extensions/sru/2.0/"
+>
+    <ShortName>{{ osd.short_name }}</ShortName>
+    <Description>{{ osd.description }}</Description>
+    <Tags>{% for tag in osd.tags %}{{ tag }}{% if forloop.counter == osd.tags|length %}{% else %}
+    {% endif %}{% endfor %}</Tags>
+    <LongName>{{ osd.long_name }}</LongName>
+    <Developer>{{ osd.developer }}</Developer>
+    <Attribution>NERC</Attribution>
+    <SyndicationRight>{{ osd.syndication_right }}</SyndicationRight>
+    <AdultContent>{{ osd.adult_content }}</AdultContent>
+    <Language>{{ osd.language }}</Language>
+    <InputEncoding>{{ osd.input_encoding }}</InputEncoding>
+    <OutputEncoding>{{ osd.output_encoding }}</OutputEncoding>
+    <Url rel="self" template="{{ osd.host }}/opensearch/description.xml"
+         type="application/opensearchdescription+xml"/>
+    {% for section in osd.url_sections %}
+        <Url rel="results" template="{{ section.url_template }}" type="{{ section.type }}">
+            {% for param in section.params %}
+                <param:Parameter name="{{ param.name }}" value="{{ param.val }}" {% for k,v in param.extra_kwargs.items %} {{k}}="{{ v }}" {% endfor %}{% if param.value_list %}>{% else %}
+                    />{% endif %}
+                {% for value in param.value_list %}
+                    <param:Option label="{{ value.label }}" value="{{ value.value }}"/>
+                {% endfor %}
+                {% if param.value_list %}
+                    </param:Parameter>
+                {% endif %}
+            {% endfor %}
+        </Url>
+    {% endfor %}
+    {% for example_query in osd.example_queries %}
+        <Query {% for k,v in example_query.items %}{{ k }}="{{ v }}"{% endfor %} role="example"/>
+    {% endfor %}
+</OpenSearchDescription>
