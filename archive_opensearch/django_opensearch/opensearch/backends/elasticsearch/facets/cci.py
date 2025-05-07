@@ -122,6 +122,7 @@ class CCIFacets(ElasticsearchFacetSet):
                 },
                 {
                     'title': 'Dataset Information',
+                    # Replace with ESA branded page link?
                     'href': f'https://catalogue.ceda.ac.uk/uuid/{source["collection_id"]}',
                     'type': 'text/html'
                 }
