@@ -1,4 +1,4 @@
-cci-tagger @ git+https://github.com/rsmith013/cci-tagger.git@73543850c9389da73ee7e94c4917e14fa306bb99
+cci-tag-scanner==2.3.0
 ceda-elasticsearch-tools @ git+https://github.com/cedadev/ceda-elasticsearch-tools.git@9364a0b3ad0ec853158af6d9d3a4a11b1a07a837
 certifi==2019.3.9
 cftime==1.5.0

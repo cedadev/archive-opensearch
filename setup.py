@@ -35,7 +35,7 @@ setup(
 
     # This qualifier can be used to selectively exclude Python versions - 
     # in this case early Python 2 and 3 releases
-    python_requires='>=3.5.0',
+    python_requires='>=3.9.0',
 
     # See:
     # https://www.python.org/dev/peps/pep-0301/#distutils-trove-classification

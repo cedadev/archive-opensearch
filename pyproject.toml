@@ -1,0 +1,29 @@
+[project]
+name = "archive-opensearch"
+version = "0.2.0"
+description = "Opensearch Interface for CCI data in the CEDA Archive"
+authors = [
+    { name = "Daniel Westwood",  email = "daniel.westwood@stfc.ac.uk" }
+]
+license = "BSD 3"
+readme = "README.md"
+requires-python = ">=3.9,<4"
+dependencies = [
+    "cci-tag-scanner (>=2.3.2,<3.0.0)",
+    "django (>=4.2,<5.0)",
+    "djangorestframework (>=3.16.0,<4.0.0)",
+    "elasticsearch (>=7.6,<8.0)",
+    "netcdf4 (>=1.7.2,<2.0.0)",
+    "python-dateutil (>=2.9.0.post0,<3.0.0)",
+    "pyyaml (>=6.0.2,<7.0.0)",
+    "jsonpickle (>=4.0.5,<5.0.0)",
+    "psycopg (>=3.2.6,<4.0.0)",
+    "psycopg2-binary (>=2.9.10,<3.0.0)"
+]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+archive_opensearch = "archive_opensearch.manage:main"
