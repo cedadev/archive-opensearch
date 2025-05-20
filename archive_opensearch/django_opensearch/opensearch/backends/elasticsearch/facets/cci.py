@@ -199,15 +199,33 @@ class CCIFacets(ElasticsearchFacetSet):
                         entry['properties']['links']['related'][-1]['opendap_fully_compatible'] = False
                         break
 
+        # Multiple kerchunk locations are permissible.
         if source['info'].get('kerchunk_location') is not None:
             kerchunk_location = source['info'].get('kerchunk_location')
-            entry['properties']['links']['related'].append(
-                {
-                    'title': 'Kerchunk',
-                    'href': thredds_path("http", kerchunk_location),
-                    'type': 'application/octet-stream'
-                }
-            )
+            if not isinstance(kerchunk_location, list):
+                kerchunk_location = [kerchunk_location]
+            for location in kerchunk_location:
+                entry['properties']['links']['related'].append(
+                    {
+                        'title': 'Kerchunk',
+                        'href': thredds_path("http", location),
+                        'type': 'application/octet-stream'
+                    }
+                )
+        
+        # Multiple zarr locations are permissible (although not expected to be required)
+        if source['info'].get('zarr_location') is not None:
+            zarr_location = source['info'].get('zarr_location')
+            if not isinstance(zarr_location, list):
+                zarr_location = [zarr_location]
+            for location in zarr_location:
+                entry['properties']['links']['related'].append(
+                    {
+                        'title': 'Zarr',
+                        'href': location, # S3 Endpoint
+                        'type': 'application/octet-stream'
+                    }
+                )
 
         return entry
 
