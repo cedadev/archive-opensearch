@@ -5,7 +5,6 @@
 
 Here are some example queries to get you started. All urls are appended onto the host name.
 
-
 ### Get top level description
 
 /opensearch/description.xml
