@@ -9,7 +9,7 @@ import json
 def get_manifest(request, uuid):
 
     es = Elasticsearch(
-        hosts=['https://elasticsearch.ceda.ac.uk'],
+        hosts=settings.ELASTICSEARCH_HOSTS,
         headers={'x-api-key':settings.ES_API_KEY}
     )
 

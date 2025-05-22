@@ -26,7 +26,7 @@ class ElasticsearchConnection:
         self.index = index
         self.collection_index = settings.ELASTICSEARCH_COLLECTION_INDEX
         self.es = Elasticsearch(
-            hosts=['https://elasticsearch.ceda.ac.uk'],
+            hosts=settings.ELASTICSEARCH_HOSTS,
             headers={'x-api-key':settings.ES_API_KEY},
             **settings.ELASTICSEARCH_CONNECTION_PARAMS)
 

@@ -218,8 +218,6 @@ class OpensearchResponse:
 
         if backend.collection.collection_search(search_params):
             # Search for collections
-            print('Search0')
-            print(Collection(path=collection_path))
             self.totalResults, self.features = Collection(path=collection_path).search(search_params, **kwargs)
 
         else:
