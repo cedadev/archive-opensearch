@@ -13,7 +13,6 @@ from django_opensearch import settings as opensearch_settings
 
 # Create your views here.
 
-
 class Index(View):
     def get(self, request):
         return HttpResponse(f"OK - Listening on {settings.ELASTICSEARCH_INDEX}", status=200)

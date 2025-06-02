@@ -10,7 +10,7 @@ __contact__ = 'richard.d.smith@stfc.ac.uk'
 
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
-from cci_tagger.facets import Facets
+from cci_tag_scanner.facets import Facets
 import json
 
 

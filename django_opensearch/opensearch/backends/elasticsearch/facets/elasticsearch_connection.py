@@ -10,7 +10,7 @@ __contact__ = 'richard.d.smith@stfc.ac.uk'
 
 
 from django.conf import settings
-from ceda_elasticsearch_tools.elasticsearch import CEDAElasticsearchClient
+from elasticsearch import Elasticsearch
 
 
 class ElasticsearchConnection:
@@ -25,7 +25,10 @@ class ElasticsearchConnection:
     def __init__(self, index=settings.ELASTICSEARCH_INDEX):
         self.index = index
         self.collection_index = settings.ELASTICSEARCH_COLLECTION_INDEX
-        self.es = CEDAElasticsearchClient(**settings.ELASTICSEARCH_CONNECTION_PARAMS)
+        self.es = Elasticsearch(
+            hosts=settings.ELASTICSEARCH_HOSTS,
+            headers={'x-api-key':settings.ES_API_KEY},
+            **settings.ELASTICSEARCH_CONNECTION_PARAMS)
 
     def search(self, query):
         """

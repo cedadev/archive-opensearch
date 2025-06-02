@@ -11,6 +11,7 @@ __contact__ = 'richard.d.smith@stfc.ac.uk'
 
 from django_opensearch import settings
 from django_opensearch.constants import DEFAULT
+from django_opensearch.opensearch.lookup.cci_lookup import CCILookupHandler
 from pydoc import locate
 
 
@@ -256,10 +257,12 @@ class FacetSet:
 
         :return: class
         """
+
         if self.LOOKUP_HANDLER:
             handler = locate(self.LOOKUP_HANDLER)
             if handler:
                 return handler()
+        return CCILookupHandler()
 
     def search(self, params, **kwargs):
         """

@@ -132,7 +132,6 @@ class Collection(ElasticsearchFacetSet):
 
         if params.get('bbox'):
             self.facets['bbox'] = 'bbox.coordinates'
-
         query = super().build_query(params, **kwargs)
 
         # Add sorting
@@ -230,10 +229,8 @@ class Collection(ElasticsearchFacetSet):
         :return: Result list
         :rtype: list
         """
-
         base_url = kwargs['uri']
         handler = kwargs.pop('handler', None)
-
         results = []
 
         for hit in hits:

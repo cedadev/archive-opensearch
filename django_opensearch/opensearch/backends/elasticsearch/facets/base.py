@@ -458,7 +458,6 @@ class ElasticsearchFacetSet(FacetSet):
         :return: search results
         :rtype: SearchResults
         """
-
         query = self.build_query(params, **kwargs)
 
         es_search = ElasticsearchConnection().search(query)
@@ -500,7 +499,6 @@ class ElasticsearchFacetSet(FacetSet):
         :return: Result list
         :rtype: list
         """
-
         results = []
         base_url = kwargs['uri']
 

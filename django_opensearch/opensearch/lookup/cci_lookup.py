@@ -10,7 +10,7 @@ __contact__ = 'richard.d.smith@stfc.ac.uk'
 
 from .base import BaseLookupHandler
 from django.core.cache import cache
-from cci_tagger.facets import Facets
+from cci_tag_scanner.facets import Facets
 from django.conf import settings
 import json
 import re
@@ -50,7 +50,12 @@ class CCILookupHandler(BaseLookupHandler):
     def __init__(self):
 
         # Retrieve cached values, cache lasts for 24 hours as vocab server doesn't change much
-        self.facets = Facets.from_json(cache.get_or_set('cci_vocabs', self._load_facets, timeout=86400))
+        self.facets = Facets()
+        #self.facets = Facets.from_json(cache.get_or_set('cci_vocabs', self._load_facets, timeout=86400))
+
+        # Emergency fix for this specific version.
+        #import requests
+        #self.facets = Facets.from_json(requests.get('https://raw.githubusercontent.com/cedadev/archive-opensearch/refs/heads/project_facet/ceda_opensearch/facets_json.json').json())
 
     @staticmethod
     def _load_facets():
@@ -62,10 +67,11 @@ class CCILookupHandler(BaseLookupHandler):
         """
 
         data = {}
-        try:
-            data = Facets().to_json()
-        except Exception as e:
-            logger.error(f'Failed to get vocabs from vocab server: {e}')
+        if settings.READ_FROM_VOCAB:
+            try:
+                data = Facets().to_json()
+            except Exception as e:
+                logger.error(f'Failed to get vocabs from vocab server: {e}')
 
         # If vocabs successfully retrieved, save to disk
         if data:

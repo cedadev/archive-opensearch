@@ -2,6 +2,7 @@ from django_opensearch import settings
 import math
 from django_opensearch.opensearch.backends import NamespaceMap
 from importlib import import_module
+from django_opensearch.opensearch.backends.elasticsearch.facets.collection_map import COLLECTION_MAP
 
 # Import required backend
 backend = import_module(f'django_opensearch.opensearch.backends.{settings.OPENSEARCH_BACKEND}')
@@ -37,9 +38,9 @@ class OpensearchDescription:
         response_types = settings.RESPONSE_TYPES
 
         if not search_params.get('parentIdentifier'):
-
+            default_path = '/neodc/esacci'
             # Get top level collection description
-            params = Collection().get_facet_set(search_params)
+            params = Collection(path=default_path).get_facet_set(search_params)
 
             for response in response_types:
                 self.generate_url_section(response, params)
