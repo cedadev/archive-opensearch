@@ -43,7 +43,7 @@ APPLICATION_ID = 'opensearch'
 ELASTICSEARCH_CONNECTION_PARAMS = {
     'timeout': 30
 }
-ELASTICSEARCH_HOSTS=['https://elasticsearch.ceda.ac.uk']
+ELASTICSEARCH_HOSTS=['http://164.30.69.113:9200']
 
 READ_FROM_VOCAB = False
 

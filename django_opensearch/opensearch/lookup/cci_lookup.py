@@ -15,6 +15,7 @@ from django.conf import settings
 import json
 import re
 import logging
+import requests
 
 CAMEL_PATTERN = re.compile(r'(?<!^)(?=[A-Z])')
 LABEL_PATTERN = re.compile(r'(?P<label>.+)\s\((?P<count>\d+)')
@@ -50,8 +51,11 @@ class CCILookupHandler(BaseLookupHandler):
     def __init__(self):
 
         # Retrieve cached values, cache lasts for 24 hours as vocab server doesn't change much
-        self.facets = Facets()
-        #self.facets = Facets.from_json(cache.get_or_set('cci_vocabs', self._load_facets, timeout=86400))
+
+        r = requests.get('https://raw.githubusercontent.com/cedadev/archive-opensearch/refs/heads/LPS_backup/ceda_opensearch/facets_json.json').json()
+
+        #self.facets = self._load_facets()
+        self.facets = Facets.from_json(r)
 
         # Emergency fix for this specific version.
         #import requests
@@ -87,6 +91,7 @@ class CCILookupHandler(BaseLookupHandler):
             try:
                 with open(settings.VOCAB_CACHE_FILE) as reader:
                     data = json.load(reader)
+                print('Loaded CCI Data')
 
             except Exception as e:
                 logger.critical('Unable to retrieve vocab cache from live server or disk: {e}')
