@@ -165,39 +165,43 @@ class CCIFacets(ElasticsearchFacetSet):
         source = hit['_source']
         file_path = os.path.join(source["info"]["directory"], source["info"]["name"])
 
+        if 'http' not in file_path:
+            file_path = thredds_path("http", file_path)
+
         entry = super().build_entry(hit, params, base_url)
         entry['properties']['links']['related'] = [
             {
                 'title': 'Download',
-                'href': thredds_path("http", file_path),
+                'href': file_path,
                 'type': 'application/octet-stream'
             }
         ]
 
-        # Add opendap link to netCDF files
-        if source['info'].get('format') == 'NetCDF':
-            # Check if any of the values are of int64 type. Dap cannot serve int64
-            int64 = any([phenom.get('dtype') == 'int64' for phenom in source['info'].get('phenomena', [])])
+        if not settings.CEDA_DETATCHED:
+            # Add opendap link to netCDF files
+            if source['info'].get('format') == 'NetCDF':
+                # Check if any of the values are of int64 type. Dap cannot serve int64
+                int64 = any([phenom.get('dtype') == 'int64' for phenom in source['info'].get('phenomena', [])])
 
-            if not int64:
-                entry['properties']['links']['related'].append(
-                    {
-                        'title': 'Opendap',
-                        'href': thredds_path("opendap", file_path),
-                        'type': 'application/octet-stream'
-                    }
-                )
+                if not int64:
+                    entry['properties']['links']['related'].append(
+                        {
+                            'title': 'Opendap',
+                            'href': thredds_path("opendap", file_path),
+                            'type': 'application/octet-stream'
+                        }
+                    )
 
-                # Check if character array. Dap converts these into strings
-                for phenom in source["info"].get("phenomena", []):
-                    if (
-                        phenom is not None
-                        and phenom.get("dtype") == "bytes8"
-                        and len(phenom.get("dimensions", [])) == 1
-                    ):
-                        # add a flag for the toolbox
-                        entry['properties']['links']['related'][-1]['opendap_fully_compatible'] = False
-                        break
+                    # Check if character array. Dap converts these into strings
+                    for phenom in source["info"].get("phenomena", []):
+                        if (
+                            phenom is not None
+                            and phenom.get("dtype") == "bytes8"
+                            and len(phenom.get("dimensions", [])) == 1
+                        ):
+                            # add a flag for the toolbox
+                            entry['properties']['links']['related'][-1]['opendap_fully_compatible'] = False
+                            break
 
         # Multiple kerchunk locations are permissible.
         if source['info'].get('kerchunk_location') is not None:
@@ -205,10 +209,14 @@ class CCIFacets(ElasticsearchFacetSet):
             if not isinstance(kerchunk_location, list):
                 kerchunk_location = [kerchunk_location]
             for location in kerchunk_location:
+
+                if 'http' not in location:
+                    location = thredds_path("http", location)
+
                 entry['properties']['links']['related'].append(
                     {
                         'title': 'Kerchunk',
-                        'href': thredds_path("http", location),
+                        'href': location,
                         'type': 'application/octet-stream'
                     }
                 )
@@ -219,6 +227,7 @@ class CCIFacets(ElasticsearchFacetSet):
             if not isinstance(zarr_location, list):
                 zarr_location = [zarr_location]
             for location in zarr_location:
+
                 entry['properties']['links']['related'].append(
                     {
                         'title': 'Zarr',

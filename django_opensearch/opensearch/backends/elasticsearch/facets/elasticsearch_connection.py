@@ -27,7 +27,7 @@ class ElasticsearchConnection:
         self.collection_index = settings.ELASTICSEARCH_COLLECTION_INDEX
         self.es = Elasticsearch(
             hosts=settings.ELASTICSEARCH_HOSTS,
-            headers={'x-api-key':settings.ES_API_KEY},
+            api_key=settings.ES_API_KEY,
             **settings.ELASTICSEARCH_CONNECTION_PARAMS)
 
     def search(self, query):
