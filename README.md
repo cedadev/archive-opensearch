@@ -1,5 +1,11 @@
 # Prototype Opensearch Interface for the CEDA Archive
 
+## CEDA Dependencies
+![Static Badge](https://img.shields.io/badge/elasticsearch%20v8-3BBEB1)
+ - EO Data Bridge: No Error
+ - Solr Host: No Error (using Elasticsearch backend) (Outdated with Solr)
+ - Thredds: No Error (no direct dependency)
+ - Vocab: Dependent
 
 ## Example Queries
 
