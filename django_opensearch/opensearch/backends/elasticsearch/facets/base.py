@@ -240,7 +240,7 @@ class ElasticsearchFacetSet(FacetSet):
             # Set start index to 0 if below 0 or -1 for zero indexing
             start_index = start_index if start_index > 0 else 0
 
-            if start_index > 0 and (start_index + page_size) < 10000:
+            if start_index > 0 and (start_index + page_size) <= 10000:
                 query['from'] = start_index
 
             # If window is > 10,000 raise error
@@ -354,7 +354,7 @@ class ElasticsearchFacetSet(FacetSet):
         :return: elasticsearch response
         :rtype: dict
         """
-        return ElasticsearchConnection().search(query)
+        return settings.ES_CONNECTION.search(query)
 
     @staticmethod
     def _process_aggregations(aggs):
@@ -460,7 +460,7 @@ class ElasticsearchFacetSet(FacetSet):
         """
         query = self.build_query(params, **kwargs)
 
-        es_search = ElasticsearchConnection().search(query)
+        es_search = settings.ES_CONNECTION.search(query)
 
         hits = es_search['hits']['hits']
 
@@ -480,7 +480,7 @@ class ElasticsearchFacetSet(FacetSet):
             for key in ['sort', 'size', 'from', 'search_after']:
                 query.pop(key, None)
 
-            total_hits = ElasticsearchConnection().count(query)['count']
+            total_hits = settings.ES_CONNECTION.count(query)['count']
 
         after_key = hits[-1]['sort'] if hits else None
         before_key = hits[0]['sort'] if hits else None
