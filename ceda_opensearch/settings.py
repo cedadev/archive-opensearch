@@ -158,3 +158,5 @@ try:
 except ImportError:
     pass
 
+ES_CONNECTION = ElasticsearchConnection(ES_API_KEY)
+
