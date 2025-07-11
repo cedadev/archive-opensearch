@@ -102,7 +102,7 @@ class OpensearchResponse:
 
     def __init__(self, request):
         search_params = request.GET
-        full_uri = request.build_absolute_uri('/opensearch')
+        full_uri = request.build_absolute_uri('/opensearch/request')
 
         self.totalResults = 0
         self.itemsPerPage = int(search_params.get('maximumRecords', settings.MAX_RESULTS_PER_PAGE))
@@ -122,9 +122,10 @@ class OpensearchResponse:
 
         search_after, reverse = self.check_scrolling()
 
-        self._generate_responses(search_params, start_index=search_index, max_results=self.itemsPerPage, uri=full_uri, search_after=search_after, reverse=reverse)
+        search_after = search_after or search_params.get('searchAfter',None)
 
-        #
+        search_next = self._generate_responses(search_params, start_index=search_index, max_results=self.itemsPerPage, uri=full_uri, search_after=search_after, reverse=reverse)
+
         if search_index + self.itemsPerPage -1 > self.totalResults:
             end_of_page = self.totalResults
         else:
@@ -132,6 +133,18 @@ class OpensearchResponse:
 
         self.subtitle = f'Showing {search_index} - {end_of_page}' \
                         f' of {self.totalResults}'
+        
+        if search_next is not None and self.startPage == settings.DEFAULT_START_PAGE:
+            self.links['next'] = [
+                {
+                    'href': f'{full_uri}?{self._stitch_query_params(search_params)}&searchAfter={search_next}',
+                    'title':'next'
+                }
+            ]
+            if search_after is not None:
+                self.subtitle = f'Showing {end_of_page} results after {search_after}' \
+                                f' ({self.totalResults} total)'
+            return
 
         if self.totalResults > self.itemsPerPage:
             # Generate paging links
@@ -176,7 +189,7 @@ class OpensearchResponse:
     @staticmethod
     def _stitch_query_params(query_params):
 
-        query_list = [f'{param}={value}' for param, value in query_params.items() if param != 'startPage']
+        query_list = [f'{param}={value.replace("+","%2B")}' for param, value in query_params.items() if param != 'startPage']
         return '&'.join(query_list)
 
     def _generate_navigation_url(self, url, search_params, link_type):
@@ -187,30 +200,28 @@ class OpensearchResponse:
         :param link_type: first|last|next|prev
         :return:
         """
-        nav_url = None
 
         if link_type == 'first':
-            nav_url = f'{url}?{self._stitch_query_params(search_params)}&startPage=1'
-
+            return f'{url}?{self._stitch_query_params(search_params)}&startPage=1'
+            
         elif link_type == 'last':
             last_page = f'startPage={math.ceil(self.totalResults/self.itemsPerPage)}'
-            nav_url = f'{url}?{self._stitch_query_params(search_params)}&{last_page}'
+            return f'{url}?{self._stitch_query_params(search_params)}&{last_page}'
 
-        elif link_type == 'prev':
-            prev_page = f'startPage={self.startPage - 1}'
-            nav_url = f'{url}?{self._stitch_query_params(search_params)}&{prev_page}'
+        else:
+            if link_type == 'prev':
+                page = f'startPage={self.startPage - 1}'
+            else:
+                page = f'startPage={self.startPage + 1}'
 
-        elif link_type == 'next':
-            next_page = f'startPage={self.startPage + 1}'
-            nav_url = f'{url}?{self._stitch_query_params(search_params)}&{next_page}'
-
-        return nav_url
+            return f'{url}?{self._stitch_query_params(search_params)}&{page}'
 
     def _generate_responses(self, search_params, **kwargs):
 
         self._generate_request_query(search_params)
 
         collection_path = None
+        next_search = None
 
         if search_params.get('parentIdentifier'):
             parentID = search_params.get('parentIdentifier')
@@ -221,10 +232,12 @@ class OpensearchResponse:
             self.totalResults, self.features = Collection(path=collection_path).search(search_params, **kwargs)
 
         else:
-            results = Granule(collection_path).search(search_params, **kwargs)
+            results, next_search = Granule(collection_path).search(search_params, **kwargs)
             self.totalResults = results.total
             self.features = results.results
-            self.set_search_after(results)
+            #self.set_search_after(results)
+
+        return next_search
 
     def _generate_request_query(self, search_params):
 

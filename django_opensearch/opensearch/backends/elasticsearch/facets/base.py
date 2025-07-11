@@ -226,7 +226,7 @@ class ElasticsearchFacetSet(FacetSet):
 
         # If search after key use this
         if search_after:
-            query['search_after'] = search_after
+            query['search_after'] = search_after.split(',')
 
             if reverse:
                 # reverse the ordering of the sort to go back a page
@@ -485,7 +485,9 @@ class ElasticsearchFacetSet(FacetSet):
         after_key = hits[-1]['sort'] if hits else None
         before_key = hits[0]['sort'] if hits else None
 
-        return SearchResults(total_hits, results, before_key, after_key)
+        next_search = ','.join(hits[-1]['sort'])
+
+        return SearchResults(total_hits, results, before_key, after_key), next_search
 
     def build_representation(self, hits, params, **kwargs):
         """
