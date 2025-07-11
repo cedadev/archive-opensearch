@@ -1,6 +1,6 @@
 [project]
 name = "ceda-opensearch"
-version = "0.2.0"
+version = "0.3.0"
 description = "Opensearch Interface for CCI data in the CEDA Archive"
 authors = [
     { name = "Daniel Westwood",  email = "daniel.westwood@stfc.ac.uk" }
