@@ -189,7 +189,7 @@ class OpensearchResponse:
     @staticmethod
     def _stitch_query_params(query_params):
 
-        query_list = [f'{param}={value.replace("+","%2B")}' for param, value in query_params.items() if param != 'startPage']
+        query_list = [f'{param}={value.replace("+","%2B")}' for param, value in query_params.items() if param != 'startPage' and param != 'searchAfter']
         return '&'.join(query_list)
 
     def _generate_navigation_url(self, url, search_params, link_type):
