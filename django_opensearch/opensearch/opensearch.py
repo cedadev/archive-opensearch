@@ -102,7 +102,7 @@ class OpensearchResponse:
 
     def __init__(self, request):
         search_params = request.GET
-        full_uri = request.build_absolute_uri('/opensearch/request')
+        full_uri = request.build_absolute_uri('/opensearch')
 
         self.totalResults = 0
         self.itemsPerPage = int(search_params.get('maximumRecords', settings.MAX_RESULTS_PER_PAGE))
