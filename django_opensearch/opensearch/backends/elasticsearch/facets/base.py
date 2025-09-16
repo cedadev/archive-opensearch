@@ -1,37 +1,42 @@
 # encoding: utf-8
-"""
+""" """
+__author__ = "Richard Smith"
+__date__ = "21 Mar 2019"
+__copyright__ = "Copyright 2018 United Kingdom Research and Innovation"
+__license__ = "BSD - see LICENSE file in top-level package directory"
+__contact__ = "richard.d.smith@stfc.ac.uk"
 
-"""
-__author__ = 'Richard Smith'
-__date__ = '21 Mar 2019'
-__copyright__ = 'Copyright 2018 United Kingdom Research and Innovation'
-__license__ = 'BSD - see LICENSE file in top-level package directory'
-__contact__ = 'richard.d.smith@stfc.ac.uk'
+import copy
+import os
+from collections import namedtuple
+from pydoc import locate
+
+from dateutil.parser import parse as date_parser
+
+from django_opensearch import settings
+from django_opensearch.constants import DEFAULT
+from django_opensearch.opensearch.backends import FacetSet, NamespaceMap, Param
+from django_opensearch.opensearch.utils import NestedDict
+from django_opensearch.opensearch.utils.aggregation_tools import (
+    get_aggregation_capabilities,
+    get_aggregation_search_link,
+    get_thredds_aggregation,
+)
+from django_opensearch.opensearch.utils.geo_point import Envelope, Point
 
 from .collection_map import COLLECTION_MAP
-from pydoc import locate
-import os
-from django_opensearch.constants import DEFAULT
-from django_opensearch.opensearch.backends import NamespaceMap, Param, FacetSet
-from django_opensearch import settings
 from .elasticsearch_connection import ElasticsearchConnection
-import copy
-from dateutil.parser import parse as date_parser
-from django_opensearch.opensearch.utils import NestedDict
-from django_opensearch.opensearch.utils.geo_point import Point, Envelope
-from collections import namedtuple
-from django_opensearch.opensearch.utils.aggregation_tools import get_thredds_aggregation, get_aggregation_capabilities, \
-    get_aggregation_search_link
 
 
 class PagingError(Exception):
     """
     Raised when the requested page is not possible
     """
+
     pass
 
 
-SearchResults = namedtuple('SearchResults', ('total', 'results', 'search_before', 'search_after'))
+SearchResults = namedtuple("SearchResults", ("total", "results", "search_before", "search_after"))
 
 
 class ElasticsearchFacetSet(FacetSet):
@@ -44,44 +49,20 @@ class ElasticsearchFacetSet(FacetSet):
     """
 
     base_query = {
-        'query': {
-            'bool': {
-                'must': [
-                    {
-                        'exists': {
-                            'field': f'projects.{settings.APPLICATION_ID}'
-
-                        }
-                    },
-                    {
-                        'exists': {
-                            'field': 'info'
-
-                        }
-                    }
-                ],
-                'should': [],
-                'filter': []
+        "query": {
+            "bool": {
+                "must": [{"exists": {"field": f"projects.{settings.APPLICATION_ID}"}}, {"exists": {"field": "info"}}],
+                "should": [],
+                "filter": [],
             }
         },
-        'sort': [
-            {
-                'info.directory': {
-                    'order': 'asc'
-                }
-            },
-            {
-                'info.name': {
-                    'order': 'asc'
-                }
-            }
-        ]
+        "sort": [{"info.directory": {"order": "asc"}}, {"info.name": {"order": "asc"}}],
     }
 
     agg_query = {}
 
     # List of facets to exclude from value aggregation
-    exclude_list = ['uuid', 'bbox', 'startDate', 'endDate', 'title', 'parentIdentifier']
+    exclude_list = ["uuid", "bbox", "startDate", "endDate", "title", "parentIdentifier"]
 
     @staticmethod
     def _extract_bbox(coordinates):
@@ -109,14 +90,14 @@ class ElasticsearchFacetSet(FacetSet):
 
         :return: object based on input type
         """
-        type = coordinates['coordinates']['type']
-        coordinates = coordinates['coordinates']['coordinates']
+        type = coordinates["coordinates"]["type"]
+        coordinates = coordinates["coordinates"]["coordinates"]
 
-        if type == 'envelope':
+        if type == "envelope":
             envelope = Envelope(coordinates)
             return envelope.bbox()
 
-        elif type == 'Point':
+        elif type == "Point":
             point = Point(coordinates)
             return point.bbox()
 
@@ -141,7 +122,6 @@ class ElasticsearchFacetSet(FacetSet):
         https://www.dublincore.org/specifications/dublin-core/dcmi-terms/terms/date/
         :rtype: str
         """
-
 
         return f"{temporal.get('start_time','..')}/{temporal.get('end_time','..')}"
 
@@ -173,7 +153,7 @@ class ElasticsearchFacetSet(FacetSet):
         :return: path to item in elasticsearch index
         :rtype: str
         """
-        return f'projects.{settings.APPLICATION_ID}.{facet_name}' if facet_path is DEFAULT else facet_path
+        return f"projects.{settings.APPLICATION_ID}.{facet_name}" if facet_path is DEFAULT else facet_path
 
     @staticmethod
     def get_date_field(key):
@@ -187,9 +167,9 @@ class ElasticsearchFacetSet(FacetSet):
         :rtype: str
         """
         date_fields = {
-            'start': 'info.temporal.start_time',
-            'end': 'info.temporal.end_time',
-            'range': 'info.temporal.time_range'
+            "start": "info.temporal.start_time",
+            "end": "info.temporal.end_time",
+            "range": "info.temporal.time_range",
         }
 
         return date_fields[key]
@@ -219,20 +199,20 @@ class ElasticsearchFacetSet(FacetSet):
         query = copy.deepcopy(self.base_query)
 
         # Get parameters from kwargs
-        search_after = kwargs.get('search_after')
-        reverse = kwargs.get('reverse')
-        start_index = kwargs.get('start_index', 1)
-        page_size = kwargs.get('max_results')
+        search_after = kwargs.get("search_after")
+        reverse = kwargs.get("reverse")
+        start_index = kwargs.get("start_index", 1)
+        page_size = kwargs.get("max_results")
 
         # If search after key use this
         if search_after:
-            query['search_after'] = search_after.split(',')
+            query["search_after"] = search_after.split(",")
 
             if reverse:
                 # reverse the ordering of the sort to go back a page
-                for sort_key in query['sort']:
+                for sort_key in query["sort"]:
                     for key in sort_key:
-                        sort_key[key]['order'] = 'desc'
+                        sort_key[key]["order"] = "desc"
 
         # If there is no search after
         elif start_index != 1:
@@ -241,54 +221,45 @@ class ElasticsearchFacetSet(FacetSet):
             start_index = start_index if start_index > 0 else 0
 
             if start_index > 0 and (start_index + page_size) <= 10000:
-                query['from'] = start_index
+                query["from"] = start_index
 
             # If window is > 10,000 raise error
             else:
-                raise PagingError(f"Result window is too large, from + size must be"
-                                  f" less than or equal to [10000] but was [{start_index + page_size}].")
+                raise PagingError(
+                    f"Result window is too large, from + size must be"
+                    f" less than or equal to [10000] but was [{start_index + page_size}]."
+                )
 
         # Set number of results
-        if kwargs.get('max_results'):
-            query['size'] = kwargs['max_results']
+        if kwargs.get("max_results"):
+            query["size"] = kwargs["max_results"]
 
         # Loop search parameters
         for param in params:
 
-            if param == 'query' and params[param]:
-                query['query']['bool']['must'].append({
-                    'simple_query_string': {
-                        'query': params[param],
-                        'default_operator': 'and'
-                    }
-                })
+            if param == "query" and params[param]:
+                query["query"]["bool"]["must"].append(
+                    {"simple_query_string": {"query": params[param], "default_operator": "and"}}
+                )
 
-            elif param == 'uuid':
-                query['query']['bool']['must'].append({
-                    'term': {
-                        '_id': params[param]
-                    }
-                })
+            elif param == "uuid":
+                query["query"]["bool"]["must"].append({"term": {"_id": params[param]}})
 
-            elif param == 'bbox':
+            elif param == "bbox":
 
-                coordinates = params[param].split(',')
+                coordinates = params[param].split(",")
 
                 # Coordinates supplied west, south, east, north
-                query['query']['bool']['filter'].append({
-                    'geo_bounding_box': {
-                        self.facets.get(param): {
-                            'top_left': {
-                                'lat': coordinates[3],
-                                'lon': coordinates[0]
-                            },
-                            'bottom_right': {
-                                'lat': coordinates[1],
-                                'lon': coordinates[2]
+                query["query"]["bool"]["filter"].append(
+                    {
+                        "geo_bounding_box": {
+                            self.facets.get(param): {
+                                "top_left": {"lat": coordinates[3], "lon": coordinates[0]},
+                                "bottom_right": {"lat": coordinates[1], "lon": coordinates[2]},
                             }
                         }
                     }
-                })
+                )
 
             # Handle all other search facets
             else:
@@ -303,45 +274,28 @@ class ElasticsearchFacetSet(FacetSet):
 
                         if len(search_terms) == 1:
                             # Equal to AND query
-                            query['query']['bool']['must'].append({
-                                'match_phrase': {
-                                    es_path: search_terms[0]
-                                }
-                            })
+                            query["query"]["bool"]["must"].append({"match_phrase": {es_path: search_terms[0]}})
 
                         else:
                             # Equal to AND (a OR b) query where there should be at least one match
-                            andor = {'bool': {'should': [], 'minimum_should_match': 1}}
+                            andor = {"bool": {"should": [], "minimum_should_match": 1}}
 
                             for search_term in search_terms:
-                                andor['bool']['should'].append(
-                                    {
-                                        'match_phrase': {
-                                            es_path: search_term
-                                        }
-                                    })
+                                andor["bool"]["should"].append({"match_phrase": {es_path: search_term}})
 
-                            query['query']['bool']['must'].append(andor)
+                            query["query"]["bool"]["must"].append(andor)
 
         # Add date filter
         date_filter = NestedDict()
 
-        if 'startDate' in params:
-            date_filter.nested_put([
-                'range', self.get_date_field('range'), 'gte'],
-                self._isodate(params['startDate'])
-            )
+        if "startDate" in params:
+            date_filter.nested_put(["range", self.get_date_field("range"), "gte"], self._isodate(params["startDate"]))
 
-        if 'endDate' in params:
-            date_filter.nested_put([
-                'range', self.get_date_field('range'), 'lte'],
-                self._isodate(params['endDate'])
-            )
+        if "endDate" in params:
+            date_filter.nested_put(["range", self.get_date_field("range"), "lte"], self._isodate(params["endDate"]))
 
         if date_filter:
-            query['query']['bool']['filter'].append(
-                date_filter.data
-            )
+            query["query"]["bool"]["filter"].append(date_filter.data)
 
         return query
 
@@ -369,37 +323,39 @@ class ElasticsearchFacetSet(FacetSet):
         """
         values = {}
 
-        if aggs.get('aggregations'):
+        if aggs.get("aggregations"):
 
-            for result in aggs['aggregations']:
+            for result in aggs["aggregations"]:
 
                 # Start and end date buckets have a different format so
                 # handle them differently
-                if result == 'startDate':
+                if result == "startDate":
 
                     # Reject null values
-                    if aggs['aggregations'][result].get('value_as_string'):
-                        values['startDate'] = {'extra_kwargs': {
-                            'minInclusive': aggs['aggregations'][result].get('value_as_string'),
-                            'pattern': '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$'
-                        }}
+                    if aggs["aggregations"][result].get("value_as_string"):
+                        values["startDate"] = {
+                            "extra_kwargs": {
+                                "minInclusive": aggs["aggregations"][result].get("value_as_string"),
+                                "pattern": "^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$",
+                            }
+                        }
 
-                elif result == 'endDate':
+                elif result == "endDate":
 
                     # Reject null values
-                    if aggs['aggregations'][result].get('value_as_string'):
-                        values['endDate'] = {'extra_kwargs': {
-                            'maxInclusive': aggs['aggregations'][result].get('value_as_string'),
-                            'pattern': '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$'
-                        }}
+                    if aggs["aggregations"][result].get("value_as_string"):
+                        values["endDate"] = {
+                            "extra_kwargs": {
+                                "maxInclusive": aggs["aggregations"][result].get("value_as_string"),
+                                "pattern": "^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$",
+                            }
+                        }
 
                 else:
                     values[result] = {
-                        'values': [
-                            {
-                                'label': f"{bucket['key']} ({bucket['doc_count']})",
-                                'value': bucket['key']
-                            } for bucket in aggs['aggregations'][result]['buckets']
+                        "values": [
+                            {"label": f"{bucket['key']} ({bucket['doc_count']})", "value": bucket["key"]}
+                            for bucket in aggs["aggregations"][result]["buckets"]
                         ]
                     }
 
@@ -415,37 +371,27 @@ class ElasticsearchFacetSet(FacetSet):
 
         query = self.build_query(search_params)
 
-        query.update({
-            'aggs': {},
-            'size': 0
-        })
+        query.update({"aggs": {}, "size": 0})
 
         for facet in self.facets:
             if facet not in self.exclude_list:
                 # Get the path to the facet data
                 facet_path = self.facets[facet]
 
-                query['aggs'][facet] = {
-                    'terms': {
-                        'field': f'{self.get_es_path(facet_path, facet)}.keyword',
-                        'size': 1000
-                    }
+                query["aggs"][facet] = {
+                    "terms": {"field": f"{self.get_es_path(facet_path, facet)}.keyword", "size": 1000}
                 }
 
         # Get start and end time ranges
-        query['aggs']['startDate'] = {
-            "min": {"field": self.get_date_field('start')}
-        }
+        query["aggs"]["startDate"] = {"min": {"field": self.get_date_field("start")}}
 
-        query['aggs']['endDate'] = {
-            "max": {"field": self.get_date_field('end')}
-        }
+        query["aggs"]["endDate"] = {"max": {"field": self.get_date_field("end")}}
 
         aggs = self.query_elasticsearch(query)
 
         values = self._process_aggregations(aggs)
 
-        #TODO: Move self.facet_values to __init__ and return the values dict for setting elsewhere
+        # TODO: Move self.facet_values to __init__ and return the values dict for setting elsewhere
         self.facet_values = values
 
     def search(self, params, **kwargs):
@@ -462,9 +408,9 @@ class ElasticsearchFacetSet(FacetSet):
 
         es_search = settings.ES_CONNECTION.search(query)
 
-        hits = es_search['hits']['hits']
+        hits = es_search["hits"]["hits"]
 
-        reverse = kwargs.get('reverse')
+        reverse = kwargs.get("reverse")
 
         if reverse:
             hits.reverse()
@@ -473,19 +419,19 @@ class ElasticsearchFacetSet(FacetSet):
 
         # Use the response from the query to get the total unless > 10k
         # In this case will need to query size directly
-        if es_search['hits']['total']['relation'] == 'eq':
-            total_hits = es_search['hits']['total']['value']
+        if es_search["hits"]["total"]["relation"] == "eq":
+            total_hits = es_search["hits"]["total"]["value"]
         else:
             # Some keys are not compatible with the count query
-            for key in ['sort', 'size', 'from', 'search_after']:
+            for key in ["sort", "size", "from", "search_after"]:
                 query.pop(key, None)
 
-            total_hits = settings.ES_CONNECTION.count(query)['count']
+            total_hits = settings.ES_CONNECTION.count(query)["count"]
 
-        after_key = hits[-1]['sort'] if hits else None
-        before_key = hits[0]['sort'] if hits else None
+        after_key = hits[-1]["sort"] if hits else None
+        before_key = hits[0]["sort"] if hits else None
 
-        next_search = ','.join(hits[-1]['sort'])
+        next_search = ",".join(hits[-1]["sort"])
 
         return SearchResults(total_hits, results, before_key, after_key), next_search
 
@@ -502,7 +448,7 @@ class ElasticsearchFacetSet(FacetSet):
         :rtype: list
         """
         results = []
-        base_url = kwargs['uri']
+        base_url = kwargs["uri"]
 
         for hit in hits:
             entry = self.build_entry(hit, params, base_url)
@@ -528,70 +474,69 @@ class ElasticsearchFacetSet(FacetSet):
         :rtype: dict
         """
 
-        source = hit['_source']
+        source = hit["_source"]
         entry = {
-            'type': 'FeatureCollection',
-            'id': f'{base_url}/request?uuid={hit["_id"]}',
-            'properties': {
-                'title': source['title'],
-                'identifier': source["collection_id"],
-                'links': {
-                    'search': [
+            "type": "FeatureCollection",
+            "id": f'{base_url}/request?uuid={hit["_id"]}',
+            "properties": {
+                "title": source["title"],
+                "identifier": source["collection_id"],
+                "links": {
+                    "search": [
                         {
-                            'title': 'Opensearch Description Document',
-                            'href': f'{base_url}/description.xml?parentIdentifier={source["collection_id"]}',
-                            'type': 'application/opensearchdescription+xml'
+                            "title": "Opensearch Description Document",
+                            "href": f'{base_url}/description.xml?parentIdentifier={source["collection_id"]}',
+                            "type": "application/opensearchdescription+xml",
                         }
                     ],
-                    'related': [
-                        {
-                            'title': 'ftp',
-                            'href': f'ftp://anon-ftp.ceda.ac.uk{source["path"]}',
-                            'type': 'text/html'
-                        }
-                    ]
-                }
-            }
+                    "related": [
+                        {"title": "ftp", "href": f'ftp://anon-ftp.ceda.ac.uk{source["path"]}', "type": "text/html"}
+                    ],
+                },
+            },
         }
 
-        if source.get('start_date'):
-            entry['properties']['date'] = f"{source['start_date']}/{source['end_date']}"
+        if source.get("start_date"):
+            entry["properties"]["date"] = f"{source['start_date']}/{source['end_date']}"
 
-        if source.get('aggregations'):
-            entry['properties']['aggregations'] = []
+        if source.get("aggregations"):
+            entry["properties"]["aggregations"] = []
 
-            for aggregation in source.get('aggregations'):
+            for aggregation in source.get("aggregations"):
                 agg = {
-                    'id': aggregation['id'],
-                    'type': 'Feature',
-                    'properties': {
-                        'links': {
-                            'described_by': [
+                    "id": aggregation["id"],
+                    "type": "Feature",
+                    "properties": {
+                        "links": {
+                            "described_by": [
                                 {
-                                    'title': 'THREDDS Catalog',
-                                    'href': get_thredds_aggregation(aggregation['id'], format='html')
+                                    "title": "THREDDS Catalog",
+                                    "href": get_thredds_aggregation(aggregation["id"], format="html"),
                                 }
                             ],
-                            'search': [
+                            "search": [
                                 {
-                                    'title': 'Files',
-                                    'href': get_aggregation_search_link(
+                                    "title": "Files",
+                                    "href": get_aggregation_search_link(
                                         base_url,
-                                        source['collection_id'],
-                                        aggregation['id'],
-                                        params.get('httpAccept', 'application/geo+json')
-                                    )
+                                        source["collection_id"],
+                                        aggregation["id"],
+                                        params.get("httpAccept", "application/geo+json"),
+                                    ),
                                 }
                             ],
-                            'related': get_aggregation_capabilities(aggregation)
+                            "related": get_aggregation_capabilities(aggregation),
                         }
-                    }
+                    },
                 }
 
-                entry['properties']['aggregations'].append(agg)
+                entry["properties"]["aggregations"].append(agg)
 
-        if params.get('parentIdentifier'):
-            entry['id'] = f'{base_url}/request?parentIdentifier={params["parentIdentifier"]}&uuid={hit["_id"]}'
+        if params.get("parentIdentifier"):
+            entry["id"] = f'{base_url}/request?parentIdentifier={params["parentIdentifier"]}&uuid={hit["_id"]}'
+
+        if source.get("relationships"):
+            entry["relationships"] = source.get("relationships")
 
         return entry
 
@@ -611,29 +556,29 @@ class ElasticsearchFacetSet(FacetSet):
         :return: entry
         :rtype: dict
         """
-        source = hit['_source']
+        source = hit["_source"]
 
         entry = {
-            'type': 'Feature',
-            'id': f'{base_url}/request?parentIdentifier={params["parentIdentifier"]}&uuid={hit["_id"]}',
-            'properties': {
-                'title': source['info']['name'],
-                'identifier': hit["_id"],
-                'updated': source['info']['last_modified'],
-                'filesize': source['info']['size'],
-                'links': {}
-            }
+            "type": "Feature",
+            "id": f'{base_url}/request?parentIdentifier={params["parentIdentifier"]}&uuid={hit["_id"]}',
+            "properties": {
+                "title": source["info"]["name"],
+                "identifier": hit["_id"],
+                "updated": source["info"]["last_modified"],
+                "filesize": source["info"]["size"],
+                "links": {},
+            },
         }
 
-        if source['info'].get('temporal'):
-            entry['properties']['date'] = self._extract_time_range(source['info']['temporal'])
+        if source["info"].get("temporal"):
+            entry["properties"]["date"] = self._extract_time_range(source["info"]["temporal"])
 
-        if source['info'].get('spatial'):
+        if source["info"].get("spatial"):
             # SW - NE (lon,lat)
-            bbox = self._extract_bbox(source['info']['spatial'])
+            bbox = self._extract_bbox(source["info"]["spatial"])
 
             if bbox:
-                entry['bbox'] = bbox
+                entry["bbox"] = bbox
 
         return entry
 
@@ -661,7 +606,7 @@ class HandlerFactory:
 
         collection, root_path = self.get_collection_map(path)
         if collection is not None:
-            handler = locate(collection['handler'])
+            handler = locate(collection["handler"])
             return handler(path)
 
     def get_collection_map(self, path):
@@ -675,11 +620,15 @@ class HandlerFactory:
         :rtype: tuple(str, str)
         """
 
-        while path not in self.map and path != '/' and path:
+        while path not in self.map and path != "/" and path:
             path = os.path.dirname(path)
 
         # No match has been found
-        if not path or path == '/':
+        if not path or path == "/":
+            return None, None
+
+        return self.map[path], path
+        if not path or path == "/":
             return None, None
 
         return self.map[path], path
