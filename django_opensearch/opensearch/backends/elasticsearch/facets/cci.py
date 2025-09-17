@@ -216,12 +216,15 @@ class CCIFacets(ElasticsearchFacetSet):
             response = requests.get(url_string, verify=False)
             if response.status_code != 200:
                 return None
-            return response.json()[0]["relationships"]
+
+            relationships = []
+            for relationship in response.json()[0]["relationships"]:
+                relationship["related_activity_type"] = "dataset"
+                relationships.append(relationship)
+
+            return relationships
 
         except Exception as ex:
-            print(f"ERROR {ex}")
-            print(f"ERROR {url_string}")
-            return None
             print(f"ERROR {ex}")
             print(f"ERROR {url_string}")
             return None
