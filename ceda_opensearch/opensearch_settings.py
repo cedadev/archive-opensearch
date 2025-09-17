@@ -12,6 +12,7 @@ import os
 import yaml
 from elasticsearch import Elasticsearch
 from cci_tag_scanner.facets import Facets
+from cci_tag_scanner.utils.elasticsearch import es_connection_kwargs
 
 def get_from_conf(env):
     """
@@ -75,9 +76,12 @@ class ElasticsearchConnection:
         self.index = index
         self.collection_index = ELASTICSEARCH_COLLECTION_INDEX
         self.es = Elasticsearch(
-            hosts=ELASTICSEARCH_HOSTS,
-            headers={'x-api-key':api_key},
-            **ELASTICSEARCH_CONNECTION_PARAMS)
+            **es_connection_kwargs(
+                hosts=ELASTICSEARCH_HOSTS,
+                api_key=api_key,
+                **ELASTICSEARCH_CONNECTION_PARAMS
+            )
+        )
 
     def search(self, query):
         """
