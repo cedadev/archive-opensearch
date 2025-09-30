@@ -502,18 +502,14 @@ class ElasticsearchFacetSet(FacetSet):
         if source.get("aggregations"):
             entry["properties"]["aggregations"] = []
 
+            agg_ids = []
             for aggregation in source.get("aggregations"):
+                agg_ids.append(aggregation["id"])
                 agg = {
                     "id": aggregation["id"],
                     "type": "Feature",
                     "properties": {
                         "links": {
-                            "described_by": [
-                                {
-                                    "title": "THREDDS Catalog",
-                                    "href": get_thredds_aggregation(aggregation["id"], format="html"),
-                                }
-                            ],
                             "search": [
                                 {
                                     "title": "Files",
@@ -529,6 +525,14 @@ class ElasticsearchFacetSet(FacetSet):
                         }
                     },
                 }
+
+                if "wms" in agg_ids or "wcs" in agg_ids:
+                    agg["properties"]["links"]["described_by"] = [
+                        {
+                            "title": "THREDDS Catalog",
+                            "href": get_thredds_aggregation(aggregation["id"], format="html"),
+                        }
+                    ]
 
                 entry["properties"]["aggregations"].append(agg)
 
