@@ -61,7 +61,7 @@ DATA_BRIDGE_URL = 'https://eo-data-bridge.ceda.ac.uk'
 
 EXTERNAL_DATA_SOURCES = ['https://wui.cmsaf.eu/s']
 
-FACETS = Facets()
+FACETS = Facets(endpoint='https://raw.githubusercontent.com/cedadev/cci-vocabularies/refs/heads/master/app/html/ontology/cci/cci-content/cci-ontology.json')
 
 class ElasticsearchConnection:
     """

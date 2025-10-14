@@ -149,8 +149,8 @@ STATIC_URL = '/static/'
 # Import Opensearch settings
 try:
     from .opensearch_settings import *
-except ImportError:
-    pass
+except ImportError as err:
+    raise err
 
 # Import local settings
 try:
