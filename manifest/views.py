@@ -8,10 +8,7 @@ import json
 
 def get_manifest(request, uuid):
 
-    es = Elasticsearch(
-        hosts=settings.ELASTICSEARCH_HOSTS,
-        headers={'x-api-key':settings.ES_API_KEY}
-    )
+    es = settings.ES_CONNECTION.es
 
     try:
         response = es.get(index=settings.ELASTICSEARCH_COLLECTION_INDEX, id=uuid, _source_includes=['manifest'])
