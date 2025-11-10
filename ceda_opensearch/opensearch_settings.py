@@ -46,7 +46,7 @@ APPLICATION_ID = 'opensearch'
 ELASTICSEARCH_CONNECTION_PARAMS = {
     'timeout': 30
 }
-ELASTICSEARCH_HOSTS=['https://elasticsearch.ceda.ac.uk']
+ELASTICSEARCH_HOSTS=['https://elasticsearch.164.30.69.113.nip.io']
 
 READ_FROM_VOCAB = False
 
@@ -57,7 +57,7 @@ SOLR_CORE = 'datasets'
 
 OPENSEARCH_BACKEND = 'elasticsearch'
 
-DATA_BRIDGE_URL = 'https://eo-data-bridge.ceda.ac.uk'
+DATA_BRIDGE_URL = 'http://eo-data-bridge.164.30.69.113.nip.io/'#'https://eo-data-bridge.ceda.ac.uk'
 
 EXTERNAL_DATA_SOURCES = ['https://wui.cmsaf.eu/s']
 
@@ -83,7 +83,7 @@ class ElasticsearchConnection:
             )
         )
 
-    def search(self, query):
+    def search(self, query, index=None):
         """
         Search the files index
 
@@ -93,7 +93,7 @@ class ElasticsearchConnection:
         :return: Elasticsearch response
         :rtype: dict
         """
-        return self.es.search(index=self.index, body=query)
+        return self.es.search(index=(index or self.index), body=query)
 
     def search_collections(self, query):
         """

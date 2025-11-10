@@ -381,7 +381,7 @@ class ElasticsearchFacetSet(FacetSet):
                     if aggs['aggregations'][result].get('value_as_string'):
                         values['startDate'] = {'extra_kwargs': {
                             'minInclusive': aggs['aggregations'][result].get('value_as_string'),
-                            'pattern': '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$'
+                            'pattern': "^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$"
                         }}
 
                 elif result == 'endDate':
@@ -390,7 +390,7 @@ class ElasticsearchFacetSet(FacetSet):
                     if aggs['aggregations'][result].get('value_as_string'):
                         values['endDate'] = {'extra_kwargs': {
                             'maxInclusive': aggs['aggregations'][result].get('value_as_string'),
-                            'pattern': '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$'
+                            'pattern': "^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$"
                         }}
 
                 else:
@@ -557,6 +557,22 @@ class ElasticsearchFacetSet(FacetSet):
         if source.get('start_date'):
             entry['properties']['date'] = f"{source['start_date']}/{source['end_date']}"
 
+        aggregations = []
+
+        # Attempt to match kerchunk/zarr aggregations with aggregation entries in opensearch
+        if params.get('drsId',False):
+            drs = params['drsId'].lower()
+            try:
+                aggs = settings.ES_CONNECTION.search({
+                    "query": {
+                        "term": {
+                        "properties.aggregation": {
+                            "value": True
+                        }
+                        }
+                    }
+                }, index=f'items_{drs}')
+
         if source.get('aggregations'):
             entry['properties']['aggregations'] = []
 
@@ -588,7 +604,10 @@ class ElasticsearchFacetSet(FacetSet):
                     }
                 }
 
-                entry['properties']['aggregations'].append(agg)
+                aggregations.append(agg)
+            
+        if len(aggregations) > 0:
+            entry['properties']['aggregations'] = aggregations
 
         if params.get('parentIdentifier'):
             entry['id'] = f'{base_url}/request?parentIdentifier={params["parentIdentifier"]}&uuid={hit["_id"]}'

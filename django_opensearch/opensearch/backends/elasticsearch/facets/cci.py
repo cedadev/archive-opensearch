@@ -113,6 +113,35 @@ class CCIFacets(ElasticsearchFacetSet):
                 }
             ]
 
+        if params.get('drsId',False):
+            drs = params['drsId'].lower()
+            try:
+                aggs = settings.ES_CONNECTION.search({
+                    "query": {
+                        "term": {
+                        "properties.aggregation": {
+                            "value": True
+                        }
+                        }
+                    }
+                }, index=f'items_{drs}')
+            except:
+                # Index may not exist in STAC
+                aggs = []
+            aggregations = []
+            for agg in aggs['hits']['hits']:
+                try:
+                    aggregations.append({
+                        'title': agg['_source']['id'],
+                        'href': agg['_source']['assets']['reference_file']['href'],
+                        'type': 'application/octet-stream'
+                    })
+                except KeyError:
+                    # Aggregation STAC record does not have required parameters.
+                    pass
+            if len(aggregations) > 0:
+                entry['properties']['links']['aggregations'] = aggregations
+
         if source.get('collection_id') != 'cci':
             entry['properties']['links']['describedby'] = [
                 {
@@ -242,6 +271,9 @@ class CCIFacets(ElasticsearchFacetSet):
         @return a list of related datasets
 
         """
+        from datetime import datetime
+        import os
+        t1 = datetime.now()
         url_string = f"{settings.DATA_BRIDGE_URL}/dataset/https://catalogue.ceda.ac.uk/uuid/{uid}?format=json"
 
         try:
