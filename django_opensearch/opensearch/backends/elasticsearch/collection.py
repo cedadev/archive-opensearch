@@ -14,6 +14,7 @@ from .facets.base import HandlerFactory
 from django_opensearch.constants import DEFAULT
 from django.http import Http404
 from django_opensearch.opensearch.utils.aggregation_tools import get_thredds_aggregation, get_aggregation_capabilities
+from django.conf import settings
 
 
 def collection_search(search_params):
@@ -39,7 +40,7 @@ def collection_search(search_params):
             }
         }
 
-        return bool(ElasticsearchConnection().es.count(index='opensearch-collections', body=query)['count'])
+        return bool(settings.ES_CONNECTION.count_collections(query)['count'])
 
     return False
 
@@ -115,8 +116,7 @@ class Collection(ElasticsearchFacetSet):
         :return: elasticsearch response
         :rtype: dict
         """
-
-        return ElasticsearchConnection().search_collections(query)
+        return settings.ES_CONNECTION.search_collections(query)
 
     def build_query(self, params, **kwargs):
         """
@@ -200,7 +200,7 @@ class Collection(ElasticsearchFacetSet):
 
         query = self.build_query(params, **kwargs)
 
-        es_search = ElasticsearchConnection().search_collections(query)
+        es_search = settings.ES_CONNECTION.search_collections(query)
 
         hits = es_search['hits']['hits']
 
@@ -213,7 +213,7 @@ class Collection(ElasticsearchFacetSet):
         else:
             # Size keys are not compatible with the count query
             query.pop('size')
-            total_hits = ElasticsearchConnection().count_collections(query)['count']
+            total_hits = settings.ES_CONNECTION.count_collections(query)['count']
 
         return total_hits, results
 
@@ -264,7 +264,7 @@ class Collection(ElasticsearchFacetSet):
             'size': 1
         }
 
-        result = ElasticsearchConnection().search_collections(query)
+        result = settings.ES_CONNECTION.search_collections(query)
         if result['hits']['hits']:
             return result['hits']['hits'][0]['_source']['path']
 

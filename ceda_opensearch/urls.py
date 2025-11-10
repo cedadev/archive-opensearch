@@ -16,11 +16,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django_opensearch.views import Index
+from django.views.generic.base import TemplateView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('opensearch/', include('django_opensearch.urls')),
     path('manifest/', include('manifest.urls')),
     path('api/', include('events.urls')),
+    path('robots.txt', TemplateView.as_view(template_name="robots.txt", content_type="text/plain"), name='robots'),
     path('', Index.as_view(), name='index'),
 ]

@@ -32,6 +32,10 @@ def thredds_path(method, path):
     method_path = method_map[method]
     mapped_path = path.replace(*mapping)
 
+    if hasattr(opensearch_settings, 'BACKUP_DOWNLOADS') and method == 'http':
+        if opensearch_settings.BACKUP_DOWNLOADS is not None:
+            return f'{opensearch_settings.BACKUP_DOWNLOADS}{mapped_path}'
+
     return f'{thredds_server}/thredds{method_path}{mapped_path}'
 
 

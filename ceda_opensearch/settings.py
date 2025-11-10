@@ -149,12 +149,14 @@ STATIC_URL = '/static/'
 # Import Opensearch settings
 try:
     from .opensearch_settings import *
-except ImportError:
-    pass
+except ImportError as err:
+    raise err
 
 # Import local settings
 try:
     from .settings_local import *
 except ImportError:
     pass
+
+ES_CONNECTION = ElasticsearchConnection(ES_API_KEY)
 

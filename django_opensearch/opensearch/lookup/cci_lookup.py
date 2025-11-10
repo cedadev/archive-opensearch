@@ -50,9 +50,8 @@ class CCILookupHandler(BaseLookupHandler):
     def __init__(self):
 
         # Retrieve cached values, cache lasts for 24 hours as vocab server doesn't change much
-        self.facets = Facets()
+        self.facets = settings.FACETS
         #self.facets = Facets.from_json(cache.get_or_set('cci_vocabs', self._load_facets, timeout=86400))
-
         # Emergency fix for this specific version.
         #import requests
         #self.facets = Facets.from_json(requests.get('https://raw.githubusercontent.com/cedadev/archive-opensearch/refs/heads/project_facet/ceda_opensearch/facets_json.json').json())

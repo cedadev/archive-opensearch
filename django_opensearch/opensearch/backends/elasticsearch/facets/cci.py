@@ -177,7 +177,11 @@ class CCIFacets(ElasticsearchFacetSet):
         # Add opendap link to netCDF files
         if source['info'].get('format') == 'NetCDF':
             # Check if any of the values are of int64 type. Dap cannot serve int64
-            int64 = any([phenom.get('dtype') == 'int64' for phenom in source['info'].get('phenomena', [])])
+            possibles = []
+            for phenom in source['info'].get('phenomena', []):
+                if isinstance(phenom,dict):
+                    possibles.append(phenom.get('dtype') == 'int64')
+            int64 = any(possibles)
 
             if not int64:
                 entry['properties']['links']['related'].append(
@@ -190,14 +194,14 @@ class CCIFacets(ElasticsearchFacetSet):
 
                 # Check if character array. Dap converts these into strings
                 for phenom in source["info"].get("phenomena", []):
-                    if (
-                        phenom is not None
-                        and phenom.get("dtype") == "bytes8"
-                        and len(phenom.get("dimensions", [])) == 1
-                    ):
-                        # add a flag for the toolbox
-                        entry['properties']['links']['related'][-1]['opendap_fully_compatible'] = False
-                        break
+                    if isinstance(phenom,dict):
+                        if (
+                            phenom.get("dtype") == "bytes8"
+                            and len(phenom.get("dimensions", [])) == 1
+                        ):
+                            # add a flag for the toolbox
+                            entry['properties']['links']['related'][-1]['opendap_fully_compatible'] = False
+                            break
 
         # Multiple kerchunk locations are permissible.
         if source['info'].get('kerchunk_location') is not None:
