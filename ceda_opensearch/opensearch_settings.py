@@ -46,7 +46,7 @@ APPLICATION_ID = 'opensearch'
 ELASTICSEARCH_CONNECTION_PARAMS = {
     'timeout': 30
 }
-ELASTICSEARCH_HOSTS=['https://elasticsearch.ceda.ac.uk']
+ELASTICSEARCH_HOSTS=['https://elasticsearch.164.30.69.113.nip.io']#['https://elasticsearch.ceda.ac.uk']
 
 READ_FROM_VOCAB = False
 
@@ -82,6 +82,12 @@ class ElasticsearchConnection:
                 **ELASTICSEARCH_CONNECTION_PARAMS
             )
         )
+
+    def get(self, *args, **kwargs):
+        """
+        Get query
+        """
+        return self.es.get(*args, **kwargs)
 
     def search(self, query):
         """
