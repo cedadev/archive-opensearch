@@ -190,7 +190,7 @@ class CCIFacets(ElasticsearchFacetSet):
                     download_url = backup_search['_source'].get('download_url',None)
                 # OpenDAP Backup switch
                 if backup_search['_source'].get('use_alt_opendap',None):
-                    opendap_href = hit.get('opendap_backup',None)
+                    opendap_href = backup_search['_source'].get('opendap_backup',None)
 
         entry['properties']['links']['related'] = [
             {
