@@ -175,9 +175,14 @@ class CCIFacets(ElasticsearchFacetSet):
 
         use_download_backup = getattr(settings, 'USE_ALL_BACKUPS',False)
 
+        download_url = None
         opendap_href = None
         if not use_download_backup:
-            backup_search = settings.ES_CONNECTION.get(index=settings.BACKUP_CHECK_INDEX, id=file_path)
+            try:
+                backup_search = settings.ES_CONNECTION.get(index=settings.BACKUP_CHECK_INDEX, id=file_path)
+            except:
+                backup_search = {'found':False}
+                
             if backup_search.get('found',False):
                 # Download backup switch
                 if backup_search['_source'].get('use_backup'):
