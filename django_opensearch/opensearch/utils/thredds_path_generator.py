@@ -20,7 +20,7 @@ method_map = {
 }
 
 
-def thredds_path(method, path, backup: bool = False):
+def thredds_path(method, path, backup: bool = False, url: str = None):
     """
     Generates the correct path to work with the THREDDS instance
     :param path: File path to server
@@ -33,6 +33,9 @@ def thredds_path(method, path, backup: bool = False):
     mapped_path = path.replace(*mapping)
 
     if backup and method == 'http':
+
+        if url is not None:
+            return url
         if opensearch_settings.BACKUP_DOWNLOADS is not None:
             return f'{opensearch_settings.BACKUP_DOWNLOADS}{mapped_path}'
 

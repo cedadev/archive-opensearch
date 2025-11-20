@@ -179,14 +179,18 @@ class CCIFacets(ElasticsearchFacetSet):
         if not use_download_backup:
             backup_search = settings.ES_CONNECTION.get(index=settings.BACKUP_CHECK_INDEX, id=file_path)
             if backup_search.get('found',False):
+                # Download backup switch
                 if backup_search['_source'].get('use_backup'):
                     use_download_backup = True
+                    download_url = backup_search['_source'].get('download_url',None)
+                # OpenDAP Backup switch
+                if backup_search['_source'].get('use_alt_opendap',None):
                     opendap_href = hit.get('opendap_backup',None)
 
         entry['properties']['links']['related'] = [
             {
                 'title': 'Download',
-                'href': thredds_path("http", file_path, backup = use_download_backup),
+                'href': thredds_path("http", file_path, backup = use_download_backup, url=download_url),
                 'type': 'application/octet-stream'
             }
         ]
