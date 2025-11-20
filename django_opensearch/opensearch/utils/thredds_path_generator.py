@@ -20,7 +20,7 @@ method_map = {
 }
 
 
-def thredds_path(method, path):
+def thredds_path(method, path, backup: bool = False):
     """
     Generates the correct path to work with the THREDDS instance
     :param path: File path to server

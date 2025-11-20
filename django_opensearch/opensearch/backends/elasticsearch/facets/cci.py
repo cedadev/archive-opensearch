@@ -17,6 +17,9 @@ import os
 from django.urls import reverse
 import requests
 
+def build_backup_query(file_path):
+    return {}
+
 
 class CCIFacets(ElasticsearchFacetSet):
     """
@@ -166,10 +169,24 @@ class CCIFacets(ElasticsearchFacetSet):
         file_path = os.path.join(source["info"]["directory"], source["info"]["name"])
 
         entry = super().build_entry(hit, params, base_url)
+
+        # Backup Download Service Additions
+        # - Check opensearch-file-backup for extra information.
+
+        use_download_backup = getattr(settings, 'USE_ALL_BACKUPS',False)
+
+        opendap_href = None
+        if not use_download_backup:
+            backup_search = settings.ES_CONNECTION.get(index=settings.BACKUP_CHECK_INDEX, id=file_path)
+            if backup_search.get('found',False):
+                if backup_search['_source'].get('use_backup'):
+                    use_download_backup = True
+                    opendap_href = hit.get('opendap_backup',None)
+
         entry['properties']['links']['related'] = [
             {
                 'title': 'Download',
-                'href': thredds_path("http", file_path),
+                'href': thredds_path("http", file_path, backup = use_download_backup),
                 'type': 'application/octet-stream'
             }
         ]
@@ -187,7 +204,7 @@ class CCIFacets(ElasticsearchFacetSet):
                 entry['properties']['links']['related'].append(
                     {
                         'title': 'Opendap',
-                        'href': thredds_path("opendap", file_path),
+                        'href': opendap_href or thredds_path("opendap", file_path),
                         'type': 'application/octet-stream'
                     }
                 )
