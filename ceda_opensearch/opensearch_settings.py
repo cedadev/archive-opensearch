@@ -9,10 +9,12 @@ __license__ = 'BSD - see LICENSE file in top-level package directory'
 __contact__ = 'richard.d.smith@stfc.ac.uk'
 
 import os
+
 import yaml
-from elasticsearch import Elasticsearch
 from cci_tag_scanner.facets import Facets
 from cci_tag_scanner.utils.elasticsearch import es_connection_kwargs
+from elasticsearch import Elasticsearch
+
 
 def get_from_conf(env):
     """
@@ -56,6 +58,11 @@ SOLR_HOST = 'https://esgf-index1.ceda.ac.uk/solr'
 SOLR_CORE = 'datasets'
 
 OPENSEARCH_BACKEND = 'elasticsearch'
+
+PROVIDERS_MAP = {
+    "OSI SAF": "EUMETSAT",
+    "CM SAF": "EUMETSAT",
+}
 
 DATA_BRIDGE_URL = 'https://eo-data-bridge.ceda.ac.uk'
 
@@ -129,4 +136,5 @@ class ElasticsearchConnection:
         :return: Elasticsearch count response
         :rtype: dict
         """
+        return self.es.count(index=self.collection_index, body=query)        """
         return self.es.count(index=self.collection_index, body=query)
