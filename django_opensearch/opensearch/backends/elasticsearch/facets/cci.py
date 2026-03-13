@@ -1,21 +1,22 @@
 # encoding: utf-8
-"""
+""" """
+__author__ = "Richard Smith"
+__date__ = "29 Apr 2019"
+__copyright__ = "Copyright 2018 United Kingdom Research and Innovation"
+__license__ = "BSD - see LICENSE file in top-level package directory"
+__contact__ = "richard.d.smith@stfc.ac.uk"
 
-"""
-__author__ = 'Richard Smith'
-__date__ = '29 Apr 2019'
-__copyright__ = 'Copyright 2018 United Kingdom Research and Innovation'
-__license__ = 'BSD - see LICENSE file in top-level package directory'
-__contact__ = 'richard.d.smith@stfc.ac.uk'
+import os
+
+import requests
+from django.urls import reverse
+
+from ceda_opensearch.opensearch_settings import EXTERNAL_DATA_SOURCES, PROVIDERS_MAP
+from django_opensearch import settings
+from django_opensearch.constants import DEFAULT
+from django_opensearch.opensearch.utils import thredds_path
 
 from .base import ElasticsearchFacetSet
-from ceda_opensearch.opensearch_settings import EXTERNAL_DATA_SOURCES
-from django_opensearch.constants import DEFAULT
-from django_opensearch import settings
-from django_opensearch.opensearch.utils import thredds_path
-import os
-from django.urls import reverse
-import requests
 
 def build_backup_query(file_path):
     return {}
@@ -29,22 +30,22 @@ class CCIFacets(ElasticsearchFacetSet):
     :attr facets: Facet map from facet term to path in the elasticsearch index
     """
 
-    LOOKUP_HANDLER = 'django_opensearch.opensearch.lookup.cci_lookup.CCILookupHandler'
+    LOOKUP_HANDLER = "django_opensearch.opensearch.lookup.cci_lookup.CCILookupHandler"
 
     facets = {
-        'ecv': DEFAULT,
-        'frequency': DEFAULT,
-        'institute': DEFAULT,
-        'processingLevel': DEFAULT,
-        'productString': DEFAULT,
-        'productVersion': DEFAULT,
-        'project':DEFAULT,
-        'dataType': DEFAULT,
-        'sensor': DEFAULT,
-        'platform': DEFAULT,
-        'fileFormat': 'info.type',
-        'bbox': 'info.spatial.coordinates.coordinates',
-        'drsId': DEFAULT
+        "ecv": DEFAULT,
+        "frequency": DEFAULT,
+        "institute": DEFAULT,
+        "processingLevel": DEFAULT,
+        "productString": DEFAULT,
+        "productVersion": DEFAULT,
+        "project": DEFAULT,
+        "dataType": DEFAULT,
+        "sensor": DEFAULT,
+        "platform": DEFAULT,
+        "fileFormat": "info.type",
+        "bbox": "info.spatial.coordinates.coordinates",
+        "drsId": DEFAULT,
     }
 
     def build_query(self, params, **kwargs):
@@ -62,14 +63,12 @@ class CCIFacets(ElasticsearchFacetSet):
 
         query = super().build_query(params, **kwargs)
 
-        pid = params.get('parentIdentifier')
+        pid = params.get("parentIdentifier")
 
         if pid:
-            query['query']['bool']['must'].append({
-                'term': {
-                    f'projects.{settings.APPLICATION_ID}.datasetId': pid
-                }
-            })
+            query["query"]["bool"]["must"].append(
+                {"term": {f"projects.{settings.APPLICATION_ID}.datasetId": pid}}
+            )
         return query
 
     def build_collection_entry(self, hit, params, base_url):
@@ -89,62 +88,56 @@ class CCIFacets(ElasticsearchFacetSet):
         :rtype: dict
         """
 
-        source = hit['_source']
+        source = hit["_source"]
         entry = super().build_collection_entry(hit, params, base_url)
 
         external_data_source_found = False
         for external_data_source in EXTERNAL_DATA_SOURCES:
-            if source['path'].startswith(external_data_source):
+            if source["path"].startswith(external_data_source):
                 external_data_source_found = True
                 # Overwrite the related links
-                entry['properties']['links']['related'] = [
-                    {
-                        'title': 'Dataset',
-                        'href': source['path']
-                    }
+                entry["properties"]["links"]["related"] = [
+                    {"title": "Dataset", "href": source["path"]}
                 ]
 
-        if not external_data_source_found and source['path'].startswith('http'):
+        if not external_data_source_found and source["path"].startswith("http"):
             # Clear the search links from default entry
-            entry['properties']['links'].pop('search', None)
+            entry["properties"]["links"].pop("search", None)
 
             # Overwrite the related links
-            entry['properties']['links']['related'] = [
-                {
-                    'title': 'Dataset',
-                    'href': source['path']
-                }
+            entry["properties"]["links"]["related"] = [
+                {"title": "Dataset", "href": source["path"]}
             ]
 
-        if source.get('collection_id') != 'cci':
-            entry['properties']['links']['describedby'] = [
+        if source.get("collection_id") != "cci":
+            entry["properties"]["links"]["describedby"] = [
                 {
-                    'title': 'ISO19115',
-                    'href': f'https://catalogue.ceda.ac.uk/export/xml/gemini2.3/{source["collection_id"]}.xml',
-                    'type': 'application/vnd.iso.19139+xml'
+                    "title": "ISO19115",
+                    "href": f'https://catalogue.ceda.ac.uk/export/xml/gemini2.3/{source["collection_id"]}.xml',
+                    "type": "application/vnd.iso.19139+xml",
                 },
                 {
-                    'title': 'Dataset Information',
+                    "title": "Dataset Information",
                     # Replace with ESA branded page link?
-                    'href': f'https://catalogue.ceda.ac.uk/uuid/{source["collection_id"]}',
-                    'type': 'text/html'
-                }
+                    "href": f'https://catalogue.ceda.ac.uk/uuid/{source["collection_id"]}',
+                    "type": "text/html",
+                },
             ]
 
-            if source.get('manifest'):
-                via = entry['properties']['links'].get('via',[])
+            if source.get("manifest"):
+                via = entry["properties"]["links"].get("via", [])
                 via.append(
                     {
-                        'title': 'Dataset Manifest',
-                        'href': f"{base_url.removesuffix('/opensearch')}{reverse('manifest:get_manifest', kwargs={'uuid': source['collection_id']})}"
+                        "title": "Dataset Manifest",
+                        "href": f"{base_url.removesuffix('/opensearch')}{reverse('manifest:get_manifest', kwargs={'uuid': source['collection_id']})}",
                     }
                 )
 
-                entry['properties']['links']['via'] = via
+                entry["properties"]["links"]["via"] = via
 
-        relationships = self.get_relationships(source.get('collection_id'))
+        relationships = self.get_relationships(source.get("collection_id"))
         if relationships is not None:
-                entry["relationships"] = relationships
+            entry["relationships"] = relationships
 
         return entry
 
@@ -165,12 +158,12 @@ class CCIFacets(ElasticsearchFacetSet):
         :rtype: dict
         """
 
-        source = hit['_source']
+        source = hit["_source"]
         file_path = os.path.join(source["info"]["directory"], source["info"]["name"])
 
         entry = super().build_entry(hit, params, base_url)
 
-        # Backup Download Service Additions
+        # Backup Download Service Additions - November 2025
         # - Check opensearch-file-backup for extra information.
 
         use_download_backup = getattr(settings, 'USE_ALL_BACKUPS',False)
@@ -201,16 +194,16 @@ class CCIFacets(ElasticsearchFacetSet):
         ]
 
         # Add opendap link to netCDF files
-        if source['info'].get('format') == 'NetCDF':
+        if source["info"].get("format") == "NetCDF":
             # Check if any of the values are of int64 type. Dap cannot serve int64
             possibles = []
-            for phenom in source['info'].get('phenomena', []):
-                if isinstance(phenom,dict):
-                    possibles.append(phenom.get('dtype') == 'int64')
+            for phenom in source["info"].get("phenomena", []):
+                if isinstance(phenom, dict):
+                    possibles.append(phenom.get("dtype") == "int64")
             int64 = any(possibles)
 
             if not int64:
-                entry['properties']['links']['related'].append(
+                entry["properties"]["links"]["related"].append(
                     {
                         'title': 'Opendap',
                         'href': opendap_href or thredds_path("opendap", file_path),
@@ -220,40 +213,42 @@ class CCIFacets(ElasticsearchFacetSet):
 
                 # Check if character array. Dap converts these into strings
                 for phenom in source["info"].get("phenomena", []):
-                    if isinstance(phenom,dict):
+                    if isinstance(phenom, dict):
                         if (
                             phenom.get("dtype") == "bytes8"
                             and len(phenom.get("dimensions", [])) == 1
                         ):
                             # add a flag for the toolbox
-                            entry['properties']['links']['related'][-1]['opendap_fully_compatible'] = False
+                            entry["properties"]["links"]["related"][-1][
+                                "opendap_fully_compatible"
+                            ] = False
                             break
 
         # Multiple kerchunk locations are permissible.
-        if source['info'].get('kerchunk_location') is not None:
-            kerchunk_location = source['info'].get('kerchunk_location')
+        if source["info"].get("kerchunk_location") is not None:
+            kerchunk_location = source["info"].get("kerchunk_location")
             if not isinstance(kerchunk_location, list):
                 kerchunk_location = [kerchunk_location]
             for location in kerchunk_location:
-                entry['properties']['links']['related'].append(
+                entry["properties"]["links"]["related"].append(
                     {
-                        'title': 'Kerchunk',
-                        'href': thredds_path("http", location),
-                        'type': 'application/octet-stream'
+                        "title": "Kerchunk",
+                        "href": thredds_path("http", location),
+                        "type": "application/octet-stream",
                     }
                 )
-        
+
         # Multiple zarr locations are permissible (although not expected to be required)
-        if source['info'].get('zarr_location') is not None:
-            zarr_location = source['info'].get('zarr_location')
+        if source["info"].get("zarr_location") is not None:
+            zarr_location = source["info"].get("zarr_location")
             if not isinstance(zarr_location, list):
                 zarr_location = [zarr_location]
             for location in zarr_location:
-                entry['properties']['links']['related'].append(
+                entry["properties"]["links"]["related"].append(
                     {
-                        'title': 'Zarr',
-                        'href': location, # S3 Endpoint
-                        'type': 'application/octet-stream'
+                        "title": "Zarr",
+                        "href": location,  # S3 Endpoint
+                        "type": "application/octet-stream",
                     }
                 )
 
@@ -274,7 +269,15 @@ class CCIFacets(ElasticsearchFacetSet):
             response = requests.get(url_string, verify=False)
             if response.status_code != 200:
                 return None
-            return response.json()[0]["relationships"]
+
+            relationships = response.json()[0]["relationships"]
+            for relationship in relationships:
+                relationship["related_dataset_provider"] = PROVIDERS_MAP.get(
+                    relationship["related_dataset_provider"],
+                    relationship["related_dataset_provider"],
+                )
+
+            return relationships
 
         except Exception as ex:
             print(f"ERROR {ex}")
