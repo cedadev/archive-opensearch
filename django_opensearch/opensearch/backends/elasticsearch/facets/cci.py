@@ -18,6 +18,9 @@ from django_opensearch.opensearch.utils import thredds_path
 
 from .base import ElasticsearchFacetSet
 
+def build_backup_query(file_path):
+    return {}
+
 
 class CCIFacets(ElasticsearchFacetSet):
     """
@@ -159,11 +162,34 @@ class CCIFacets(ElasticsearchFacetSet):
         file_path = os.path.join(source["info"]["directory"], source["info"]["name"])
 
         entry = super().build_entry(hit, params, base_url)
-        entry["properties"]["links"]["related"] = [
+
+        # Backup Download Service Additions - November 2025
+        # - Check opensearch-file-backup for extra information.
+
+        use_download_backup = getattr(settings, 'USE_ALL_BACKUPS',False)
+
+        download_url = None
+        opendap_href = None
+        if not use_download_backup:
+            try:
+                backup_search = settings.ES_CONNECTION.get(index=settings.BACKUP_CHECK_INDEX, id=file_path)
+            except:
+                backup_search = {'found':False}
+                
+            if backup_search.get('found',False):
+                # Download backup switch
+                if backup_search['_source'].get('use_backup'):
+                    use_download_backup = True
+                    download_url = backup_search['_source'].get('download_url',None)
+                # OpenDAP Backup switch
+                if backup_search['_source'].get('use_alt_opendap',None):
+                    opendap_href = backup_search['_source'].get('opendap_backup',None)
+
+        entry['properties']['links']['related'] = [
             {
-                "title": "Download",
-                "href": thredds_path("http", file_path),
-                "type": "application/octet-stream",
+                'title': 'Download',
+                'href': thredds_path("http", file_path, backup = use_download_backup, url=download_url),
+                'type': 'application/octet-stream'
             }
         ]
 
@@ -179,9 +205,9 @@ class CCIFacets(ElasticsearchFacetSet):
             if not int64:
                 entry["properties"]["links"]["related"].append(
                     {
-                        "title": "Opendap",
-                        "href": thredds_path("opendap", file_path),
-                        "type": "application/octet-stream",
+                        'title': 'Opendap',
+                        'href': opendap_href or thredds_path("opendap", file_path),
+                        'type': 'application/octet-stream'
                     }
                 )
 

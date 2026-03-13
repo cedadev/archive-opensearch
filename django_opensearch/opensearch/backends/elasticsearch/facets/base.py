@@ -482,10 +482,12 @@ class ElasticsearchFacetSet(FacetSet):
 
             total_hits = settings.ES_CONNECTION.count(query)['count']
 
-        after_key = hits[-1]['sort'] if hits else None
-        before_key = hits[0]['sort'] if hits else None
+        after_key, before_key, next_search = None, None, None
+        if len(hits) > 0:
+            after_key = hits[-1]['sort'] if hits else None
+            before_key = hits[0]['sort'] if hits else None
 
-        next_search = ','.join(hits[-1]['sort'])
+            next_search = ','.join(hits[-1]['sort'])
 
         return SearchResults(total_hits, results, before_key, after_key), next_search
 

@@ -146,17 +146,25 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 
-# Import Opensearch settings
-try:
-    from .opensearch_settings import *
-except ImportError as err:
-    raise err
-
 # Import local settings
 try:
     from .settings_local import *
 except ImportError:
     pass
 
-ES_CONNECTION = ElasticsearchConnection(ES_API_KEY)
+# Import Opensearch settings
+try:
+    from .opensearch_settings import *
+except ImportError as err:
+    raise err
+
+from cci_tag_scanner.utils.elasticsearch import ElasticsearchConnection
+
+ES_CONNECTION = ElasticsearchConnection(
+    ELASTICSEARCH_HOST,
+    ES_API_KEY,
+    index=ELASTICSEARCH_INDEX,
+    collection_index=ELASTICSEARCH_COLLECTION_INDEX,
+    connection_params=ELASTICSEARCH_CONNECTION_PARAMS
+)
 
