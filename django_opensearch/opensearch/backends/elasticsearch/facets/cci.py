@@ -166,11 +166,11 @@ class CCIFacets(ElasticsearchFacetSet):
         # Backup Download Service Additions - November 2025
         # - Check opensearch-file-backup for extra information.
 
-        use_download_backup = getattr(settings, 'USE_ALL_BACKUPS',False)
+        use_download_backup = getattr(settings, 'USE_BACKUPS',False)
 
         download_url = None
         opendap_href = None
-        if not use_download_backup:
+        if use_download_backup:
             try:
                 backup_search = settings.ES_CONNECTION.get(index=settings.BACKUP_CHECK_INDEX, id=file_path)
             except:
