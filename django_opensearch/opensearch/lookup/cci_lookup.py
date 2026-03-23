@@ -104,6 +104,16 @@ class CCILookupHandler(BaseLookupHandler):
         :return: Modified value list
         """
 
+        def title_exceptions(pref_label):
+            new_label = []
+            exceptions = ["and", "or", "for", "the", "a", "an", "but", "nor", "at", "by", "from", "to", "in", "on", "with"]
+            for word in pref_label.split(' '):
+                if word in exceptions:
+                    new_label.append(word)
+                else:
+                    new_label.append(word.title())
+            return ' '.join(new_label)
+
         # Reduce calls to lookup
         if facet in self.MAPPABLE_FACETS:
 
@@ -111,6 +121,7 @@ class CCILookupHandler(BaseLookupHandler):
                 pref_label = self.facets.get_pref_label_from_alt_label(camel_to_snake(facet), value['value'])
                 if pref_label:
                     count = value['label'].split()[-1]
-                    value['label'] = f'{pref_label.title()} {count}'
+
+                    value['label'] = f'{title_exceptions(pref_label)} {count}'
 
         return value_list
