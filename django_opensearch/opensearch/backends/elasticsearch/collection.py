@@ -137,6 +137,20 @@ class Collection(ElasticsearchFacetSet):
         # Add sorting
         query['sort'] = [
             {
+                "_script": {
+                    "type": "number",
+                    "order": "asc",
+                    "script": {
+                    "source": "params._source.versionStatus == 'superseded' ? 1 : 0"
+                    }
+                }
+            },
+            {
+                "numericVersionId.keyword": {
+                    "order": "desc"
+                }
+            },
+            {
                 "dataType.keyword": {
                     "order": "asc"
                 }
@@ -152,15 +166,10 @@ class Collection(ElasticsearchFacetSet):
                 }
             },
             {
-                "productVersion.keyword": {
-                    "order": "desc"
-                }
-            },
-            {
                 "title.keyword": {
                     "order": "asc"
                 }
-            }
+            },
         ]
 
         pid = params.get('parentIdentifier')
