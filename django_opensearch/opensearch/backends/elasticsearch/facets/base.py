@@ -8,6 +8,8 @@ __copyright__ = 'Copyright 2018 United Kingdom Research and Innovation'
 __license__ = 'BSD - see LICENSE file in top-level package directory'
 __contact__ = 'richard.d.smith@stfc.ac.uk'
 
+from re import search
+
 from .collection_map import COLLECTION_MAP
 from pydoc import locate
 import os
@@ -574,27 +576,32 @@ class ElasticsearchFacetSet(FacetSet):
                     'type': 'Feature',
                     'properties': {
                         'links': {
-                            'described_by': [
-                                {
-                                    'title': 'THREDDS Catalog',
-                                    'href': get_thredds_aggregation(aggregation['id'], format='html')
-                                }
-                            ],
-                            'search': [
-                                {
-                                    'title': 'Files',
-                                    'href': get_aggregation_search_link(
-                                        base_url,
-                                        source['collection_id'],
-                                        aggregation['id'],
-                                        params.get('httpAccept', 'application/geo+json')
-                                    )
-                                }
-                            ],
-                            'related': get_aggregation_capabilities(aggregation)
+                            'described_by': [],
+                            'search': [],
+                            'related': []
                         }
                     }
                 }
+
+                described_by = get_thredds_aggregation(aggregation['id'], format='html')
+                if described_by:
+                    agg['properties']['links']['described_by'].append({
+                        'title': 'THREDDS Catalog',
+                        'href': described_by
+                    })
+
+                search = get_aggregation_search_link(
+                    base_url,
+                    source['collection_id'],
+                    aggregation['id'],
+                    params.get('httpAccept', 'application/geo+json')
+                )
+                if search:
+                    agg['properties']['links']['search'].append({
+                        'title': 'Files',
+                        'href': search})
+                    
+                agg['properties']['links']['related'] = get_aggregation_capabilities(aggregation)
 
                 entry['properties']['aggregations'].append(agg)
 
