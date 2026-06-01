@@ -208,7 +208,7 @@ class Collection(ElasticsearchFacetSet):
             kwargs['handler'] = handler
 
         query = self.build_query(params, **kwargs)
-
+        print(query)
         es_search = settings.ES_CONNECTION.search_collections(query)
 
         hits = es_search['hits']['hits']

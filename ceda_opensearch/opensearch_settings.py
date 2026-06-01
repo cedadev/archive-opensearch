@@ -11,10 +11,7 @@ __contact__ = "richard.d.smith@stfc.ac.uk"
 import os
 
 import yaml
-from cci_tag_scanner.facets import Facets
-from cci_tag_scanner.utils.elasticsearch import es_connection_kwargs
-from elasticsearch import Elasticsearch
-
+from cci_facet_scanner.tagging.facets import Facets
 
 def get_from_conf(env):
     """
@@ -44,7 +41,7 @@ TAGS = ["CEDA", "NERC"]
 DEVELOPER = "CEDA"
 
 ELASTICSEARCH_INDEX = get_from_conf("elasticsearch.index") or "opensearch-files"
-ELASTICSEARCH_COLLECTION_INDEX = "opensearch-collections"
+ELASTICSEARCH_COLLECTION_INDEX = "opensearch-collections-0"
 APPLICATION_ID = "opensearch"
 ELASTICSEARCH_CONNECTION_PARAMS = {"timeout": 30}
 ELASTICSEARCH_HOST="https://elasticsearch.164.30.69.113.nip.io"
@@ -71,70 +68,3 @@ FACETS = Facets(
     endpoint="https://raw.githubusercontent.com/cedadev/cci-vocabularies/refs/heads/master/app/html/ontology/cci/cci-content/cci-ontology.json"
 )
 
-class ElasticsearchConnection:
-    """
-    Elasticsearch Connection class. Uses `CEDAElasticsearchClient <https://github.com/cedadev/ceda-elasticsearch-tools>`_
-
-    :param index: files index (default: settings.ELASTICSEARCH_INDEX)
-    :type index: str
-
-    """
-
-    def __init__(self, api_key, index=ELASTICSEARCH_INDEX):
-        self.index = index
-        self.collection_index = ELASTICSEARCH_COLLECTION_INDEX
-        self.es = Elasticsearch(
-            **es_connection_kwargs(
-                hosts=ELASTICSEARCH_HOSTS,
-                api_key=api_key,
-                **ELASTICSEARCH_CONNECTION_PARAMS,
-            )
-        )
-
-    def search(self, query):
-        """
-        Search the files index
-
-        :param query: Elasticsearch file query
-        :type query: dict
-
-        :return: Elasticsearch response
-        :rtype: dict
-        """
-        return self.es.search(index=self.index, body=query)
-
-    def search_collections(self, query):
-        """
-        Search the collections index
-
-        :param query: Elasticsearch collection query
-        :type query: dict
-
-        :return: Elasticsearch response
-        :rtype: dict
-        """
-        return self.es.search(index=self.collection_index, body=query)
-
-    def count(self, query):
-        """
-        Return the hit count from the current file query
-
-        :param query: Elasticsearch file query
-        :type query: dict
-
-        :return: Elasticsearch count response
-        :rtype: dict
-        """
-        return self.es.count(index=self.index, body=query)
-
-    def count_collections(self, query):
-        """
-        Return the hit count from the current collection query
-
-        :param query: Elasticsearch collection query
-        :type query: dict
-
-        :return: Elasticsearch count response
-        :rtype: dict
-        """
-        return self.es.count(index=self.collection_index, body=query)

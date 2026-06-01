@@ -10,7 +10,7 @@ __contact__ = 'richard.d.smith@stfc.ac.uk'
 
 from .base import BaseLookupHandler
 from django.core.cache import cache
-from cci_tag_scanner.facets import Facets
+from cci_facet_scanner.tagging.facets import Facets
 from django.conf import settings
 import json
 import re
