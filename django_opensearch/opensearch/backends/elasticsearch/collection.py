@@ -130,12 +130,28 @@ class Collection(ElasticsearchFacetSet):
         :rtype: dict
         """
 
+        version_status = params.get('versionStatus',None)
+
         if params.get('bbox'):
             self.facets['bbox'] = 'bbox.coordinates'
         query = super().build_query(params, **kwargs)
 
         # Add sorting
         query['sort'] = [
+            {
+                "_script": {
+                    "type": "number",
+                    "order": "asc",
+                    "script": {
+                    "source": "params._source.versionStatus == 'superseded' ? 1 : 0" # ordering
+                    }
+                }
+            },
+            {
+                "numericVersionId.keyword": {
+                    "order": "desc"
+                }
+            },
             {
                 "dataType.keyword": {
                     "order": "asc"
@@ -152,16 +168,18 @@ class Collection(ElasticsearchFacetSet):
                 }
             },
             {
-                "productVersion.keyword": {
-                    "order": "desc"
-                }
-            },
-            {
                 "title.keyword": {
                     "order": "asc"
                 }
-            }
+            },
         ]
+
+        if version_status:
+            query['query']['bool']['must'].append({
+                'term': {
+                    'versionStatus': version_status
+                }
+            })
 
         pid = params.get('parentIdentifier')
 

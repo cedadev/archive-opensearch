@@ -559,6 +559,12 @@ class ElasticsearchFacetSet(FacetSet):
         if source.get('start_date'):
             entry['properties']['date'] = f"{source['start_date']}/{source['end_date']}"
 
+        if source.get('versionStatus'):
+            entry['properties']['versionStatus'] = source['versionStatus']
+
+        if source.get('publicationDate'):
+            entry['properties']['publicationDate'] = source['publicationDate']
+
         if source.get('aggregations'):
             entry['properties']['aggregations'] = []
 
