@@ -130,7 +130,7 @@ class Collection(ElasticsearchFacetSet):
         :rtype: dict
         """
 
-        version_status = params['versionStatus']
+        version_status = params.get('versionStatus',None)
 
         if params.get('bbox'):
             self.facets['bbox'] = 'bbox.coordinates'
@@ -143,7 +143,7 @@ class Collection(ElasticsearchFacetSet):
                     "type": "number",
                     "order": "asc",
                     "script": {
-                    "source": "params._source.versionStatus == 'superseded' ? 1 : 0"
+                    "source": "params._source.versionStatus == 'superseded' ? 1 : 0" # ordering
                     }
                 }
             },
