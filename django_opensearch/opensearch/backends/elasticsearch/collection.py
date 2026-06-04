@@ -130,6 +130,8 @@ class Collection(ElasticsearchFacetSet):
         :rtype: dict
         """
 
+        version_status = params['versionStatus']
+
         if params.get('bbox'):
             self.facets['bbox'] = 'bbox.coordinates'
         query = super().build_query(params, **kwargs)
@@ -171,6 +173,13 @@ class Collection(ElasticsearchFacetSet):
                 }
             },
         ]
+
+        if version_status:
+            query['query']['bool']['must'].append({
+                'term': {
+                    'versionStatus': version_status
+                }
+            })
 
         pid = params.get('parentIdentifier')
 
