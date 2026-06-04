@@ -11,8 +11,8 @@ __contact__ = "richard.d.smith@stfc.ac.uk"
 import os
 
 import yaml
-from cci_tag_scanner.facets import Facets
-from cci_tag_scanner.utils.elasticsearch import es_connection_kwargs
+from cci_facet_scanner.tagging.facets import Facets
+from cci_facet_scanner.utils.elasticsearch import es_connection_kwargs
 from elasticsearch import Elasticsearch
 
 

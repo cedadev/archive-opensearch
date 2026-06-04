@@ -158,7 +158,7 @@ try:
 except ImportError as err:
     raise err
 
-from cci_tag_scanner.utils.elasticsearch import ElasticsearchConnection
+from cci_facet_scanner.utils.elasticsearch import ElasticsearchConnection
 
 ES_CONNECTION = ElasticsearchConnection(
     ELASTICSEARCH_HOST,
