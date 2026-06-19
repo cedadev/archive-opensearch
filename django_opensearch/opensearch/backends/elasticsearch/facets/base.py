@@ -304,8 +304,8 @@ class ElasticsearchFacetSet(FacetSet):
                         if len(search_terms) == 1:
                             # Equal to AND query
                             query['query']['bool']['must'].append({
-                                'match_phrase': {
-                                    es_path: search_terms[0]
+                                'term': {
+                                    f'{es_path}.keyword': search_terms[0]
                                 }
                             })
 
@@ -316,8 +316,8 @@ class ElasticsearchFacetSet(FacetSet):
                             for search_term in search_terms:
                                 andor['bool']['should'].append(
                                     {
-                                        'match_phrase': {
-                                            es_path: search_term
+                                        'term': {
+                                            f'{es_path}.keyword': search_term
                                         }
                                     })
 
@@ -442,6 +442,7 @@ class ElasticsearchFacetSet(FacetSet):
         }
 
         aggs = self.query_elasticsearch(query)
+        print(query)
 
         values = self._process_aggregations(aggs)
 
