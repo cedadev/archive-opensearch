@@ -569,6 +569,21 @@ argon2 = ["argon2-cffi (>=19.1.0)"]
 bcrypt = ["bcrypt"]
 
 [[package]]
+name = "django-flexi-settings"
+version = "0.1.1"
+description = "Utilities for flexible configuration for Django."
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "django-flexi-settings-0.1.1.tar.gz", hash = "sha256:f53b4309d72891e240093e44b16662675d2ccb5b3a7351a58cadf39826ad1cd5"},
+    {file = "django_flexi_settings-0.1.1-py3-none-any.whl", hash = "sha256:69f044617aabe8d3db90d975bd6b6bd504a6a0dc18cbf83a31a4484a0b4c5bb1"},
+]
+
+[package.dependencies]
+pyyaml = "*"
+
+[[package]]
 name = "djangorestframework"
 version = "3.16.0"
 description = "Web APIs for Django, made easy."
@@ -2398,4 +2413,4 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4"
-content-hash = "4444dcab06782c19b968f2b6fd484d4fbdc8ea5e1d777b9d5122bd6096ba0404"
+content-hash = "30ba318d13db3ab3c6d8adaaf20bd8e23de71a8f6ed43c41eec9ede69be63431"
