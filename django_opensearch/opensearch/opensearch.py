@@ -134,16 +134,16 @@ class OpensearchResponse:
         self.subtitle = f'Showing {search_index} - {end_of_page}' \
                         f' of {self.totalResults}'
         
-        if search_next is not None and self.startPage == settings.DEFAULT_START_PAGE:
-            self.links['next'] = [
-                {
-                    'href': f'{full_uri}/request?{self._stitch_query_params(search_params)}&searchAfter={search_next}',
-                    'title':'next'
-                }
-            ]
-            if search_after is not None:
-                self.subtitle = f'Showing {end_of_page} results after {search_after}' \
+        if search_after is not None and self.startPage == settings.DEFAULT_START_PAGE:
+            self.subtitle = f'Showing {end_of_page} results after {search_after}' \
                                 f' ({self.totalResults} total)'
+            if search_next is not None:
+                self.links['next'] = [
+                    {
+                        'href': f'{full_uri}/request?{self._stitch_query_params(search_params)}&searchAfter={search_next}',
+                        'title':'next'
+                    }
+                ]
             return
 
         if self.totalResults > self.itemsPerPage:
