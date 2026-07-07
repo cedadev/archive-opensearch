@@ -137,7 +137,7 @@ class OpensearchResponse:
         if search_next is not None and self.startPage == settings.DEFAULT_START_PAGE:
             self.links['next'] = [
                 {
-                    'href': f'{full_uri}?{self._stitch_query_params(search_params)}&searchAfter={search_next}',
+                    'href': f'{full_uri}/request?{self._stitch_query_params(search_params)}&searchAfter={search_next}',
                     'title':'next'
                 }
             ]
@@ -202,11 +202,11 @@ class OpensearchResponse:
         """
 
         if link_type == 'first':
-            return f'{url}?{self._stitch_query_params(search_params)}&startPage=1'
+            return f'{url}/request?{self._stitch_query_params(search_params)}&startPage=1'
             
         elif link_type == 'last':
             last_page = f'startPage={math.ceil(self.totalResults/self.itemsPerPage)}'
-            return f'{url}?{self._stitch_query_params(search_params)}&{last_page}'
+            return f'{url}/request?{self._stitch_query_params(search_params)}&{last_page}'
 
         else:
             if link_type == 'prev':
@@ -214,7 +214,7 @@ class OpensearchResponse:
             else:
                 page = f'startPage={self.startPage + 1}'
 
-            return f'{url}?{self._stitch_query_params(search_params)}&{page}'
+            return f'{url}/request?{self._stitch_query_params(search_params)}&{page}'
 
     def _generate_responses(self, search_params, **kwargs):
 
