@@ -134,9 +134,13 @@ class OpensearchResponse:
         self.subtitle = f'Showing {search_index} - {end_of_page}' \
                         f' of {self.totalResults}'
         
-        if search_after is not None and self.startPage == settings.DEFAULT_START_PAGE:
-            self.subtitle = f'Showing {end_of_page} results after {search_after}' \
-                                f' ({self.totalResults} total)'
+        if self.startPage == settings.DEFAULT_START_PAGE:
+            if search_after is not None:
+                search_after = f'after {search_after} '
+            else:
+                search_after = ''
+            self.subtitle = f'Showing {end_of_page} results {search_after}' \
+                                f'({self.totalResults} total)'
             if search_next is not None:
                 self.links['next'] = [
                     {
