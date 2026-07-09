@@ -442,14 +442,27 @@ class ElasticsearchFacetSet(FacetSet):
         }
 
         aggs = self.query_elasticsearch(query)
-        print(query)
 
         values = self._process_aggregations(aggs)
 
         #TODO: Move self.facet_values to __init__ and return the values dict for setting elsewhere
         self.facet_values = values
 
-    def search(self, params, **kwargs):
+    def search(self, params, recursive=False, start_index=1, **kwargs):
+
+        if int(params.get('startPage',1)) > 1 and recursive:
+            start_index = 1
+            max_results = kwargs.pop('max_results')
+            for i in range(int(params.get('startPage'))-1):
+                print('Page',i)
+                
+                _, next_search = self.search_internal(params, **(kwargs | {'max_results':1}))
+                kwargs['search_after'] = next_search
+            kwargs['max_results'] = max_results
+
+        return self.search_internal(params, start_index=start_index, **kwargs)
+
+    def search_internal(self, params, **kwargs):
         """
         Search interface to elasticsearch
 
