@@ -17,6 +17,17 @@ class Index(View):
     def get(self, request):
         return HttpResponse(f"OK - Listening on {settings.ELASTICSEARCH_INDEX}", status=200)
 
+class UpdateStatic(View):
+    def get(self, request):
+        from django_opensearch.opensearch.backends.elasticsearch.collection import Collection
+        from django_opensearch.opensearch.backends.elasticsearch.facets.collection_map import DEFAULT_COLLECTION
+
+        ec = Collection(path=DEFAULT_COLLECTION)
+        query = ec.build_query(params={})
+
+        opensearch_settings.ES_CONNECTION.update_static_collections(query)
+        return HttpResponse("CCI Static Collection Updated", status=200)
+
 
 class Description(TemplateView):
     template_name = 'description.xml'

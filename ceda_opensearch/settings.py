@@ -165,6 +165,7 @@ ES_CONNECTION = ElasticsearchConnection(
     ES_API_KEY,
     index=ELASTICSEARCH_INDEX,
     collection_index=ELASTICSEARCH_COLLECTION_INDEX,
-    connection_params=ELASTICSEARCH_CONNECTION_PARAMS
+    connection_params=ELASTICSEARCH_CONNECTION_PARAMS,
+    static_collection='/Users/daniel.westwood/cedadev/cci/archive-opensearch/testing/static.json'
 )
 

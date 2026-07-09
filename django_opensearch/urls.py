@@ -19,6 +19,7 @@ from . import views
 
 urlpatterns = [
     path('',views.Index.as_view()),
+    path('update', views.UpdateStatic.as_view()),
     path('description.xml', views.Description.as_view()),
     path('request', views.Response.as_view()),
     path('files', views.Response.as_view()),
