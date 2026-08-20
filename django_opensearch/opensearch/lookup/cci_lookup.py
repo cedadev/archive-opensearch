@@ -43,6 +43,7 @@ class CCILookupHandler(BaseLookupHandler):
     """
     MAPPABLE_FACETS = [
         'ecv',
+        'project',
         'processingLevel',
         'dataType',
     ]
