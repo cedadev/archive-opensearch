@@ -63,7 +63,7 @@ PROVIDERS_MAP = {
     "CM SAF": "EUMETSAT",
 }
 
-DATA_BRIDGE_URL = "https://eo-data-bridge.ceda.ac.uk"
+DATA_BRIDGE_URL = "https://eo-bridge-data-ai-overlay-en81qj.staging-k8s.jasmin.ac.uk/"
 
 EXTERNAL_DATA_SOURCES = ["https://wui.cmsaf.eu/s"]
 
