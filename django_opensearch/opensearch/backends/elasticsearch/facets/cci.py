@@ -272,10 +272,11 @@ class CCIFacets(ElasticsearchFacetSet):
 
             relationships = response.json()[0]["relationships"]
             for relationship in relationships:
-                relationship["related_dataset_provider"] = PROVIDERS_MAP.get(
-                    relationship["related_dataset_provider"],
-                    relationship["related_dataset_provider"],
-                )
+                if relationship["related_activity_type"] == "dataset":
+                    relationship["related_dataset_provider"] = PROVIDERS_MAP.get(
+                        relationship["related_dataset_provider"],
+                        relationship["related_dataset_provider"],
+                    )
 
             return relationships
 
