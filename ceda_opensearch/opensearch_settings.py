@@ -11,8 +11,8 @@ __contact__ = "richard.d.smith@stfc.ac.uk"
 import os
 
 import yaml
-from cci_tag_scanner.facets import Facets
-from cci_tag_scanner.utils.elasticsearch import es_connection_kwargs
+from cci_facet_scanner.tagging.facets import Facets
+from cci_facet_scanner.utils.elasticsearch import es_connection_kwargs
 from elasticsearch import Elasticsearch
 
 
@@ -47,7 +47,7 @@ ELASTICSEARCH_INDEX = get_from_conf("elasticsearch.index") or "opensearch-files"
 ELASTICSEARCH_COLLECTION_INDEX = "opensearch-collections"
 APPLICATION_ID = "opensearch"
 ELASTICSEARCH_CONNECTION_PARAMS = {"timeout": 30}
-ELASTICSEARCH_HOSTS = ["https://elasticsearch.ceda.ac.uk"]
+ELASTICSEARCH_HOST="https://elasticsearch.164.30.69.113.nip.io"
 
 READ_FROM_VOCAB = False
 
@@ -70,7 +70,6 @@ EXTERNAL_DATA_SOURCES = ["https://wui.cmsaf.eu/s"]
 FACETS = Facets(
     endpoint="https://raw.githubusercontent.com/cedadev/cci-vocabularies/refs/heads/master/app/html/ontology/cci/cci-content/cci-ontology.json"
 )
-
 
 class ElasticsearchConnection:
     """

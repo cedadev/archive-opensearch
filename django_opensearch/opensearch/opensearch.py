@@ -124,7 +124,12 @@ class OpensearchResponse:
 
         search_after = search_after or search_params.get('searchAfter',None)
 
-        search_next = self._generate_responses(search_params, start_index=search_index, max_results=self.itemsPerPage, uri=full_uri, search_after=search_after, reverse=reverse)
+        recursive_search = False
+        # 10,000 document limit
+        if search_index + self.itemsPerPage > 10000:
+            recursive_search = True
+
+        search_next = self._generate_responses(search_params, start_index=search_index, max_results=self.itemsPerPage, uri=full_uri, search_after=search_after, reverse=reverse, recursive=recursive_search)
 
         if search_index + self.itemsPerPage -1 > self.totalResults:
             end_of_page = self.totalResults
@@ -134,29 +139,33 @@ class OpensearchResponse:
         self.subtitle = f'Showing {search_index} - {end_of_page}' \
                         f' of {self.totalResults}'
         
-        if search_next is not None and self.startPage == settings.DEFAULT_START_PAGE:
+        if self.startPage == settings.DEFAULT_START_PAGE:
+            if search_after is not None:
+                search_after = f'after {search_after} '
+            else:
+                search_after = ''
+            self.subtitle = f'Showing {end_of_page} results {search_after}' \
+                                f'({self.totalResults} total)'
+
+        if search_next is not None:
             self.links['next'] = [
                 {
-                    'href': f'{full_uri}?{self._stitch_query_params(search_params)}&searchAfter={search_next}',
+                    'href': f'{full_uri}/request?{self._stitch_query_params(search_params)}&searchAfter={search_next}',
                     'title':'next'
                 }
             ]
-            if search_after is not None:
-                self.subtitle = f'Showing {end_of_page} results after {search_after}' \
-                                f' ({self.totalResults} total)'
-            return
 
         if self.totalResults > self.itemsPerPage:
             # Generate paging links
             if self.startPage > 1:
 
-                self.links['first'] = [
+                self.links['first_page'] = [
                         {
                             'href': self._generate_navigation_url(full_uri, search_params, 'first'),
                             'title': 'first',
                         }
                     ]
-                self.links['previous'] = [
+                self.links['previous_page'] = [
                         {
                             'href': self._generate_navigation_url(full_uri, search_params, 'prev'),
                             'title': 'prev',
@@ -164,14 +173,14 @@ class OpensearchResponse:
                     ]
 
             if self.startPage < self.totalResults / self.itemsPerPage:
-                self.links['next'] = [
+                self.links['next_page'] = [
                         {
                             'href': self._generate_navigation_url(full_uri, search_params, 'next'),
                             'title': 'next',
                         }
                     ]
 
-                self.links['last'] = [
+                self.links['last_page'] = [
                             {
                                 'href': self._generate_navigation_url(full_uri, search_params, 'last'),
                                 'title': 'last',
@@ -202,11 +211,11 @@ class OpensearchResponse:
         """
 
         if link_type == 'first':
-            return f'{url}?{self._stitch_query_params(search_params)}&startPage=1'
+            return f'{url}/request?{self._stitch_query_params(search_params)}&startPage=1'
             
         elif link_type == 'last':
             last_page = f'startPage={math.ceil(self.totalResults/self.itemsPerPage)}'
-            return f'{url}?{self._stitch_query_params(search_params)}&{last_page}'
+            return f'{url}/request?{self._stitch_query_params(search_params)}&{last_page}'
 
         else:
             if link_type == 'prev':
@@ -214,9 +223,9 @@ class OpensearchResponse:
             else:
                 page = f'startPage={self.startPage + 1}'
 
-            return f'{url}?{self._stitch_query_params(search_params)}&{page}'
+            return f'{url}/request?{self._stitch_query_params(search_params)}&{page}'
 
-    def _generate_responses(self, search_params, **kwargs):
+    def _generate_responses(self, search_params, recursive=False, **kwargs):
 
         self._generate_request_query(search_params)
 
@@ -232,7 +241,7 @@ class OpensearchResponse:
             self.totalResults, self.features = Collection(path=collection_path).search(search_params, **kwargs)
 
         else:
-            results, next_search = Granule(collection_path).search(search_params, **kwargs)
+            results, next_search = Granule(collection_path).search(search_params, recursive=recursive, **kwargs)
             self.totalResults = results.total
             self.features = results.results
             #self.set_search_after(results)
