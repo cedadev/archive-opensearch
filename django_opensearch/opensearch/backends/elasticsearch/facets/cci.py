@@ -263,7 +263,10 @@ class CCIFacets(ElasticsearchFacetSet):
         @return a list of related datasets
 
         """
-        url_string = f"https://eo-bridge-data-ai-overlay-en81qj.staging-k8s.jasmin.ac.uk/dataset/https://catalogue.ceda.ac.uk/uuid/{uid}?format=json"
+        url_string = os.path.join(
+            settings.DATA_BRIDGE_URL,
+            f"dataset/https://catalogue.ceda.ac.uk/uuid/{uid}?format=json"
+        )
 
         try:
             response = requests.get(url_string, verify=False)
