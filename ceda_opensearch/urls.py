@@ -19,7 +19,6 @@ from django_opensearch.views import Index
 from django.views.generic.base import TemplateView
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
     path('opensearch/', include('django_opensearch.urls')),
     path('manifest/', include('manifest.urls')),
     path('api/', include('events.urls')),
